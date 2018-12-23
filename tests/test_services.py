@@ -1,6 +1,6 @@
 import unittest
 
-from service_urls import cache, db, Service
+from service_urls import cache, db, email, Service
 
 GENERIC_TESTS = [
     (
@@ -274,6 +274,40 @@ class TestCaches(unittest.TestCase):
         result = cache.parse('file:///abc/def/xyz')
         self.assertEqual(result['BACKEND'], 'django.core.cache.backends.filebased.FileBasedCache')
         self.assertEqual(result['LOCATION'], '/abc/def/xyz')
+
+
+EMAIL_SMTP_TESTS = [
+    ('smtp://:@:', {'HOST': 'localhost', 'PORT': 25, 'HOST_USER': '', 'HOST_PASSWORD': '', 'USE_TLS': False, 'USE_SSL': False, 'SSL_CERTFILE': None, 'SSL_KEYFILE': None, 'TIMEOUT': None}),  # noqa
+    ('smtps://:@:', {'HOST': 'localhost', 'PORT': 25, 'HOST_USER': '', 'HOST_PASSWORD': '', 'USE_TLS': True, 'USE_SSL': False, 'SSL_CERTFILE': None, 'SSL_KEYFILE': None, 'TIMEOUT': None}),  # noqa
+    ('smtp+tls://:@:', {'HOST': 'localhost', 'PORT': 25, 'HOST_USER': '', 'HOST_PASSWORD': '', 'USE_TLS': True, 'USE_SSL': False, 'SSL_CERTFILE': None, 'SSL_KEYFILE': None, 'TIMEOUT': None}),  # noqa
+    ('smtp+ssl://:@:', {'HOST': 'localhost', 'PORT': 25, 'HOST_USER': '', 'HOST_PASSWORD': '', 'USE_TLS': False, 'USE_SSL': True, 'SSL_CERTFILE': None, 'SSL_KEYFILE': None, 'TIMEOUT': None}),  # noqa
+]
+
+
+class EmailsTests(unittest.TestCase):
+    def test_smtp(self):
+        for test in EMAIL_SMTP_TESTS:
+            url = email.parse(test[0])
+            self.assertEqual(url['ENGINE'], 'django.core.mail.backends.smtp.EmailBackend')
+            for k, v in test[1].items():
+                self.assertEqual(url[k], v)
+
+    def test_console(self):
+        url = email.parse('console://')
+        self.assertEqual(url['ENGINE'], 'django.core.mail.backends.console.EmailBackend')
+
+    def test_file(self):
+        url = email.parse('file://')
+        self.assertEqual(url['ENGINE'], 'django.core.mail.backends.filebased.EmailBackend')
+        self.assertEqual(url['FILE_PATH'], '/')
+
+    def test_memory(self):
+        url = email.parse('memory://')
+        self.assertEqual(url['ENGINE'], 'django.core.mail.backends.locmem.EmailBackend')
+
+    def test_dummy(self):
+        url = email.parse('dummy://')
+        self.assertEqual(url['ENGINE'], 'django.core.mail.backends.dummy.EmailBackend')
 
 
 class TestParseURL(unittest.TestCase):

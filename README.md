@@ -26,6 +26,18 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+HOST = 'localhost'
+PORT = 2525
+HOST_USER = ''
+HOST_PASSWORD = ''
+USE_TLS = True
+USE_SSL = False
+SSL_CERTFILE = '/etc/ssl/cert'
+SSL_KEYFILE = '/etc/ssl/key'
+TIMEOUT = 600
+USE_LOCALTIME = False
 ```
 
 Replace with:
@@ -38,11 +50,13 @@ DATABASES = {
 CACHES = {
     'default': os.environ.get('CACHE_DEFAULT', ''memcached://127.0.0.1:11211'),
 }
+
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
 ```
 
 ## Backends
 
-Currently `django-service-urls` supports two different services:
+Currently `django-service-urls` supports three different services:
 
 ### DATABASES (``service_urls.db``)
 
@@ -82,6 +96,19 @@ Memcached+PyLibMCCache unix socket | django.core.cache.backends.memcached.PyLibM
 File | django.core.cache.backends.filebased.FileBasedCache | file://C:/abc/def/xyz
 File | django.core.cache.backends.filebased.FileBasedCache | file:///abc/def/xyz
 
+### EMAIL (``service_urls.email``)
+
+Service | Backend | URLString
+--------|---------|-----------
+Console | django.core.mail.backends.console.EmailBackend | console://
+SMTP | django.core.mail.backends.smtp.EmailBackend | smtp://localhost:25
+SMTPS | django.core.mail.backends.smtp.EmailBackend | smtps://localhost:465
+SMTP+TLS | django.core.mail.backends.smtp.EmailBackend | smtp+tls://localhost:465
+SMTP+SSL | django.core.mail.backends.smtp.EmailBackend | smtp+ssl://localhost:587
+File | django.core.mail.backends.filebased.EmailBackend | file:///var/log/emails
+Memory | django.core.mail.backends.locmem.EmailBackend | memory://
+Dummy | django.core.mail.backends.dummy.EmailBackend | dummy://
+
 ## Installation
 
 Install package
@@ -108,6 +135,16 @@ except:
     pass
 else:
     CACHES = service_urls.cache.parse(CACHES)
+
+try:
+    EMAIL_BACKEND
+except:
+    pass
+else:
+    if service_urls.email.validate(EMAIL_BACKEND):
+        for k, v in service_urls.email.parse(EMAIL_BACKEND).items():
+            setting = 'EMAIL_' + ('BACKEND' if k == 'ENGINE' else k)
+            globals()[setting] = v
 ```
 
 ## Changes
@@ -116,3 +153,4 @@ else:
 
 * Add `service_urls.db` service and defaul parsers
 * Add `service_urls.cache` service and defaul parsers
+* Add `service_urls.email` service and defaul parsers
