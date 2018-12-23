@@ -2,7 +2,7 @@
 import io
 
 import service_urls
-from setuptools import setup
+from setuptools import find_packages, setup
 
 with io.open('README.md', "rt", encoding='utf-8') as fp:
     long_description = fp.read()
@@ -21,6 +21,7 @@ setup(
     license='BSD',
     zip_safe=False,
     python_requires='>=3.5',
+    packages=find_packages(exclude=['tests', 'tests.*']),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",

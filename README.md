@@ -194,6 +194,10 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
+### dev
+
+* fix setup.py
+
 ### 1.0.1
 
 * fix README typos
