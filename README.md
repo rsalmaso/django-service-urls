@@ -194,7 +194,7 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
-### dev
+### 1.0.2
 
 * fix setup.py and MANIFEST.in
 
