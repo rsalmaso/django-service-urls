@@ -194,6 +194,10 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
+### 1.0.1
+
+* fix README typos
+
 ### 1.0.0
 
 * Add `service_urls.db` service and default parsers
