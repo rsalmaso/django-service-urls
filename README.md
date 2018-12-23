@@ -194,8 +194,8 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
-### dev
+### 1.0.0
 
-* Add `service_urls.db` service and defaul parsers
-* Add `service_urls.cache` service and defaul parsers
-* Add `service_urls.email` service and defaul parsers
+* Add `service_urls.db` service and default parsers
+* Add `service_urls.cache` service and default parsers
+* Add `service_urls.email` service and default parsers
