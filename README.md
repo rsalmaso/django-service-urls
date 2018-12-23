@@ -147,6 +147,51 @@ else:
             globals()[setting] = v
 ```
 
+## Extend `django-service-urls`
+
+### Add another handler
+
+You can add another handler to an already existing handler:
+
+`my_postgres_backend/service_url.py`
+```python
+from service_urls.services import db, postgresql_config_from_url
+
+# postgresql fork)
+postgresql_config_from_url = db.register(('mypgbackend', 'my_postgres_backend'))(postgresql_config_from_url)
+```
+
+`yourapp/settings.py`
+```python
+import my_postgres_backend.service_url
+
+
+DATABASES = {'default': 'mypgbackend://user:pwd@:/mydb'}
+```
+
+### Add another service
+
+```python
+from service_urls import Service
+
+
+class SearchService(Service):
+    def config_from_url(self, engine, scheme, url):
+        parsed = self.parse_url(url)
+        return {
+            'ENGINE': engine,
+            # here all options from parsed
+        }
+
+
+search = SearchService()
+
+
+@search.register(('myengine', 'my_search_engine'))
+def search_config_from_url(backend, engine, scheme, url):
+    return backend.config_from_url(engine, scheme, url)
+```
+
 ## Changes
 
 ### dev
