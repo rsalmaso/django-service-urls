@@ -1,5 +1,5 @@
 from .base import Service  # noqa: F401
-from .services import db  # noqa: F401
+from .services import cache, db  # noqa: F401
 from .version import get_version
 
 VERSION = (0, 1, 0, "alpha", 0)

@@ -64,3 +64,75 @@ def oracle_config_from_url(backend, engine, scheme, url):
     # Oracle requires string ports
     config['PORT'] = str(config['PORT'])
     return config
+
+
+class CacheService(Service):
+    def config_from_url(self, engine, scheme, url, *, multiple_netloc=True):
+        parsed = self.parse_url(url, multiple_netloc=multiple_netloc)
+        config = {
+            'BACKEND': engine
+        }
+        if multiple_netloc and parsed['location']:
+            config['LOCATION'] = parsed['location']
+        else:
+            if parsed['hostname']:
+                config['LOCATION'] = parsed['hostname']
+                if parsed['port']:
+                    config['LOCATION'] += ':%s' % parsed['port']
+        for key in ('timeout', 'key_prefix', 'version'):
+            if key in parsed['options']:
+                option = parsed['options'].pop(key)
+                config[key.upper()] = option
+        config['OPTIONS'] = parsed['options']
+        return config
+
+
+cache = CacheService()
+
+
+@cache.register(('memory', 'django.core.cache.backends.locmem.LocMemCache'))
+def memory_config_from_url(backend, engine, scheme, url):
+    return backend.config_from_url(engine, scheme, url)
+
+
+@cache.register(('db', 'django.core.cache.backends.db.DatabaseCache'))
+def db_config_from_url(backend, engine, scheme, url):
+    return backend.config_from_url(engine, scheme, url)
+
+
+@cache.register(('dummy', 'django.core.cache.backends.dummy.DummyCache'))
+def dummy_config_from_url(backend, engine, scheme, url):
+    return backend.config_from_url(engine, scheme, url)
+
+
+@cache.register(('memcached', 'django.core.cache.backends.memcached.MemcachedCache'))
+def memcached_config_from_url(backend, engine, scheme, url):
+    parsed = backend.parse_url(url, multiple_netloc=True)
+    config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
+    if parsed['path']:
+        # We are dealing with a URI like memcached:///socket/path
+        config['LOCATION'] = 'unix:/{0}'.format(parsed['path'])
+    return config
+
+
+@cache.register(('memcached+pylibmccache', 'django.core.cache.backends.memcached.PyLibMCCache'))
+def pylibmccache_config_from_url(backend, engine, scheme, url):
+    parsed = backend.parse_url(url, multiple_netloc=True)
+    # We are dealing with a URI like memcached://unix:/abc
+    # Set the hostname to be the unix path
+    parsed['hostname'] = '/{}'.format(parsed['path'])
+    parsed['path'] = None
+    return backend.config_from_url(engine, scheme, parsed)
+
+
+@cache.register(('file', 'django.core.cache.backends.filebased.FileBasedCache'))
+def file_config_from_url(backend, engine, scheme, url):
+    parsed = backend.parse_url(url)
+    config = backend.config_from_url(engine, scheme, parsed)
+    path = '/' + parsed['path']
+    # On windows a path like C:/a/b is parsed with C as the hostname
+    # and a/b/ as the path. Reconstruct the windows path here.
+    if parsed['hostname']:
+        path = '{0}:{1}'.format(parsed['hostname'], path)
+    config['LOCATION'] = path
+    return config

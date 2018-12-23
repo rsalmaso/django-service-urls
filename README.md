@@ -19,6 +19,13 @@ DATABASES = {
         'PASSWORD': 'mypasswd',
     },
 }
+
+CACHES = {
+    'default': {
+        'BACKEND' : 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    },
+}
 ```
 
 Replace with:
@@ -27,11 +34,15 @@ Replace with:
 DATABASES = {
     'default': os.environ.get('DATABASE_DEFAULT', 'postgres://myuser:mypasswd@localhost:5432/mydb'),
 }
+
+CACHES = {
+    'default': os.environ.get('CACHE_DEFAULT', ''memcached://127.0.0.1:11211'),
+}
 ```
 
 ## Backends
 
-Currently `django-service-urls` support one service:
+Currently `django-service-urls` supports two different services:
 
 ### DATABASES (``service_urls.db``)
 
@@ -50,6 +61,26 @@ Mysql | django.db.backends.mysql | mysql://user:passwd@host:port/db
 Mysql + GIS | django.contrib.gis.db.backends.mysql | mysql+gis://user:passwd@host:port/db
 Oracle | django.db.backends.oracle | oracle://user:passwd@host:port/db
 Oracle + GIS | django.contrib.gis.db.backends.oracle | oracle+gis://user:passwd@host:port/db
+
+### CACHES (``service_urls.cache``)
+
+Service | Backend | URLString
+--------|---------|-----------
+Memory | django.core.cache.backends.locmem.LocMemCache | memory://
+Memory | django.core.cache.backends.locmem.LocMemCache | memory://abc
+Database | django.core.cache.backends.db.DatabaseCache | db://table-name
+Dummy | django.core.cache.backends.dummy.DummyCache | dummy://
+Dummy | django.core.cache.backends.dummy.DummyCache | dummy://abc
+Memcached: single ip | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4:1567
+Memcached+PyLibMCCache: single ip | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4:1567
+Memcached multiple ips | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4:1567,1.2.3.5:1568
+Memcached+PyLibMCCache multiple ips | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4:1567,1.2.3.5:1568
+Memcached no port | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4
+Memcached+PyLibMCCache no port | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4
+Memcached unix socket | django.core.cache.backends.memcached.MemcachedCache | memcached:///tmp/memcached.sock
+Memcached+PyLibMCCache unix socket | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache:///tmp/memcached.sock
+File | django.core.cache.backends.filebased.FileBasedCache | file://C:/abc/def/xyz
+File | django.core.cache.backends.filebased.FileBasedCache | file:///abc/def/xyz
 
 ## Installation
 
@@ -70,6 +101,13 @@ except:
     pass
 else:
     DATABASES = service_urls.db.parse(DATABASES)
+
+try:
+    CACHES
+except:
+    pass
+else:
+    CACHES = service_urls.cache.parse(CACHES)
 ```
 
 ## Changes
@@ -77,3 +115,4 @@ else:
 ### dev
 
 * Add `service_urls.db` service and defaul parsers
+* Add `service_urls.cache` service and defaul parsers
