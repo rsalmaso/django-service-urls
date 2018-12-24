@@ -48,7 +48,7 @@ DATABASES = {
 }
 
 CACHES = {
-    'default': os.environ.get('CACHE_DEFAULT', ''memcached://127.0.0.1:11211'),
+    'default': os.environ.get('CACHE_DEFAULT', 'memcached://127.0.0.1:11211'),
 }
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
