@@ -1,5 +1,5 @@
 def get_version(version=None):
-    "Returns a PEP 386-compliant version number from VERSION."
+    """Returns a PEP 386-compliant version number from VERSION."""
     if version is None:
         from . import VERSION as version
     else:
