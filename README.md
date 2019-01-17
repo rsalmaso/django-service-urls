@@ -117,34 +117,44 @@ Install package
 $ python3 -m pip install django-service-urls
 ```
 
-and at the end of your main settings file add something like as
+add `import service_urls` in your `manage.py`
 
 ```python
-import service_urls
+#!/usr/bin/env python
+import os
+import sys
 
-try:
-    DATABASES
-except:
-    pass
-else:
-    DATABASES = service_urls.db.parse(DATABASES)
+import service_urls.patch
 
-try:
-    CACHES
-except:
-    pass
-else:
-    CACHES = service_urls.cache.parse(CACHES)
 
-try:
-    EMAIL_BACKEND
-except:
-    pass
-else:
-    if service_urls.email.validate(EMAIL_BACKEND):
-        for k, v in service_urls.email.parse(EMAIL_BACKEND).items():
-            setting = 'EMAIL_' + ('BACKEND' if k == 'ENGINE' else k)
-            globals()[setting] = v
+def main():
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+
+if __name__ == '__main__':
+    main()
+```
+
+and in `wsgi.py`
+
+```python
+import os
+import service_urls.patch
+
+from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
+
+application = get_wsgi_application()
 ```
 
 ## Extend `django-service-urls`
@@ -193,6 +203,10 @@ def search_config_from_url(backend, engine, scheme, url):
 ```
 
 ## Changes
+
+### dev
+
+* add helper to monkey patch django settings
 
 ### 1.0.2
 
