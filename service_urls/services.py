@@ -13,7 +13,7 @@ class DbService(Service):
             'PASSWORD': parse.unquote(parsed['password'] or ''),
             'HOST': parsed['hostname'],
             'PORT': parsed['port'] or '',
-            'OPTIONS': parsed['options']
+            'OPTIONS': parsed['options'],
         }
 
 
@@ -26,7 +26,7 @@ def sqlite_config_from_url(backend, engine, scheme, url):
     if url in ('sqlite://:memory:', 'sqlite://'):
         return {
             'ENGINE': engine,
-            'NAME': ':memory:'
+            'NAME': ':memory:',
         }
     return backend.config_from_url(engine, scheme, url)
 
@@ -70,7 +70,7 @@ class CacheService(Service):
     def config_from_url(self, engine, scheme, url, *, multiple_netloc=True):
         parsed = self.parse_url(url, multiple_netloc=multiple_netloc)
         config = {
-            'BACKEND': engine
+            'BACKEND': engine,
         }
         if multiple_netloc and parsed['location']:
             config['LOCATION'] = parsed['location']
