@@ -157,7 +157,7 @@ You can add another handler to an already existing handler:
 ```python
 from service_urls.services import db, postgresql_config_from_url
 
-# postgresql fork)
+# postgresql fork
 postgresql_config_from_url = db.register(('mypgbackend', 'my_postgres_backend'))(postgresql_config_from_url)
 ```
 
