@@ -102,7 +102,7 @@ Service | Backend | URLString
 --------|---------|-----------
 Console | django.core.mail.backends.console.EmailBackend | console://
 SMTP | django.core.mail.backends.smtp.EmailBackend | smtp://localhost:25
-SMTPS | django.core.mail.backends.smtp.EmailBackend | smtps://localhost:465
+SMTPS (smtp+tls alias) | django.core.mail.backends.smtp.EmailBackend | smtps://localhost:465
 SMTP+TLS | django.core.mail.backends.smtp.EmailBackend | smtp+tls://localhost:465
 SMTP+SSL | django.core.mail.backends.smtp.EmailBackend | smtp+ssl://localhost:587
 File | django.core.mail.backends.filebased.EmailBackend | file:///var/log/emails
