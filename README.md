@@ -117,7 +117,7 @@ Install package
 $ python3 -m pip install django-service-urls
 ```
 
-add `import service_urls` in your `manage.py`
+add `import service_urls.patch` in your `manage.py`
 
 ```python
 #!/usr/bin/env python
