@@ -64,8 +64,8 @@ Service  | Backend | URLString
 ---------|---------|-----------
 Postgresql | django.db.backends.postgresql | postgres://user:passws@host:port/db
 Postgresql Socket | django.db.backends.postgresql | postgres://%2Fvar%2Frun%2Fpostgresql/db
-Postgresql alias | django.db.backends.postgresql | postgresql://user:passwd@host:port/db
-Postgresql alias | django.db.backends.postgresql | pgsql://user:passwd@host:port/db
+Postgresql (dj-database-url compat alias) | django.db.backends.postgresql | postgresql://user:passwd@host:port/db
+Postgresql (dj-database-url compat alias) | django.db.backends.postgresql | pgsql://user:passwd@host:port/db
 Postgis | django.contrib.gis.db.backends.postgis | postgis://user:passwd@host:port/db
 Sqlite (memory) | django.db.backends.sqlite3 | sqlite://:memory: or sqlite://
 Sqlite (file) | django.db.backends.sqlite3 | sqlite:///var/db/database.db
