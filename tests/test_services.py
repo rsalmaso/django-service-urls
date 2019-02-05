@@ -53,7 +53,7 @@ class DatabaseTestCase(unittest.TestCase):
                 self.assertDictEqual(result['OPTIONS'], options)
 
 
-class SqliteTests(DatabaseTestCase):
+class SqliteTests(unittest.TestCase):
     SCHEME = 'sqlite'
 
     def test_empty_url(self):
@@ -65,6 +65,20 @@ class SqliteTests(DatabaseTestCase):
         url = db.parse('sqlite://:memory:')
         self.assertEqual(url['ENGINE'], 'django.db.backends.sqlite3')
         self.assertEqual(url['NAME'], ':memory:')
+
+    def _test_file(self, dbname):
+        url = db.parse('sqlite://{}'.format(dbname))
+        self.assertEqual(url['ENGINE'], 'django.db.backends.sqlite3')
+        self.assertEqual(url['NAME'], dbname)
+        self.assertEqual(url['HOST'], '')
+        self.assertEqual(url['USER'], '')
+        self.assertEqual(url['PASSWORD'], '')
+        self.assertEqual(url['PORT'], '')
+        self.assertDictEqual(url['OPTIONS'], {})
+
+    def test_file(self):
+        self._test_file('/home/user/projects/project/app.sqlite3')
+        self._test_file('C:/home/user/projects/project/app.sqlite3')
 
 
 class PostgresTests(DatabaseTestCase):

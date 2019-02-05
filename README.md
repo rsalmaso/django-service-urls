@@ -204,6 +204,10 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
+### dev
+
+* correct sqlite parser
+
 ### 1.1.0
 
 * add helper to monkey patch django settings
