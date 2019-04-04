@@ -1,6 +1,7 @@
 import operator
 import os
 
+import django
 from django import conf
 from django.conf import (
     ENVIRONMENT_VARIABLE, LazySettings as DjangoLazySettings,
@@ -64,8 +65,9 @@ class LazySettings(DjangoLazySettings):
             self._setup()
         delattr(self._wrapped, name)
 
-    __lt__ = new_method_proxy(operator.lt)  # added in django 2.2
-    __gt__ = new_method_proxy(operator.gt)  # added in django 2.2
+    if django.VERSION[:2] < (2, 2):
+        __lt__ = new_method_proxy(operator.lt)
+        __gt__ = new_method_proxy(operator.gt)
 
 
 settings = LazySettings()

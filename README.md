@@ -204,6 +204,10 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
+### dev
+
+* add __lt__ and __gt__ when using Django < 2.2
+
 ### 1.1.1
 
 * correct sqlite parser
