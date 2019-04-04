@@ -204,7 +204,7 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
-### dev
+### 1.2.0
 
 * add __lt__ and __gt__ when using Django < 2.2
 * correct settings operations under django > 1.11 (ie: when running tests which override values)
