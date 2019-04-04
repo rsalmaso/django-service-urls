@@ -16,17 +16,18 @@ class Service:
         return match.groups()[0] if match else None
 
     def _parse(self, data):
-        if isinstance(data, str):
-            scheme = self.validate(data)
-            if scheme is None:
-                raise ValueError('{dsn} is invalid, only full dsn urls (scheme://host...) allowed'.format(dsn=data))
-            try:
-                _scheme = self._schemes[scheme]
-            except KeyError:
-                raise ValueError('{scheme}:// scheme not registered'.format(scheme=scheme))
-            callback, engine = _scheme['callback'], _scheme['engine']
-            return callback(self, engine, scheme, data)
-        return data
+        if not isinstance(data, str):
+            return data
+
+        scheme = self.validate(data)
+        if scheme is None:
+            raise ValueError('{dsn} is invalid, only full dsn urls (scheme://host...) allowed'.format(dsn=data))
+        try:
+            _scheme = self._schemes[scheme]
+        except KeyError:
+            raise ValueError('{scheme}:// scheme not registered'.format(scheme=scheme))
+        callback, engine = _scheme['callback'], _scheme['engine']
+        return callback(self, engine, scheme, data)
 
     def parse(self, data):
         if isinstance(data, dict):
