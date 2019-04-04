@@ -48,22 +48,21 @@ class LazySettings(DjangoLazySettings):
 
         self._wrapped = self.get_settings_class()(settings_module)
 
-    def __setattr__(self, name, value):
-        # needed for django 1.11
-        if name == '_wrapped':
-            self.__dict__['_wrapped'] = value
-        else:
-            if self._wrapped is empty:
-                self._setup()
-            setattr(self._wrapped, name, value)
+    if django.VERSION[:2] < (2, 0):
+        # avoid maximum recursion depth exception
 
-    def __delattr__(self, name):
-        # needed for django 1.11
-        if name == '_wrapped':
-            raise TypeError("can't delete _wrapped.")
-        if self._wrapped is empty:
-            self._setup()
-        delattr(self._wrapped, name)
+        def __setattr__(self, name, value):
+            if name == '_wrapped':
+                self.__dict__.clear()
+            else:
+                self.__dict__.pop(name, None)
+            super(DjangoLazySettings, self).__setattr__(name, value)
+
+        def __delattr__(self, name):
+            if name == '_wrapped':
+                raise TypeError("can't delete _wrapped.")
+            super(DjangoLazySettings, self).__delattr__(name)
+            self.__dict__.pop(name, None)
 
     if django.VERSION[:2] < (2, 2):
         __lt__ = new_method_proxy(operator.lt)
