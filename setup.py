@@ -16,7 +16,7 @@ setup(
     long_description_content_type='text/markdown',
     author=service_urls.__author__,
     author_email=service_urls.__email__,
-    url='https://bitbucket.org/rsalmaso/django-service-urls/',
+    url='https://github.com/rsalmaso/django-service-urls',
     download_url='https://bitbucket.org/rsalmaso/django-service-urls/get/{0}.tar.gz'.format(service_urls.__version__),
     license='BSD',
     zip_safe=False,
