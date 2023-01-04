@@ -41,8 +41,8 @@ class Settings(DjangoSettings):
         self.handle_service_urls()
 
     def handle_service_urls(self):
-        setattr(self, 'DATABASES', db.parse(self.DATABASES))
-        setattr(self, 'CACHES', cache.parse(self.CACHES))
+        self.DATABASES = db.parse(self.DATABASES)
+        self.CACHES = cache.parse(self.CACHES)
 
         # preserve EMAIL_BACKEND backward compatibility
         if email.validate(self.EMAIL_BACKEND):
