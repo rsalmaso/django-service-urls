@@ -204,6 +204,10 @@ def search_config_from_url(backend, engine, scheme, url):
 
 ## Changes
 
+### dev
+
+* use declarative config in setup.cfg
+
 ### 1.2.0
 
 * add __lt__ and __gt__ when using Django < 2.2
