@@ -23,17 +23,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import operator
 import os
 
-import django
 from django import conf
 from django.conf import (
     ENVIRONMENT_VARIABLE, LazySettings as DjangoLazySettings,
     Settings as DjangoSettings,
 )
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.functional import empty, new_method_proxy
 
 from .services import cache, db, email
 
@@ -72,26 +69,6 @@ class LazySettings(DjangoLazySettings):
                 % (desc, ENVIRONMENT_VARIABLE))
 
         self._wrapped = self.get_settings_class()(settings_module)
-
-    if django.VERSION[:2] < (2, 0):
-        # avoid maximum recursion depth exception
-
-        def __setattr__(self, name, value):
-            if name == '_wrapped':
-                self.__dict__.clear()
-            else:
-                self.__dict__.pop(name, None)
-            super(DjangoLazySettings, self).__setattr__(name, value)
-
-        def __delattr__(self, name):
-            if name == '_wrapped':
-                raise TypeError("can't delete _wrapped.")
-            super(DjangoLazySettings, self).__delattr__(name)
-            self.__dict__.pop(name, None)
-
-    if django.VERSION[:2] < (2, 2):
-        __lt__ = new_method_proxy(operator.lt)
-        __gt__ = new_method_proxy(operator.gt)
 
 
 settings = LazySettings()
