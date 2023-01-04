@@ -47,7 +47,7 @@ class Settings(DjangoSettings):
         # preserve EMAIL_BACKEND backward compatibility
         if email.validate(self.EMAIL_BACKEND):
             for k, v in email.parse(self.EMAIL_BACKEND).items():
-                setting = 'EMAIL_{}'.format('BACKEND' if k == 'ENGINE' else k)
+                setting = f'EMAIL_{"BACKEND" if k == "ENGINE" else k}'
                 setattr(self, setting, v)
                 self._explicit_settings.add(setting)
 
@@ -61,12 +61,12 @@ class LazySettings(DjangoLazySettings):
     def _setup(self, name=None):
         settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
         if not settings_module:
-            desc = ('setting %s' % name) if name else 'settings'
+            desc = f'setting {name}' if name else 'settings'
             raise ImproperlyConfigured(
-                'Requested %s, but settings are not configured. '
-                'You must either define the environment variable %s '
+                f'Requested {desc}, but settings are not configured. '
+                f'You must either define the environment variable {ENVIRONMENT_VARIABLE} '
                 'or call settings.configure() before accessing settings.'
-                % (desc, ENVIRONMENT_VARIABLE))
+            )
 
         self._wrapped = self.get_settings_class()(settings_module)
 

@@ -59,7 +59,7 @@ def sqlite_config_from_url(backend, engine, scheme, url):
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
     if parsed['hostname']:
-        path = '{0}:{1}'.format(parsed['hostname'], path)
+        path = f'{parsed["hostname"]}:{path}'
         parsed['location'] = parsed['hostname'] = ''
     parsed['path'] = path
     return backend.config_from_url(engine, scheme, parsed)
@@ -79,7 +79,7 @@ def postgresql_config_from_url(backend, engine, scheme, url):
     config = backend.config_from_url(engine, scheme, parsed)
     if 'currentSchema' in config['OPTIONS']:
         value = config['OPTIONS'].pop('currentSchema')
-        config['OPTIONS']['options'] = '-c search_path={0}'.format(value)
+        config['OPTIONS']['options'] = f'-c search_path={value}'
     return config
 
 
@@ -112,7 +112,7 @@ class CacheService(Service):
             if parsed['hostname']:
                 config['LOCATION'] = parsed['hostname']
                 if parsed['port']:
-                    config['LOCATION'] += ':%s' % parsed['port']
+                    config['LOCATION'] = f'{config["LOCATION"]}:{parsed["port"]}'
         for key in ('timeout', 'key_prefix', 'version'):
             if key in parsed['options']:
                 option = parsed['options'].pop(key)
@@ -145,7 +145,7 @@ def memcached_config_from_url(backend, engine, scheme, url):
     config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
     if parsed['path']:
         # We are dealing with a URI like memcached:///socket/path
-        config['LOCATION'] = 'unix:/{0}'.format(parsed['path'])
+        config['LOCATION'] = f'unix:/{parsed["path"]}'
     return config
 
 
@@ -154,7 +154,7 @@ def pylibmccache_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url, multiple_netloc=True)
     # We are dealing with a URI like memcached://unix:/abc
     # Set the hostname to be the unix path
-    parsed['hostname'] = '/{}'.format(parsed['path'])
+    parsed['hostname'] = f'/{parsed["path"]}'
     parsed['path'] = None
     return backend.config_from_url(engine, scheme, parsed)
 
@@ -163,11 +163,11 @@ def pylibmccache_config_from_url(backend, engine, scheme, url):
 def file_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url)
     config = backend.config_from_url(engine, scheme, parsed)
-    path = '/' + parsed['path']
+    path = f'/{parsed["path"}'
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
     if parsed['hostname']:
-        path = '{0}:{1}'.format(parsed['hostname'], path)
+        path = f'{parsed["hostname"]}:{path}'
     config['LOCATION'] = path
     return config
 
@@ -215,11 +215,11 @@ def email_console_config_url(backend, engine, scheme, url):
 def email_file_config_url(backend, engine, scheme, url):
     config = backend.config_from_url(engine, scheme, url)
     parsed = backend.parse_url(url)
-    path = '/' + parsed['path']
+    path = f'/{parsed["path"]}'
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
     if parsed['hostname']:
-        path = '{0}:{1}'.format(parsed['hostname'], path)
+        path = f'{parsed["hostname"]}:{path}'
     return {
         'FILE_PATH': path,
         **config,

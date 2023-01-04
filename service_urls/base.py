@@ -46,11 +46,11 @@ class Service:
 
         scheme = self.validate(data)
         if scheme is None:
-            raise ValueError('{dsn} is invalid, only full dsn urls (scheme://host...) allowed'.format(dsn=data))
+            raise ValueError(f'{data} is invalid, only full dsn urls (scheme://host...) allowed')
         try:
             _scheme = self._schemes[scheme]
         except KeyError:
-            raise ValueError('{scheme}:// scheme not registered'.format(scheme=scheme))
+            raise ValueError(f'{scheme}:// scheme not registered')
         callback, engine = _scheme['callback'], _scheme['engine']
         return callback(self, engine, scheme, data)
 

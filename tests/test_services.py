@@ -67,7 +67,7 @@ class DatabaseTestCase(unittest.TestCase):
         if self.SCHEME is None:
             return
         for value, (user, passw, host, port, database, options) in GENERIC_TESTS:
-            value = '{scheme}://{value}'.format(scheme=self.SCHEME, value=value)
+            value = f'{self.SCHEME}://{value}'
             with self.subTest(value=value):
                 result = db.parse(value)
                 self.assertEqual(result['NAME'], database)
