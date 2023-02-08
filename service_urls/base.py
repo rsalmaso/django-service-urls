@@ -28,10 +28,10 @@ from urllib import parse
 
 
 class Service:
-    validation = re.compile(r'^(?P<scheme>\S+)://\S*')
+    validation = re.compile(r"^(?P<scheme>\S+)://\S*")
 
     def config_from_url(self, engine, scheme, url):
-        raise NotImplementedError('')
+        raise NotImplementedError("")
 
     def __init__(self):
         self._schemes = {}
@@ -46,12 +46,12 @@ class Service:
 
         scheme = self.validate(data)
         if scheme is None:
-            raise ValueError(f'{data} is invalid, only full dsn urls (scheme://host...) allowed')
+            raise ValueError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
         try:
             _scheme = self._schemes[scheme]
         except KeyError:
-            raise ValueError(f'{scheme}:// scheme not registered')
-        callback, engine = _scheme['callback'], _scheme['engine']
+            raise ValueError(f"{scheme}:// scheme not registered")
+        callback, engine = _scheme["callback"], _scheme["engine"]
         return callback(self, engine, scheme, data)
 
     def parse(self, data):
@@ -76,7 +76,7 @@ class Service:
         # 2) parsed.hostname always returns a lower-cased hostname
         #    this isn't correct if hostname is a file path, so use '_hostinfo'
         #    to get the actual host
-        netlocs = parsed.netloc.split(',') if multiple_netloc else []
+        netlocs = parsed.netloc.split(",") if multiple_netloc else []
         hostname, port = (None, None) if len(netlocs) > 1 else parsed._hostinfo
         if port:
             port = int(port)
@@ -87,29 +87,30 @@ class Service:
             value = values[-1]
             if value.isdigit():
                 value = int(value)
-            elif value.lower() == 'true':
+            elif value.lower() == "true":
                 value = True
-            elif value.lower() == 'false':
+            elif value.lower() == "false":
                 value = False
             options[key] = value
         path = parsed.path[1:]
 
         config = {
-            'scheme': parsed.scheme,
-            'username': parsed.username,
-            'password': parsed.password,
-            'hostname': hostname,
-            'port': port,
-            'path': path,
-            'fullpath': parsed.path,
-            'options': options,
-            'location': netlocs if len(netlocs) > 1 else parsed.netloc,
+            "scheme": parsed.scheme,
+            "username": parsed.username,
+            "password": parsed.password,
+            "hostname": hostname,
+            "port": port,
+            "path": path,
+            "fullpath": parsed.path,
+            "options": options,
+            "location": netlocs if len(netlocs) > 1 else parsed.netloc,
         }
         return config
 
     def register(self, *args):
         def wrapper(func):
-            for (scheme, engine) in args:
-                self._schemes[scheme] = {'callback': func, 'engine': engine}
+            for scheme, engine in args:
+                self._schemes[scheme] = {"callback": func, "engine": engine}
             return func
+
         return wrapper

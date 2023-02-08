@@ -211,6 +211,7 @@ def search_config_from_url(backend, engine, scheme, url):
 * add support for Python 3.8, 3.9, 3.10, and 3.11
 * drop support for Django < 3.2
 * drop support for Python < 3.8
+* format code with black
 
 ### 1.2.0
 
