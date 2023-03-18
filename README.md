@@ -212,6 +212,7 @@ def search_config_from_url(backend, engine, scheme, url):
 * drop support for Django < 3.2
 * drop support for Python < 3.8
 * format code with black
+* switch to ruff from flake8/isort
 
 ### 1.2.0
 

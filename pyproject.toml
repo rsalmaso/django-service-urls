@@ -16,3 +16,71 @@ exclude = '''
 line-length = 120
 safe = true
 target-version = ["py38"]
+
+[tool.ruff]
+select = [
+    "B", # flake8-bugbear
+    "C90", # mccabe
+    "E", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "W", # pycodestyle
+]
+ignore = [
+    "E722", # Do not use bare except, specify exception instead
+    "B904",
+]
+
+# # Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = [
+    "I",
+]
+unfixable = [
+    "F401", # don't remove unused import
+]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "*/migrations/*.py",
+]
+
+line-length = 120
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+target-version = "py38"
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.ruff.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+known-first-party = [
+    "service_urls",
+]
+known-third-party = [
+    "django",
+]
+order-by-type = false
