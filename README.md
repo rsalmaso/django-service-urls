@@ -207,7 +207,7 @@ def search_config_from_url(backend, engine, scheme, url):
 ### dev
 
 * use declarative config in setup.cfg
-* add support for Django 3.2, 4.0, and 4.1
+* add support for Django 3.2, 4.0, 4.1, and 4.2
 * add support for Python 3.8, 3.9, 3.10, and 3.11
 * drop support for Django < 3.2
 * drop support for Python < 3.8
