@@ -28,7 +28,7 @@ from urllib import parse
 from .base import Service
 
 
-class DbService(Service):
+class DatabaseService(Service):
     def config_from_url(self, engine, scheme, url):
         parsed = self.parse_url(url)
         return {
@@ -42,7 +42,7 @@ class DbService(Service):
         }
 
 
-db = DbService()
+db = DatabaseService()
 
 
 @db.register(
