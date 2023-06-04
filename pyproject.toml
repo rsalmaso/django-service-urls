@@ -42,6 +42,7 @@ dependencies = [
 
 [project.urls]
 GitHub = "https://github.com/rsalmaso/django-service-urls"
+Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 zip-safe = false

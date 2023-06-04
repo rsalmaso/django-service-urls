@@ -2,5 +2,6 @@ include README.md
 include AUTHORS
 include LICENSE
 include MANIFEST.in
+include CHANGELOG.md
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
