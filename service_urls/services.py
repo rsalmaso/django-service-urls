@@ -170,7 +170,8 @@ def pymemcached_config_from_url(backend, engine, scheme, url):
 
 
 @cache.register(
-    ("memcached+pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),
+    ("pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),
+    ("memcached+pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),  # deprecated protocol
 )
 def pylibmccache_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url, multiple_netloc=True)

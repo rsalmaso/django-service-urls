@@ -282,25 +282,45 @@ class TestCaches(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], backend)
                 self.assertEqual(result["LOCATION"], "unix:/tmp/memcached.sock")
 
-    def test_pylibmccache_memcached_with_single_ip(self):
-        result = cache.parse("memcached+pylibmccache://1.2.3.4:1567")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
-        self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
+    def test_pylibmccache_with_single_ip(self):
+        for url in [
+            "pylibmccache://1.2.3.4:1567",
+            "memcached+pylibmccache://1.2.3.4:1567",
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
+                self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
 
-    def test_pylibmccache_memcached_with_multiple_ips(self):
-        result = cache.parse("memcached+pylibmccache://1.2.3.4:1567,1.2.3.5:1568")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
-        self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
+    def test_pylibmccache_with_multiple_ips(self):
+        for url in [
+            "pylibmccache://1.2.3.4:1567,1.2.3.5:1568",
+            "memcached+pylibmccache://1.2.3.4:1567,1.2.3.5:1568",
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
+                self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
-    def test_pylibmccache_memcached_without_port(self):
-        result = cache.parse("memcached+pylibmccache://1.2.3.4")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
-        self.assertEqual(result["LOCATION"], "1.2.3.4")
+    def test_pylibmccache_without_port(self):
+        for url in [
+            "pylibmccache://1.2.3.4",
+            "memcached+pylibmccache://1.2.3.4",
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
+                self.assertEqual(result["LOCATION"], "1.2.3.4")
 
-    def test_pylibmccache_memcached_with_unix_socket(self):
-        result = cache.parse("memcached+pylibmccache:///tmp/memcached.sock")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
-        self.assertEqual(result["LOCATION"], "/tmp/memcached.sock")
+    def test_pylibmccache_with_unix_socket(self):
+        for url in [
+            "pylibmccache:///tmp/memcached.sock",
+            "memcached+pylibmccache:///tmp/memcached.sock",
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
+                self.assertEqual(result["LOCATION"], "/tmp/memcached.sock")
 
     def test_file_cache_windows_path(self):
         result = cache.parse("file://C:/abc/def/xyz")
