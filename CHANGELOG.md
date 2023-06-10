@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* add support for `django.core.cache.backends.memcached.PyMemcacheCache` as `pymemcached:` protocol
+
 ## 1.3.0
 
 * use declarative config in setup.cfg

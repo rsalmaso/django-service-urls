@@ -157,13 +157,14 @@ def dummy_config_from_url(backend, engine, scheme, url):
 
 
 @cache.register(
-    ("memcached", "django.core.cache.backends.memcached.MemcachedCache"),
+    ("pymemcached", "django.core.cache.backends.memcached.PyMemcachedCache"),
+    ("memcached", "django.core.cache.backends.memcached.MemcachedCache"),  # for django <= 4.2
 )
-def memcached_config_from_url(backend, engine, scheme, url):
+def pymemcached_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url, multiple_netloc=True)
     config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
     if parsed["path"]:
-        # We are dealing with a URI like memcached:///socket/path
+        # We are dealing with a URI like pymemcached:///socket/path
         config["LOCATION"] = f"unix:/{parsed['path']}"
     return config
 

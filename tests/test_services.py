@@ -242,25 +242,45 @@ class TestCaches(unittest.TestCase):
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.dummy.DummyCache")
         self.assertEqual(result["LOCATION"], "abc")
 
-    def test_memcached_with_single_ip(self):
-        result = cache.parse("memcached://1.2.3.4:1567")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
-        self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
+    def test_pymemcached_with_single_ip(self):
+        for url, backend in [
+            ("pymemcached://1.2.3.4:1567", "django.core.cache.backends.memcached.PyMemcachedCache"),
+            ("memcached://1.2.3.4:1567", "django.core.cache.backends.memcached.MemcachedCache"),
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], backend)
+                self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
 
-    def test_memcached_with_multiple_ips(self):
-        result = cache.parse("memcached://1.2.3.4:1567,1.2.3.5:1568")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
-        self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
+    def test_pymemcached_with_multiple_ips(self):
+        for url, backend in [
+            ("pymemcached://1.2.3.4:1567,1.2.3.5:1568", "django.core.cache.backends.memcached.PyMemcachedCache"),
+            ("memcached://1.2.3.4:1567,1.2.3.5:1568", "django.core.cache.backends.memcached.MemcachedCache"),
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], backend)
+                self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
-    def test_memcached_without_port(self):
-        result = cache.parse("memcached://1.2.3.4")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
-        self.assertEqual(result["LOCATION"], "1.2.3.4")
+    def test_pymemcached_without_port(self):
+        for url, backend in [
+            ("pymemcached://1.2.3.4", "django.core.cache.backends.memcached.PyMemcachedCache"),
+            ("memcached://1.2.3.4", "django.core.cache.backends.memcached.MemcachedCache"),
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], backend)
+                self.assertEqual(result["LOCATION"], "1.2.3.4")
 
-    def test_memcached_with_unix_socket(self):
-        result = cache.parse("memcached:///tmp/memcached.sock")
-        self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
-        self.assertEqual(result["LOCATION"], "unix:/tmp/memcached.sock")
+    def test_pymemcached_with_unix_socket(self):
+        for url, backend in [
+            ("pymemcached:///tmp/memcached.sock", "django.core.cache.backends.memcached.PyMemcachedCache"),
+            ("memcached:///tmp/memcached.sock", "django.core.cache.backends.memcached.MemcachedCache"),
+        ]:
+            with self.subTest(url=url):
+                result = cache.parse(url)
+                self.assertEqual(result["BACKEND"], backend)
+                self.assertEqual(result["LOCATION"], "unix:/tmp/memcached.sock")
 
     def test_pylibmccache_memcached_with_single_ip(self):
         result = cache.parse("memcached+pylibmccache://1.2.3.4:1567")
