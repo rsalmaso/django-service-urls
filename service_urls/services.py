@@ -174,12 +174,14 @@ def pymemcached_config_from_url(backend, engine, scheme, url):
     ("memcached+pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),  # deprecated protocol
 )
 def pylibmccache_config_from_url(backend, engine, scheme, url):
+    # django >= 5.0 remove the "unix:" prefix from unix location
+    # keep a different converter until we support old django versions
     parsed = backend.parse_url(url, multiple_netloc=True)
-    # We are dealing with a URI like memcached://unix:/abc
-    # Set the hostname to be the unix path
-    parsed["hostname"] = f"/{parsed['path']}"
-    parsed["path"] = None
-    return backend.config_from_url(engine, scheme, parsed)
+    config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
+    if parsed["path"]:
+        # We are dealing with a URI like pylibmccache:///socket/path
+        config["LOCATION"] = f"/{parsed['path']}"
+    return config
 
 
 @cache.register(
