@@ -26,11 +26,7 @@
 import os
 
 from django import conf
-from django.conf import (
-    ENVIRONMENT_VARIABLE,
-    LazySettings as DjangoLazySettings,
-    Settings as DjangoSettings,
-)
+from django.conf import ENVIRONMENT_VARIABLE, LazySettings as DjangoLazySettings, Settings as DjangoSettings
 from django.core.exceptions import ImproperlyConfigured
 
 from .services import cache, db, email
