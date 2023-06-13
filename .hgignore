@@ -3,6 +3,7 @@ __pycache__
 *.egg-info
 .coverage
 .tox
+.nox
 .svnignore
 .DS_Store
 .git

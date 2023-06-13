@@ -6,6 +6,7 @@
 * rename `memcached+pylibmccache` protocol to `pylibmccache`
 * fix parsing of `pylibmccache` service
 * add support for Python 3.12
+* add nox support
 
 ## 1.3.0
 
