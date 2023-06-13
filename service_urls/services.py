@@ -123,7 +123,7 @@ class CacheService(Service):
             if parsed["hostname"]:
                 config["LOCATION"] = parsed["hostname"]
                 if parsed["port"]:
-                    config["LOCATION"] = f"{config['LOCATION']}:parsed['port']"
+                    config["LOCATION"] = f"{config['LOCATION']}:{parsed['port']}"
         for key in ("timeout", "key_prefix", "version"):
             if key in parsed["options"]:
                 option = parsed["options"].pop(key)
