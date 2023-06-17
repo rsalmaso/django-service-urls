@@ -8,6 +8,8 @@
 * add support for Python 3.12
 * add nox support
 * test `service_urls.patch` (monkeypatch django settings)
+* cleanup license wording
+  (replace wrong copyright holder name with more generic "THE COPYRIGHT HOLDERS AND CONTRIBUTORS")
 
 ## 1.3.0
 
