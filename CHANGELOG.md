@@ -7,6 +7,7 @@
 * fix parsing of `pylibmccache` service
 * add support for Python 3.12
 * add nox support
+* test `service_urls.patch` (monkeypatch django settings)
 
 ## 1.3.0
 
