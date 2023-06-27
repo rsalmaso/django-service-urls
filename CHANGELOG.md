@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.4.0
 
 * add support for `django.core.cache.backends.memcached.PyMemcacheCache` as `pymemcached:` protocol
 * rename `memcached+pylibmccache` protocol to `pylibmccache`
