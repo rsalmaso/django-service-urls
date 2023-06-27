@@ -85,14 +85,18 @@ Memory | django.core.cache.backends.locmem.LocMemCache | memory://abc
 Database | django.core.cache.backends.db.DatabaseCache | db://table-name
 Dummy | django.core.cache.backends.dummy.DummyCache | dummy://
 Dummy | django.core.cache.backends.dummy.DummyCache | dummy://abc
+PyMemcached: single ip | django.core.cache.backends.memcached.PyMemcachedCache | pymemcached://1.2.3.4:1567
+PyLibMCCache: single ip | django.core.cache.backends.memcached.PyLibMCCache | pylibmccache://1.2.3.4:1567
 Memcached: single ip | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4:1567
-Memcached+PyLibMCCache: single ip | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4:1567
+PyMemcached multiple ips | django.core.cache.backends.memcached.PyMemcachedCache | pymemcached://1.2.3.4:1567,1.2.3.5:1568
+PyLibMCCache multiple ips | django.core.cache.backends.memcached.PyLibMCCache | pylibmccache://1.2.3.4:1567,1.2.3.5:1568
 Memcached multiple ips | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4:1567,1.2.3.5:1568
-Memcached+PyLibMCCache multiple ips | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4:1567,1.2.3.5:1568
+PyMemcached no port | django.core.cache.backends.memcached.PyMemcachedCache | pymemcached://1.2.3.4
+PyLibMCCache no port | django.core.cache.backends.memcached.PyLibMCCache | pylibmccache://1.2.3.4
 Memcached no port | django.core.cache.backends.memcached.MemcachedCache | memcached://1.2.3.4
-Memcached+PyLibMCCache no port | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache://1.2.3.4
+PyMemcached unix socket | django.core.cache.backends.memcached.PyMemcachedCache | pymemcached:///tmp/memcached.sock
+PyLibMCCache unix socket | django.core.cache.backends.memcached.PyLibMCCache | pylibmccache:///tmp/memcached.sock
 Memcached unix socket | django.core.cache.backends.memcached.MemcachedCache | memcached:///tmp/memcached.sock
-Memcached+PyLibMCCache unix socket | django.core.cache.backends.memcached.PyLibMCCache | memcached+pylibmccache:///tmp/memcached.sock
 File | django.core.cache.backends.filebased.FileBasedCache | file://C:/abc/def/xyz
 File | django.core.cache.backends.filebased.FileBasedCache | file:///abc/def/xyz
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* update memcache service protocols in README.md
+
 ## 1.4.0
 
 * add support for `django.core.cache.backends.memcached.PyMemcacheCache` as `pymemcached:` protocol
