@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.4.1
 
 * update memcache service protocols in README.md
 
