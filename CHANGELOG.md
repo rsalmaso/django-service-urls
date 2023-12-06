@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* test django 4.2 with python 3.12
+
 ## 1.4.1
 
 * update memcache service protocols in README.md

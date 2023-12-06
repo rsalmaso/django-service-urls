@@ -31,7 +31,7 @@ MAP = [
     ("3.9", ("3.2", "4.0", "4.1", "4.2")),
     ("3.10", ("3.2", "4.0", "4.1", "4.2", "main")),
     ("3.11", ("4.1", "4.2", "main")),
-    ("3.12", ("main",)),
+    ("3.12", ("4.2", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 nox.options.sessions = ["lint", "tests"]
