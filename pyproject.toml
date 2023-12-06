@@ -43,8 +43,11 @@ dependencies = [
 ]
 
 [project.urls]
+"Home Page" = "https://pypi.org/project/django-service-urls/"
+Documentation = "https://github.com/rsalmaso/django-service-urls/blob/main/README.md"
 GitHub = "https://github.com/rsalmaso/django-service-urls"
 Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG.md"
+"Bug Reports" = "https://github.com/rsalmaso/django-service-urls/discussions"
 
 [tool.setuptools]
 zip-safe = false
