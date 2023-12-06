@@ -29,9 +29,9 @@ FILES = ["service_urls", "tests", "noxfile.py"]
 MAP = [
     ("3.8", ("3.2", "4.0", "4.1", "4.2")),
     ("3.9", ("3.2", "4.0", "4.1", "4.2")),
-    ("3.10", ("3.2", "4.0", "4.1", "4.2", "main")),
-    ("3.11", ("4.1", "4.2", "main")),
-    ("3.12", ("4.2", "main")),
+    ("3.10", ("3.2", "4.0", "4.1", "4.2", "5.0", "main")),
+    ("3.11", ("4.1", "4.2", "5.0", "main")),
+    ("3.12", ("4.2", "5.0", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 nox.options.sessions = ["lint", "tests"]
@@ -68,6 +68,7 @@ def requirements(session, django):
         "4.0": ["django>=4.0,<4.1", "psycopg2-binary"],
         "4.1": ["django>=4.1,<4.2", "psycopg2-binary"],
         "4.2": ["django>=4.2,<5.0", "psycopg[binary]"],
+        "5.0": ["django>=5.0,<5.1", "psycopg[binary]"],
         "main": [
             "git+https://github.com/django/django@main",
             "psycopg" if session.python == "3.12" else "psycopg[binary]",
