@@ -69,10 +69,7 @@ def requirements(session, django):
         "4.1": ["django>=4.1,<4.2", "psycopg2-binary"],
         "4.2": ["django>=4.2,<5.0", "psycopg[binary]"],
         "5.0": ["django>=5.0,<5.1", "psycopg[binary]"],
-        "main": [
-            "git+https://github.com/django/django@main",
-            "psycopg" if session.python == "3.12" else "psycopg[binary]",
-        ],
+        "main": ["git+https://github.com/django/django@main", "psycopg[binary]"],
     }
     session.run("pip", "install", "--upgrade", "pip", "wheel", "setuptools", "pip-tools")
     with session.cd("requirements"):
@@ -86,6 +83,7 @@ def requirements(session, django):
                     fout.flush()
                 session.run(
                     "pip-compile",
+                    "--upgrade",
                     "--annotation-style=line",
                     "--resolver=backtracking",
                     f"--output-file={requirements_file(session, django)}",
