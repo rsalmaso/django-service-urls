@@ -49,7 +49,7 @@ def install(session, django):
 @nox.session(python="3.10")
 def lint(session, django="4.2"):
     install(session, django)
-    session.run("black", "--check", *FILES)
+    session.run("ruff", "format", "--check", *FILES)
     session.run("ruff", *FILES)
 
 
