@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.5.0
 
 * test django 4.2 with python 3.12
 * add support for Django 5.0
