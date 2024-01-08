@@ -205,3 +205,21 @@ search = SearchService()
 def search_config_from_url(backend, engine, scheme, url):
     return backend.config_from_url(engine, scheme, url)
 ```
+
+## mypy integration
+
+If you need to load the initializer from mypy you could add
+
+```ini
+[mypy]
+plugins = django_service_urls.mypy
+```
+
+in your `mypy.ini` or `setup.cfg` [file](https://mypy.readthedocs.io/en/latest/config_file.html).
+
+[pyproject.toml](https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file) configuration is also supported:
+
+```toml
+[tool.mypy]
+plugins = ["django_service_urls.mypy"]
+```

@@ -3,6 +3,7 @@
 ## dev
 
 * BREAKING: renamed module from `service_urls` to `django_service_urls`
+* added mypy plugin
 
 ## 1.5.0
 
