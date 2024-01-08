@@ -121,14 +121,14 @@ Install package
 $ python3 -m pip install django-service-urls
 ```
 
-add `import service_urls.patch` in your `manage.py`
+add `import django_service_urls.loads` in your `manage.py`
 
 ```python
 #!/usr/bin/env python
 import os
 import sys
 
-import service_urls.patch
+import django_service_urls.loads
 
 
 def main():
@@ -152,7 +152,7 @@ and in `wsgi.py`
 
 ```python
 import os
-import service_urls.patch
+import django_service_urls.loads
 
 from django.core.wsgi import get_wsgi_application
 
@@ -169,7 +169,7 @@ You can add another handler to an already existing handler:
 
 `my_postgres_backend/service_url.py`
 ```python
-from service_urls.services import db, postgresql_config_from_url
+from django_service_urls.services import db, postgresql_config_from_url
 
 # postgresql fork
 postgresql_config_from_url = db.register(('mypgbackend', 'my_postgres_backend'))(postgresql_config_from_url)
@@ -186,7 +186,7 @@ DATABASES = {'default': 'mypgbackend://user:pwd@:/mydb'}
 ### Add another service
 
 ```python
-from service_urls import Service
+from django_service_urls import Service
 
 
 class SearchService(Service):

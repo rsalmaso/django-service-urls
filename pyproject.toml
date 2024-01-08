@@ -50,10 +50,11 @@ Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG
 "Bug Reports" = "https://github.com/rsalmaso/django-service-urls/discussions"
 
 [tool.setuptools]
+packages = ["django_service_urls", "service_urls"]
 zip-safe = false
 
 [tool.setuptools.dynamic]
-version = {attr = "service_urls.__version__"}
+version = {attr = "django_service_urls.__version__"}
 
 [tool.distutils.bdist_wheel]
 universal = false
@@ -96,6 +97,7 @@ combine-as-imports = true
 force-sort-within-sections = true
 force-wrap-aliases = true
 known-first-party = [
+    "django_service_urls",
     "service_urls",
 ]
 known-third-party = [

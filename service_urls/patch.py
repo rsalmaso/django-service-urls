@@ -23,66 +23,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import warnings
 
-from django import conf
-from django.conf import (
-    ENVIRONMENT_VARIABLE,
-    LazySettings as DjangoLazySettings,
-    Settings as DjangoSettings,
+import django_service_urls.loads  # noqa: F401
+
+from .deprecation import RemovedInVersion20Warning
+
+warnings.warn(
+    "The service_urls.patch module is deprecated in favor of django_service_urls.loads "
+    "and will be removed in version 2.0.",
+    RemovedInVersion20Warning,
+    stacklevel=2,
 )
-from django.core.exceptions import ImproperlyConfigured
-
-from .services import cache, db, email
-
-
-class Settings(DjangoSettings):
-    def __init__(self, settings_module):
-        super().__init__(settings_module)
-        self.handle_service_urls()
-
-    def handle_service_urls(self):
-        self.DATABASES = db.parse(self.DATABASES)
-        self.CACHES = cache.parse(self.CACHES)
-
-        # preserve EMAIL_BACKEND backward compatibility
-        if email.validate(self.EMAIL_BACKEND):
-            for k, v in email.parse(self.EMAIL_BACKEND).items():
-                setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
-                setattr(self, setting, v)
-                self._explicit_settings.add(setting)
-
-
-class LazySettings(DjangoLazySettings):
-    settings_class = None
-
-    def get_settings_class(self):
-        return self.settings_class or Settings
-
-    def _setup(self, name=None):
-        settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
-        if not settings_module:
-            desc = f"setting {name}" if name else "settings"
-            raise ImproperlyConfigured(
-                f"Requested {desc}, but settings are not configured. "
-                f"You must either define the environment variable {ENVIRONMENT_VARIABLE} "
-                "or call settings.configure() before accessing settings."
-            )
-
-        self._wrapped = self.get_settings_class()(settings_module)
-
-
-settings = LazySettings()
-_patched = False
-
-
-def patch():
-    global _patched
-    if not _patched:
-        conf.Settings = Settings
-        conf.LazySettings = LazySettings
-        conf.settings = settings
-        _patched = True
-
-
-patch()

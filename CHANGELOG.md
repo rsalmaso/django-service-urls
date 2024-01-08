@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* BREAKING: renamed module from `service_urls` to `django_service_urls`
+
 ## 1.5.0
 
 * test django 4.2 with python 3.12

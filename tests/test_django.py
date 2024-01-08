@@ -26,7 +26,7 @@ import unittest
 
 import django
 
-import service_urls.patch  # noqa: F401
+import django_service_urls.loads  # noqa: F401
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "tests.settings"
 django.setup()

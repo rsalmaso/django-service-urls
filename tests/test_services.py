@@ -25,7 +25,7 @@
 
 import unittest
 
-from service_urls import cache, db, email, Service
+from django_service_urls import cache, db, email, Service
 
 GENERIC_TESTS = [
     ("username:password@domain/database", ("username", "password", "domain", "", "database", {})),

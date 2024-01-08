@@ -1,6 +1,4 @@
 # Copyright (C) Raffaele Salmaso <raffaele@salmaso.org>
-# Copyright (C) Tom Forbes
-# Copyright (C) Kenneth Reitz
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,17 +21,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+import unittest
 
-from django_service_urls import __author__, __email__, __version__, VERSION  # noqa: F401
-from django_service_urls.base import Service  # noqa: F401
-from django_service_urls.services import cache, db, email  # noqa: F401
-from django_service_urls.version import get_version  # noqa: F401
 
-from .deprecation import RemovedInVersion20Warning
+class DeprecationModileTestCase(unittest.TestCase):
+    def test_global_import(self) -> None:
+        with self.assertWarns(PendingDeprecationWarning):
+            import service_urls  # noqa: F401
 
-warnings.warn(
-    "The service_urls module is deprecated in favor of django_service_urls and will be removed in version 2.0.",
-    RemovedInVersion20Warning,
-    stacklevel=2,
-)
+    def test_patch_import(self) -> None:
+        with self.assertWarns(PendingDeprecationWarning):
+            import service_urls.patch  # noqa: F401

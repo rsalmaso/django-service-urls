@@ -23,17 +23,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
 
-from django_service_urls import __author__, __email__, __version__, VERSION  # noqa: F401
-from django_service_urls.base import Service  # noqa: F401
-from django_service_urls.services import cache, db, email  # noqa: F401
-from django_service_urls.version import get_version  # noqa: F401
+class RemovedInNextVersionWarning(DeprecationWarning):
+    pass
 
-from .deprecation import RemovedInVersion20Warning
 
-warnings.warn(
-    "The service_urls module is deprecated in favor of django_service_urls and will be removed in version 2.0.",
-    RemovedInVersion20Warning,
-    stacklevel=2,
-)
+class RemovedInVersion20Warning(PendingDeprecationWarning):
+    pass
