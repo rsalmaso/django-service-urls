@@ -24,13 +24,10 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def get_version(version=None):
+def get_version(version):
     """Returns a PEP 386-compliant version number from VERSION."""
-    if version is None:
-        from . import VERSION as version
-    else:
-        assert len(version) == 5
-        assert version[3] in ("alpha", "beta", "rc", "final")
+    assert len(version) == 5
+    assert version[3] in ("alpha", "beta", "rc", "final")
 
     # Now build the two parts of the version number:
     # main = X.Y[.Z]
