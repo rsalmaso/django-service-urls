@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.6.0
 
 * BREAKING: renamed module from `service_urls` to `django_service_urls`
 * added mypy plugin
