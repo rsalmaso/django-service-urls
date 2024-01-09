@@ -58,7 +58,7 @@ EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_cert
 
 Currently `django-service-urls` supports three different services:
 
-### DATABASES (``service_urls.db``)
+### DATABASES (``django_service_urls.db``)
 
 Service  | Backend | URLString
 ---------|---------|-----------
@@ -76,7 +76,7 @@ Mysql + GIS | django.contrib.gis.db.backends.mysql | mysql+gis://user:passwd@hos
 Oracle | django.db.backends.oracle | oracle://user:passwd@host:port/db
 Oracle + GIS | django.contrib.gis.db.backends.oracle | oracle+gis://user:passwd@host:port/db
 
-### CACHES (``service_urls.cache``)
+### CACHES (``django_service_urls.cache``)
 
 Service | Backend | URLString
 --------|---------|-----------
@@ -100,7 +100,7 @@ Memcached unix socket | django.core.cache.backends.memcached.MemcachedCache | me
 File | django.core.cache.backends.filebased.FileBasedCache | file://C:/abc/def/xyz
 File | django.core.cache.backends.filebased.FileBasedCache | file:///abc/def/xyz
 
-### EMAIL (``service_urls.email``)
+### EMAIL (``django_service_urls.email``)
 
 Service | Backend | URLString
 --------|---------|-----------
