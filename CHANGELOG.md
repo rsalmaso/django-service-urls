@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.7.0
 
 * made empty string value (`""`) parse as empty dictionary (`{}`)
 
