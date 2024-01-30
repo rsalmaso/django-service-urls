@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* made empty string value (`""`) parse as empty dictionary (`{}`)
+
 ## 1.6.0
 
 * BREAKING: renamed module from `service_urls` to `django_service_urls`

@@ -44,6 +44,16 @@ GENERIC_TESTS = [
 ]
 
 
+class ServiceTestCase(unittest.TestCase):
+    def test_an_empty_string_should_returns_an_empty_dict(self):
+        class TestService(Service):
+            def config_from_url(self, engine, scheme, url):
+                return {}
+
+        service = TestService()
+        self.assertEqual(service.parse(""), {})
+
+
 class DatabaseTestCase(unittest.TestCase):
     SCHEME = None
     STRING_PORTS = False  # Workaround for Oracle

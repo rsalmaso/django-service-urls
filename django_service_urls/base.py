@@ -44,6 +44,9 @@ class Service:
         if not isinstance(data, str):
             return data
 
+        if not data:
+            return {}
+
         scheme = self.validate(data)
         if scheme is None:
             raise ValueError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
