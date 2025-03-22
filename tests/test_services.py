@@ -205,11 +205,7 @@ class OracleTests(DatabaseTestCase):
     STRING_PORTS = True
 
     def test_dsn_parsing(self):
-        dsn = (
-            "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)"
-            "(HOST=oraclehost)(PORT=1521)))"
-            "(CONNECT_DATA=(SID=hr)))"
-        )
+        dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=oraclehost)(PORT=1521)))(CONNECT_DATA=(SID=hr)))"
         url = db.parse("oracle://scott:tiger@/" + dsn)
         self.assertEqual(url["ENGINE"], "django.db.backends.oracle")
         self.assertEqual(url["USER"], "scott")
@@ -218,11 +214,7 @@ class OracleTests(DatabaseTestCase):
         self.assertEqual(url["PORT"], "")
 
     def test_empty_dsn_parsing(self):
-        dsn = (
-            "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)"
-            "(HOST=oraclehost)(PORT=1521)))"
-            "(CONNECT_DATA=(SID=hr)))"
-        )
+        dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=oraclehost)(PORT=1521)))(CONNECT_DATA=(SID=hr)))"
         self.assertRaises(ValueError, db.parse, dsn)
 
 

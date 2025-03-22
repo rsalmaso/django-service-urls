@@ -62,7 +62,7 @@ def sqlite_config_from_url(backend, engine, scheme, url):
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
     if parsed["hostname"]:
-        path = f'{parsed["hostname"]}:{path}'
+        path = f"{parsed['hostname']}:{path}"
         parsed["location"] = parsed["hostname"] = ""
     parsed["path"] = path
     return backend.config_from_url(engine, scheme, parsed)
