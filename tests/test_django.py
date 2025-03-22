@@ -33,7 +33,7 @@ django.setup()
 
 
 class MonkeyPatchDjangoTestCase(unittest.TestCase):
-    def test_databases(self):
+    def test_databases(self) -> None:
         from django.conf import settings
 
         DATABASES = settings.DATABASES
@@ -46,7 +46,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertEqual(analytics_database["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(analytics_database["NAME"], "/tmp/analytics.db")
 
-    def test_caches(self):
+    def test_caches(self) -> None:
         from django.conf import settings
 
         CACHES = settings.CACHES
@@ -54,7 +54,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertTrue(isinstance(default_cache, dict))
         self.assertEqual(default_cache["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
 
-    def test_email(self):
+    def test_email(self) -> None:
         from django.conf import settings
 
         self.assertEqual(settings.EMAIL_BACKEND, "django.core.mail.backends.smtp.EmailBackend")
