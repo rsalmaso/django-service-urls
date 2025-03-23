@@ -5,6 +5,7 @@
 * update ruff to 0.11.2
 * switch development to uv/nox[uv] and replace custom requirements with uv.lock file
 * upgrade all requirements to latest version
+* add CONTRIBUTING.md docs
 
 ## 1.7.0
 
