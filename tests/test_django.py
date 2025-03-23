@@ -67,3 +67,19 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertEqual(settings.EMAIL_SSL_CERTFILE, "mycert")
         self.assertEqual(settings.EMAIL_SSL_KEYFILE, None)
         self.assertEqual(settings.EMAIL_TIMEOUT, 30)
+
+    def test_ensure_that_locale_keep_the_right_path(self) -> None:
+        import datetime as dt
+
+        from django.template import engines
+        from django.utils import translation
+
+        engine = engines.all()[0]
+        template = engine.from_string("{{ now }}")
+
+        with translation.override("en"):
+            output = template.render(context={"now": dt.date(2025, 3, 21)})
+            self.assertEqual(output, "March 21, 2025")
+        with translation.override("it"):
+            output = template.render(context={"now": dt.date(2025, 3, 21)})
+            self.assertEqual(output, "21 Marzo 2025")
