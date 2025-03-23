@@ -6,6 +6,7 @@
 * switch development to uv/nox[uv] and replace custom requirements with uv.lock file
 * upgrade all requirements to latest version
 * add CONTRIBUTING.md docs
+* refactor Django integration (to preserve default translations)
 
 ## 1.7.0
 

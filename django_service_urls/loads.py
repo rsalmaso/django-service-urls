@@ -23,66 +23,31 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
 
-from django import conf
-from django.conf import (
-    ENVIRONMENT_VARIABLE,
-    LazySettings as DjangoLazySettings,
-    Settings as DjangoSettings,
-)
-from django.core.exceptions import ImproperlyConfigured
+def setup(set_prefix: bool = True) -> None:
+    import django
+    from django.conf import settings
 
-from .services import cache, db, email
+    from django_service_urls.services import cache, db, email
 
+    settings.DATABASES = db.parse(settings.DATABASES)
+    settings.CACHES = cache.parse(settings.CACHES)
 
-class Settings(DjangoSettings):
-    def __init__(self, settings_module):
-        super().__init__(settings_module)
-        self.handle_service_urls()
+    # preserve EMAIL_BACKEND backward compatibility
+    if email.validate(settings.EMAIL_BACKEND):
+        for k, v in email.parse(settings.EMAIL_BACKEND).items():
+            setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
+            setattr(settings, setting, v)
 
-    def handle_service_urls(self):
-        self.DATABASES = db.parse(self.DATABASES)
-        self.CACHES = cache.parse(self.CACHES)
-
-        # preserve EMAIL_BACKEND backward compatibility
-        if email.validate(self.EMAIL_BACKEND):
-            for k, v in email.parse(self.EMAIL_BACKEND).items():
-                setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
-                setattr(self, setting, v)
-                self._explicit_settings.add(setting)
-
-
-class LazySettings(DjangoLazySettings):
-    settings_class = None
-
-    def get_settings_class(self):
-        return self.settings_class or Settings
-
-    def _setup(self, name=None):
-        settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
-        if not settings_module:
-            desc = f"setting {name}" if name else "settings"
-            raise ImproperlyConfigured(
-                f"Requested {desc}, but settings are not configured. "
-                f"You must either define the environment variable {ENVIRONMENT_VARIABLE} "
-                "or call settings.configure() before accessing settings."
-            )
-
-        self._wrapped = self.get_settings_class()(settings_module)
-
-
-settings = LazySettings()
-_patched = False
+    django._django_service_urls_original_django_setup(set_prefix)
 
 
 def patch():
-    global _patched
-    if not _patched:
-        conf.Settings = Settings
-        conf.LazySettings = LazySettings
-        conf.settings = settings
-        _patched = True
+    import django
+
+    if not getattr(django, "_django_service_urls_original_setup", None):
+        django._django_service_urls_original_django_setup = django.setup
+        django.setup = setup
 
 
 patch()
