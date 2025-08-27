@@ -1,6 +1,7 @@
 syntax: glob
 __pycache__
 *.egg-info
+.pytest_cache
 .coverage
 .tox
 .nox
