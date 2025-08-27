@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.8.0
 
 * update ruff to 0.11.2
 * switch development to uv/nox[uv] and replace custom requirements with uv.lock file
