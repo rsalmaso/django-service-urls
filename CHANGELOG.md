@@ -1,5 +1,10 @@
 # Changelog
 
+## dev
+
+* update ruff to 0.12.10
+* update nox[uv] to 2025.5.1
+
 ## 1.8.0
 
 * update ruff to 0.11.2
