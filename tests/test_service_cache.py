@@ -45,6 +45,16 @@ class DictionaryTests(unittest.TestCase):
         self.assertEqual(result["memcached"]["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
 
+class CacheNestedOptionsTestCase(unittest.TestCase):
+    def test_cache_nested_options(self):
+        result = cache.parse(
+            "pymemcached://host:11211/?binary_protocol.enabled=true&binary_protocol.version=2&timeout.connect=5&timeout.read=10"
+        )
+        expected_options = {"binary_protocol": {"enabled": True, "version": 2}, "timeout": {"connect": 5, "read": 10}}
+
+        self.assertEqual(result["OPTIONS"], expected_options)
+
+
 class MemoryCacheTestCase(unittest.TestCase):
     def test_local_caching_no_params(self):
         result = cache.parse("memory://")

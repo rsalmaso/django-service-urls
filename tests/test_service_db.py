@@ -62,6 +62,43 @@ class DatabaseTestCaseMixin:
                 self.assertEqual(result["PORT"], str(port) if self.STRING_PORTS else port)
                 self.assertDictEqual(result["OPTIONS"], options)
 
+    def test_multiple_nested_groups(self):
+        result = db.parse(
+            f"{self.SCHEME}://user:passwd@host:5432/dbname?sslmode=require"
+            "&pool.min_size=4&pool.max_size=10"
+            "&pool.enabled=true&pool.auto_reconnect=false&pool.strategy=round_robin"
+            "&pool.health_check.query=SELECT%201"
+            "&ssl.mode=require&ssl.cert=/path/to/cert&application_name=myapp"
+        )
+        expected_options = {
+            "sslmode": "require",
+            "application_name": "myapp",
+            "pool": {
+                "min_size": 4,
+                "max_size": 10,
+                "enabled": True,
+                "auto_reconnect": False,
+                "strategy": "round_robin",
+                "health_check": {"query": "SELECT 1"},
+            },
+            "ssl": {"mode": "require", "cert": "/path/to/cert"},
+        }
+        self.assertIn(self.SCHEME, result["ENGINE"])
+        self.assertEqual(result["NAME"], "dbname")
+        self.assertEqual(result["USER"], "user")
+        self.assertEqual(result["PASSWORD"], "passwd")
+        self.assertEqual(result["HOST"], "host")
+        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)
+        self.assertEqual(result["OPTIONS"], expected_options)
+
+    def test_conflict_resolution_flat_to_nested(self):
+        # This tests the conflict resolution where we have pool=something and pool.min_size=4
+        # The nested structure should take precedence
+        result = db.parse(f"{self.SCHEME}://user:pass@host:5432/dbname?pool=legacy&pool.min_size=4")
+        expected_options = {"pool": {"min_size": 4}}
+
+        self.assertEqual(result["OPTIONS"], expected_options)
+
 
 class SqliteTests(unittest.TestCase):
     def test_empty_url(self):

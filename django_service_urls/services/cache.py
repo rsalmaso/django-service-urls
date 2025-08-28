@@ -41,8 +41,11 @@ class CacheService(Service):
                     config["LOCATION"] = f"{config['LOCATION']}:{parsed['port']}"
         for key in ("timeout", "key_prefix", "version"):
             if key in parsed["options"]:
-                option = parsed["options"].pop(key)
-                config[key.upper()] = option
+                option = parsed["options"][key]
+                # Only move simple values to top-level config, not nested dictionaries
+                if not isinstance(option, dict):
+                    option = parsed["options"].pop(key)
+                    config[key.upper()] = option
         config["OPTIONS"] = parsed["options"]
         return config
 

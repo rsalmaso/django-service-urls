@@ -6,6 +6,7 @@
 * update nox[uv] to 2025.5.1
 * refactor and updated tests
 * refactor services code (split into separate modules)
+* added support for complex values (nested dictionaries, list) in querystring
 
 ## 1.8.0
 

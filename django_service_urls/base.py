@@ -27,6 +27,16 @@ import re
 from urllib import parse
 
 
+def _cast_value(value):
+    if value.isdigit():
+        value = int(value)
+    elif value.lower() == "true":
+        value = True
+    elif value.lower() == "false":
+        value = False
+    return value
+
+
 class Service:
     validation = re.compile(r"^(?P<scheme>\S+)://\S*")
 
@@ -63,6 +73,29 @@ class Service:
         return self._parse(data)
 
     @staticmethod
+    def _set_nested_option(options, key, value):
+        """
+        Set a nested option using dot notation.
+
+        For example, 'pool.min_size' with value 4 will create:
+        options['pool']['min_size'] = 4
+        """
+        parts = key.split(".")
+        current = options
+
+        # Navigate/create the nested structure
+        for part in parts[:-1]:
+            if part not in current:
+                current[part] = {}
+            elif not isinstance(current[part], dict):
+                # If there's a conflict (existing non-dict value), convert to dict
+                current[part] = {}
+            current = current[part]
+
+        # Set the final value
+        current[parts[-1]] = value
+
+    @staticmethod
     def parse_url(url, *, multiple_netloc=False):
         """
         A method to parse URLs into components that handles quirks
@@ -84,17 +117,20 @@ class Service:
         if port:
             port = int(port)
 
-        query = parse.parse_qs(parsed.query)
+        query = parse.parse_qs(parsed.query, keep_blank_values=True)
         options = {}
         for key, values in query.items():
-            value = values[-1]
-            if value.isdigit():
-                value = int(value)
-            elif value.lower() == "true":
-                value = True
-            elif value.lower() == "false":
-                value = False
-            options[key] = value
+            # Handle multiple values as lists (e.g., points=1&points=2&points=3)
+            if len(values) > 1:
+                value = [_cast_value(value) for value in values]
+            else:
+                value = _cast_value(values[-1])
+
+            # Handle nested options using dot notation (e.g., pool.min_size=4)
+            if "." in key:
+                Service._set_nested_option(options, key, value)
+            else:
+                options[key] = value
         path = parsed.path[1:]
 
         config = {

@@ -17,6 +17,13 @@ DATABASES = {
         'PORT': 5432,
         'USER': 'myuser',
         'PASSWORD': 'mypasswd',
+        'OPTIONS': {
+            'pool': {
+                'min_size': 2,
+                'max_size': 10,
+            },
+            'sslmode': 'require',
+        }
     },
 }
 
@@ -24,6 +31,10 @@ CACHES = {
     'default': {
         'BACKEND' : 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
+        'OPTIONS': {
+            'timeout': 300,
+            'key_prefix': 'myapp',
+        },
     },
 }
 
@@ -44,14 +55,52 @@ Replace with:
 
 ```python
 DATABASES = {
-    'default': os.environ.get('DATABASE_DEFAULT', 'postgres://myuser:mypasswd@localhost:5432/mydb'),
+    'default': os.environ.get('DATABASE_DEFAULT', 'postgres://myuser:mypasswd@localhost:5432/mydb?pool.min_size=2&pool.max_size=10&sslmode=require'),
 }
 
 CACHES = {
-    'default': os.environ.get('CACHE_DEFAULT', 'memcached://127.0.0.1:11211'),
+    'default': os.environ.get('CACHE_DEFAULT', 'memcached://127.0.0.1:11211?timeout=300&key_prefix=myapp'),
 }
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
+```
+
+## Advanced Features (Nested Dictionaries & Lists)
+
+`django-service-urls` supports **nested dictionaries** using dot notation and **lists** using repeated parameters:
+
+```python
+# Nested options with dot notation
+'postgres://user:pass@host/db?pool.min_size=2&pool.max_size=10&sslmode=require'
+# → OPTIONS: {
+#       'pool': {'min_size': 2, 'max_size': 10},
+#       'sslmode': 'require',
+#    }
+
+# Lists with repeated parameters
+'postgres://user:pass@host/db?hosts=host1&hosts=host2&hosts=host3'
+# → OPTIONS: {
+#       'hosts': ['host1', 'host2', 'host3'],
+#    }
+
+# Combined: nested structure with lists
+'postgres://user:pass@host/db?pool.hosts=host1&pool.hosts=host2&pool.ports=5432&pool.ports=5433'
+# → OPTIONS: {
+#       'pool': {
+#           'hosts': ['host1', 'host2'],
+#           'ports': [5432, 5433],
+#       },
+#    }
+
+# Deep nesting and mixed types
+'postgres://user:pass@host/db?cluster.nodes.primary=node1&cluster.weights=10&cluster.weights=20&cluster.enabled=true'
+# → OPTIONS: {
+#       'cluster': {
+#           'nodes': {'primary': 'node1'},
+#           'weights': [10, 20],
+#           'enabled': True,
+#       },
+#    }
 ```
 
 ## Backends

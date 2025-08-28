@@ -75,9 +75,9 @@ class ServiceTestCase(unittest.TestCase):
         parsed = self.backend.parse_url("http://test/?a=true&b=false")
         self.assertDictEqual(parsed["options"], {"a": True, "b": False})
 
-    def test_query_last_parameter(self):
+    def test_query_multiple_parameters(self):
         parsed = self.backend.parse_url("http://test/?a=one&a=two")
-        self.assertDictEqual(parsed["options"], {"a": "two"})
+        self.assertDictEqual(parsed["options"], {"a": ["one", "two"]})
 
     def test_does_not_reparse(self):
         parsed = self.backend.parse_url("http://test/abc")
