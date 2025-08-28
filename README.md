@@ -65,9 +65,12 @@ CACHES = {
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
 ```
 
-## Advanced Features (Nested Dictionaries & Lists)
+## Advanced Features (Nested dictionaries, lists, booleans and integers)
 
-`django-service-urls` supports **nested dictionaries** using dot notation and **lists** using repeated parameters:
+`django-service-urls` supports **nested dictionaries** using dot notation and **lists** using repeated parameters.
+
+**Boolean values** are automatically recognized: `true`, `false`, `t`, `f`, `1`, `0`, `yes`, `no`, `y`, `n` (case-insensitive).
+**Integer values** are automatically converted: `123`, `0`, `999` → `int` type.
 
 ```python
 # Nested options with dot notation

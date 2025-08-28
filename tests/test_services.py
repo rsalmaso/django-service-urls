@@ -72,8 +72,22 @@ class ServiceTestCase(unittest.TestCase):
         self.assertDictEqual(parsed["options"], {"a": 1})
 
     def test_query_parameters_boolean(self):
-        parsed = self.backend.parse_url("http://test/?a=true&b=false")
-        self.assertDictEqual(parsed["options"], {"a": True, "b": False})
+        parsed = self.backend.parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
+        self.assertDictEqual(
+            parsed["options"],
+            {
+                "a": True,
+                "b": False,
+                "c": True,
+                "d": False,
+                "e": True,
+                "f": False,
+                "g": True,
+                "h": False,
+                "i": True,
+                "j": False,
+            },
+        )
 
     def test_query_multiple_parameters(self):
         parsed = self.backend.parse_url("http://test/?a=one&a=two")

@@ -30,9 +30,9 @@ from urllib import parse
 def _cast_value(value):
     if value.isdigit():
         value = int(value)
-    elif value.lower() == "true":
+    elif value.lower() in ("true", "t", "1", "yes", "y"):
         value = True
-    elif value.lower() == "false":
+    elif value.lower() in ("false", "f", "0", "no", "n"):
         value = False
     return value
 
