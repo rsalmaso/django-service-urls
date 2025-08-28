@@ -25,10 +25,10 @@ import unittest
 
 
 class DeprecationModileTestCase(unittest.TestCase):
-    def test_global_import(self) -> None:
+    def test_global_import(self):
         with self.assertWarns(PendingDeprecationWarning):
             import service_urls  # noqa: F401
 
-    def test_patch_import(self) -> None:
+    def test_patch_import(self):
         with self.assertWarns(PendingDeprecationWarning):
             import service_urls.patch  # noqa: F401

@@ -4,6 +4,7 @@
 
 * update ruff to 0.12.10
 * update nox[uv] to 2025.5.1
+* refactor and updated tests
 
 ## 1.8.0
 
