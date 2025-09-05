@@ -69,6 +69,7 @@ class DatabaseTestCaseMixin:
             "&pool.enabled=true&pool.auto_reconnect=false&pool.strategy=round_robin"
             "&pool.health_check.query=SELECT%201"
             "&ssl.mode=require&ssl.cert=/path/to/cert&application_name=myapp"
+            "#CONN_MAX_AGE=42&TEST.default.NAME=testdb"
         )
         expected_options = {
             "sslmode": "require",
@@ -90,6 +91,8 @@ class DatabaseTestCaseMixin:
         self.assertEqual(result["HOST"], "host")
         self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)
         self.assertEqual(result["OPTIONS"], expected_options)
+        self.assertEqual(result["CONN_MAX_AGE"], 42)
+        self.assertEqual(result["TEST"], {"default": {"NAME": "testdb"}})
 
     def test_conflict_resolution_flat_to_nested(self):
         # This tests the conflict resolution where we have pool=something and pool.min_size=4
@@ -344,6 +347,17 @@ class DictionaryTests(unittest.TestCase):
         self.assertEqual(result["dummy"]["BACKEND"], "django.core.cache.backends.dummy.DummyCache")
         self.assertEqual(result["memcached"]["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
         self.assertEqual(result["memcached"]["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
+
+    def test_fragment_top_level_config(self):
+        result = db.parse(
+            "postgresql://user:pass@host:5432/dbname?pool=true#CONN_MAX_AGE=42&TEST.DATABASES.NAME=testdb"
+        )
+
+        self.assertEqual(result["ENGINE"], "django.db.backends.postgresql")
+        self.assertEqual(result["NAME"], "dbname")
+        self.assertEqual(result["CONN_MAX_AGE"], 42)
+        self.assertEqual(result["OPTIONS"], {"pool": True})
+        self.assertEqual(result["TEST"], {"DATABASES": {"NAME": "testdb"}})
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@
 * refactor services code (split into separate modules)
 * added support for complex values (nested dictionaries, list) in querystring
 * extended support for boolean values
+* added support for extra keys using fragment urls
 
 ## 1.8.0
 

@@ -69,12 +69,12 @@ class ServiceTestCase(unittest.TestCase):
 
     def test_query_parameters_integer(self):
         parsed = self.backend.parse_url("http://test/?a=1")
-        self.assertDictEqual(parsed["options"], {"a": 1})
+        self.assertDictEqual(parsed["query"], {"a": 1})
 
     def test_query_parameters_boolean(self):
         parsed = self.backend.parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
         self.assertDictEqual(
-            parsed["options"],
+            parsed["query"],
             {
                 "a": True,
                 "b": False,
@@ -91,7 +91,15 @@ class ServiceTestCase(unittest.TestCase):
 
     def test_query_multiple_parameters(self):
         parsed = self.backend.parse_url("http://test/?a=one&a=two")
-        self.assertDictEqual(parsed["options"], {"a": ["one", "two"]})
+        self.assertDictEqual(parsed["query"], {"a": ["one", "two"]})
+
+    def test_fragment_parameters(self):
+        parsed = self.backend.parse_url(
+            "dbengine://user:passwd@host:123/dbname?pool=true#KEY=42&ENABLED=true&TEST.default.NAME=testdb&TEST.default.ENABLED=true"
+        )
+        self.assertDictEqual(parsed["query"], {"pool": True})
+        expected = {"KEY": 42, "ENABLED": True, "TEST": {"default": {"NAME": "testdb", "ENABLED": True}}}
+        self.assertDictEqual(parsed["fragment"], expected)
 
     def test_does_not_reparse(self):
         parsed = self.backend.parse_url("http://test/abc")
@@ -179,10 +187,10 @@ class ServiceTestCase(unittest.TestCase):
         url = "scheme://host/path?int_param=123&bool_true=true&bool_false=false&string_param=value"
         result = Service.parse_url(url)
 
-        self.assertEqual(result["options"]["int_param"], 123)
-        self.assertEqual(result["options"]["bool_true"], True)
-        self.assertEqual(result["options"]["bool_false"], False)
-        self.assertEqual(result["options"]["string_param"], "value")
+        self.assertEqual(result["query"]["int_param"], 123)
+        self.assertEqual(result["query"]["bool_true"], True)
+        self.assertEqual(result["query"]["bool_false"], False)
+        self.assertEqual(result["query"]["string_param"], "value")
 
     def test_parse_url_path_handling(self):
         url = "scheme://host/some/path"

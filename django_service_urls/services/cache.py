@@ -40,13 +40,14 @@ class CacheService(Service):
                 if parsed["port"]:
                     config["LOCATION"] = f"{config['LOCATION']}:{parsed['port']}"
         for key in ("timeout", "key_prefix", "version"):
-            if key in parsed["options"]:
-                option = parsed["options"][key]
+            if key in parsed["query"]:
+                query = parsed["query"][key]
                 # Only move simple values to top-level config, not nested dictionaries
-                if not isinstance(option, dict):
-                    option = parsed["options"].pop(key)
-                    config[key.upper()] = option
-        config["OPTIONS"] = parsed["options"]
+                if not isinstance(query, dict):
+                    query = parsed["query"].pop(key)
+                    config[key.upper()] = query
+        config["OPTIONS"] = parsed["query"]
+        config.update({k: v for k, v in parsed["fragment"].items() if k not in config})
         return config
 
 

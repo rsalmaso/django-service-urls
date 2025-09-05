@@ -31,15 +31,17 @@ from django_service_urls.base import Service
 class DatabaseService(Service):
     def config_from_url(self, engine, scheme, url):
         parsed = self.parse_url(url)
-        return {
+        config = {
             "ENGINE": engine,
             "NAME": parse.unquote(parsed["path"] or ""),
             "USER": parse.unquote(parsed["username"] or ""),
             "PASSWORD": parse.unquote(parsed["password"] or ""),
             "HOST": parsed["hostname"],
             "PORT": parsed["port"] or "",
-            "OPTIONS": parsed["options"],
+            "OPTIONS": parsed["query"],
         }
+        config.update({k: v for k, v in parsed["fragment"].items() if k not in config})
+        return config
 
 
 db = DatabaseService()

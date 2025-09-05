@@ -28,9 +28,11 @@ from django_service_urls.base import Service
 
 class EmailService(Service):
     def config_from_url(self, engine, scheme, url):
-        return {
+        _parsed = self.parse_url(url)
+        config = {
             "ENGINE": engine,
         }
+        return config
 
 
 email = EmailService()
@@ -50,12 +52,12 @@ def email_smtp_config_url(backend, engine, scheme, url):
         "PORT": parsed["port"] or 25,
         "HOST_USER": parsed["username"] or "",
         "HOST_PASSWORD": parsed["password"] or "",
-        "USE_TLS": parsed["options"].get("use_tls", scheme in ("smtps", "smtp+tls")),
-        "USE_SSL": parsed["options"].get("use_ssl", scheme == "smtp+ssl"),
-        "SSL_CERTFILE": parsed["options"].get("ssl_certfile", None),
-        "SSL_KEYFILE": parsed["options"].get("ssl_keyfile", None),
-        "TIMEOUT": parsed["options"].get("timeout", None),
-        "USE_LOCALTIME": parsed["options"].get("use_localtime", False),
+        "USE_TLS": parsed["query"].get("use_tls", scheme in ("smtps", "smtp+tls")),
+        "USE_SSL": parsed["query"].get("use_ssl", scheme == "smtp+ssl"),
+        "SSL_CERTFILE": parsed["query"].get("ssl_certfile", None),
+        "SSL_KEYFILE": parsed["query"].get("ssl_keyfile", None),
+        "TIMEOUT": parsed["query"].get("timeout", None),
+        "USE_LOCALTIME": parsed["query"].get("use_localtime", False),
         **config,
     }
 

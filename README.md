@@ -23,7 +23,8 @@ DATABASES = {
                 'max_size': 10,
             },
             'sslmode': 'require',
-        }
+        },
+        'CONN_MAX_AGE': 300,
     },
 }
 
@@ -55,7 +56,7 @@ Replace with:
 
 ```python
 DATABASES = {
-    'default': os.environ.get('DATABASE_DEFAULT', 'postgres://myuser:mypasswd@localhost:5432/mydb?pool.min_size=2&pool.max_size=10&sslmode=require'),
+    'default': os.environ.get('DATABASE_DEFAULT', 'postgres://myuser:mypasswd@localhost:5432/mydb?pool.min_size=2&pool.max_size=10&sslmode=require#CONN_MAX_AGE=300'),
 }
 
 CACHES = {
@@ -65,9 +66,9 @@ CACHES = {
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
 ```
 
-## Advanced Features (Nested dictionaries, lists, booleans and integers)
+## Advanced Features (Nested dictionaries, lists, fragments, booleans and integers)
 
-`django-service-urls` supports **nested dictionaries** using dot notation and **lists** using repeated parameters.
+`django-service-urls` supports **nested dictionaries** using dot notation, **lists** using repeated parameters, and **URL fragments** for top-level configuration keys.
 
 **Boolean values** are automatically recognized: `true`, `false`, `t`, `f`, `1`, `0`, `yes`, `no`, `y`, `n` (case-insensitive).
 **Integer values** are automatically converted: `123`, `0`, `999` → `int` type.
@@ -104,6 +105,33 @@ EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_cert
 #           'enabled': True,
 #       },
 #    }
+```
+
+### URL Fragments for Top-Level Configuration
+
+URL fragments (after `#`) create top-level Django configuration keys, ideal for database settings like `CONN_MAX_AGE`, `AUTOCOMMIT`, or test configurations:
+
+```python
+# Database with connection settings and testing config
+'postgresql://user:pass@host:5432/db?pool=true#CONN_MAX_AGE=42&TEST.DATABASES.NAME=testdb'
+# → {
+#     'ENGINE': 'django.db.backends.postgresql',
+#     'NAME': 'db',
+#     'USER': 'user', 'PASSWORD': 'pass', 'HOST': 'host', 'PORT': 5432,
+#     'OPTIONS': {'pool': True},
+#     'CONN_MAX_AGE': 42,
+#     'TEST': {'DATABASES': {'NAME': 'testdb'}},
+#   }
+
+# Cache with top-level timeout and testing config
+'redis://localhost:6379/1?timeout=300#KEY_PREFIX=prod&VERSION=2&TEST.CACHE.BACKEND=dummy'
+# → {
+#     'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#     'LOCATION': 'redis://localhost:6379/1',
+#     'TIMEOUT': 300,
+#     'KEY_PREFIX': 'prod', 'VERSION': 2,
+#     'TEST': {'CACHE': {'BACKEND': 'dummy'}},
+#   }
 ```
 
 ## Backends
