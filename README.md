@@ -142,7 +142,7 @@ Currently `django-service-urls` supports three different services:
 
 Service  | Backend | URLString
 ---------|---------|-----------
-Postgresql | django.db.backends.postgresql | postgres://user:passws@host:port/db
+Postgresql | django.db.backends.postgresql | postgres://user:passwd@host:port/db
 Postgresql Socket | django.db.backends.postgresql | postgres://%2Fvar%2Frun%2Fpostgresql/db
 Postgresql (dj-database-url compat alias) | django.db.backends.postgresql | postgresql://user:passwd@host:port/db
 Postgresql (dj-database-url compat alias) | django.db.backends.postgresql | pgsql://user:passwd@host:port/db
