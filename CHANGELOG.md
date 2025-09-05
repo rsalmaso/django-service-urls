@@ -11,6 +11,7 @@
 * added support for extra keys using fragment urls
 * replaced `urlparse` with `urlsplit`
 * always recreate the virtualenv when runnin nox with uv
+* drop support for python 3.8 and 3.9
 
 ## 1.8.0
 
