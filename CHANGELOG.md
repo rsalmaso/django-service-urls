@@ -10,6 +10,7 @@
 * extended support for boolean values
 * added support for extra keys using fragment urls
 * replaced `urlparse` with `urlsplit`
+* always recreate the virtualenv when runnin nox with uv
 
 ## 1.8.0
 

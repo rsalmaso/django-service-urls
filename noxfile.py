@@ -35,7 +35,7 @@ MAP = [
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 
 nox.options.sessions = ["lint", "tests"]
-nox.options.reuse_existing_virtualenvs = True
+nox.options.reuse_existing_virtualenvs = False
 nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv|virtualenv"
 
