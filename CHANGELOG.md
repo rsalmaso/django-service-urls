@@ -9,6 +9,7 @@
 * added support for complex values (nested dictionaries, list) in querystring
 * extended support for boolean values
 * added support for extra keys using fragment urls
+* replaced `urlparse` with `urlsplit`
 
 ## 1.8.0
 

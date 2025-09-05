@@ -93,6 +93,21 @@ def _parse_querystring(data):
     return result
 
 
+def _get_hostinfo(netloc):
+    _, _, hostinfo = netloc.rpartition("@")
+    _, have_open_br, bracketed = hostinfo.partition("[")
+    if have_open_br:
+        hostname, _, port = bracketed.partition("]")
+        _, _, port = port.partition(":")
+    else:
+        hostname, _, port = hostinfo.partition(":")
+    if not port:
+        port = None
+    else:
+        port = int(port)
+    return hostname, port
+
+
 class Service:
     validation = re.compile(r"^(?P<scheme>\S+)://\S*")
 
@@ -142,7 +157,7 @@ class Service:
                 - scheme: URL scheme (e.g., 'postgresql')
                 - username: URL username
                 - password: URL password
-                - hostname: Hostname (preserves case, unlike urlparse)
+                - hostname: Hostname (preserves case, unlike urlsplit)
                 - port: Port as integer or None
                 - path: Path without leading slash
                 - fullpath: Original path with leading slash
@@ -156,15 +171,13 @@ class Service:
             return url
 
         # scheme://netloc/path;parameters?query#fragment
-        parsed = parse.urlparse(url)
+        parsed = parse.urlsplit(url)
         # 1) cannot have multiple files, so assume that they are always hostnames
         # 2) parsed.hostname always returns a lower-cased hostname
-        #    this isn't correct if hostname is a file path, so use '_hostinfo'
-        #    to get the actual host
+        #    this isn't correct if hostname is a file path, so parse with the same
+        #    algorithm of _hostinfo (and cast port to int if exists)
         netlocs = parsed.netloc.split(",") if multiple_netloc else []
-        hostname, port = (None, None) if len(netlocs) > 1 else parsed._hostinfo
-        if port:
-            port = int(port)
+        hostname, port = (None, None) if len(netlocs) > 1 else _get_hostinfo(parsed.netloc)
 
         config = {
             "scheme": parsed.scheme,

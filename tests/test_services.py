@@ -203,7 +203,7 @@ class ServiceTestCase(unittest.TestCase):
         url = "scheme://user%40domain:pass%40word@host/db"
         result = Service.parse_url(url)
 
-        # Note: urllib.parse.urlparse doesn't automatically decode username/password
+        # Note: urllib.parse.urlsplit doesn't automatically decode username/password
         self.assertEqual(result["username"], "user%40domain")
         self.assertEqual(result["password"], "pass%40word")
 
