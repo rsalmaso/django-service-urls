@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 1.9.0
 
 * refactor and updated tests
 * refactor services code (split into separate modules)
