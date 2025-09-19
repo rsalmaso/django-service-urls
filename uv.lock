@@ -318,15 +318,15 @@ dev = [
     { name = "ruff", specifier = ">=0.12.12" },
 ]
 django32 = [
-    { name = "django", marker = "python_full_version >= '3.8'", specifier = ">=3.2,<4.0" },
+    { name = "django", marker = "python_full_version >= '3.10'", specifier = ">=3.2,<4.0" },
     { name = "psycopg2-binary" },
 ]
 django40 = [
-    { name = "django", marker = "python_full_version >= '3.8'", specifier = ">=4.0,<4.1" },
+    { name = "django", marker = "python_full_version >= '3.10'", specifier = ">=4.0,<4.1" },
     { name = "psycopg2-binary" },
 ]
 django41 = [
-    { name = "django", marker = "python_full_version >= '3.8'", specifier = ">=4.1,<4.2" },
+    { name = "django", marker = "python_full_version >= '3.10'", specifier = ">=4.1,<4.2" },
     { name = "psycopg2-binary" },
 ]
 django42 = [
