@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* added support for python 3.14
+
 ## 1.9.0
 
 * refactor and updated tests
