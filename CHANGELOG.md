@@ -3,6 +3,7 @@
 ## dev
 
 * added support for python 3.14
+* added support for django 6.0
 
 ## 1.9.0
 
