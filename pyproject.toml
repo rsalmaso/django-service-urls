@@ -6,7 +6,7 @@ requires = ["setuptools"]
 name = "django-service-urls"
 description = "setting helper for django to represent databases, caches and email settings via a single string"
 authors = [
-    {name = "Raffaele Salmaso", email = "raffaele.salmaso@gmail.com"},
+    {name = "Raffaele Salmaso", email = "raffaele@salmaso.org"},
 ]
 readme = "README.md"
 license = "BSD-2-Clause"
