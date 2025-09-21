@@ -88,9 +88,9 @@ class Service:
         return parse_url(url, multiple_netloc=multiple_netloc)
 
     def register(self, *args):
-        def wrapper(func):
+        def wrapper(callback):
             for scheme, engine in args:
-                self._schemes[scheme] = {"callback": func, "engine": engine}
-            return func
+                self._schemes[scheme] = {"callback": callback, "engine": engine}
+            return callback
 
         return wrapper
