@@ -26,6 +26,7 @@
 import unittest
 
 from django_service_urls import Service
+from django_service_urls.parse import parse_url
 
 
 class MockTestService(Service):
@@ -54,56 +55,6 @@ class ServiceTestCase(unittest.TestCase):
 
         service = TestService()
         self.assertEqual(service.parse(""), {})
-
-    def test_hostname_sensitivity(self):
-        parsed = self.backend.parse_url("http://CaseSensitive")
-        self.assertEqual(parsed["hostname"], "CaseSensitive")
-
-    def test_port_is_an_integer(self):
-        parsed = self.backend.parse_url("http://CaseSensitive:123")
-        self.assertIsInstance(parsed["port"], int)
-
-    def test_path_strips_leading_slash(self):
-        parsed = self.backend.parse_url("http://test/abc")
-        self.assertEqual(parsed["path"], "abc")
-
-    def test_query_parameters_integer(self):
-        parsed = self.backend.parse_url("http://test/?a=1")
-        self.assertDictEqual(parsed["query"], {"a": 1})
-
-    def test_query_parameters_boolean(self):
-        parsed = self.backend.parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
-        self.assertDictEqual(
-            parsed["query"],
-            {
-                "a": True,
-                "b": False,
-                "c": True,
-                "d": False,
-                "e": True,
-                "f": False,
-                "g": True,
-                "h": False,
-                "i": True,
-                "j": False,
-            },
-        )
-
-    def test_query_multiple_parameters(self):
-        parsed = self.backend.parse_url("http://test/?a=one&a=two")
-        self.assertDictEqual(parsed["query"], {"a": ["one", "two"]})
-
-    def test_fragment_parameters(self):
-        parsed = self.backend.parse_url(
-            "dbengine://user:passwd@host:123/dbname?pool=true#KEY=42&ENABLED=true&TEST.default.NAME=testdb&TEST.default.ENABLED=true"
-        )
-        self.assertDictEqual(parsed["query"], {"pool": True})
-        expected = {"KEY": 42, "ENABLED": True, "TEST": {"default": {"NAME": "testdb", "ENABLED": True}}}
-        self.assertDictEqual(parsed["fragment"], expected)
-
-    def test_does_not_reparse(self):
-        parsed = self.backend.parse_url("http://test/abc")
-        self.assertIs(self.backend.parse_url(parsed), parsed)
 
     def test_validate_with_valid_url(self):
         self.assertEqual(self.backend.validate("http://example.com"), "http")
@@ -160,48 +111,16 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(self.backend._schemes["test2"]["callback"], test_callback)
         self.assertEqual(self.backend._schemes["test2"]["engine"], "test2.engine")
 
-    def test_parse_url_with_multiple_netloc(self):
-        url = "scheme://host1:1234,host2:5678/path"
-        result = Service.parse_url(url, multiple_netloc=True)
-
-        self.assertEqual(result["scheme"], "scheme")
-        self.assertEqual(result["location"], ["host1:1234", "host2:5678"])
-        self.assertIsNone(result["hostname"])
-        self.assertIsNone(result["port"])
-
-    def test_parse_url_without_multiple_netloc(self):
-        url = "scheme://host:1234/path"
-        result = Service.parse_url(url, multiple_netloc=False)
-
-        self.assertEqual(result["scheme"], "scheme")
-        self.assertEqual(result["location"], "host:1234")
-        self.assertEqual(result["hostname"], "host")
-        self.assertEqual(result["port"], 1234)
-
-    def test_parse_url_with_dict_input(self):
-        test_dict = {"key": "value"}
-        result = Service.parse_url(test_dict)
-        self.assertIs(result, test_dict)
-
-    def test_parse_url_query_parameter_types(self):
-        url = "scheme://host/path?int_param=123&bool_true=true&bool_false=false&string_param=value"
-        result = Service.parse_url(url)
-
-        self.assertEqual(result["query"]["int_param"], 123)
-        self.assertEqual(result["query"]["bool_true"], True)
-        self.assertEqual(result["query"]["bool_false"], False)
-        self.assertEqual(result["query"]["string_param"], "value")
-
     def test_parse_url_path_handling(self):
         url = "scheme://host/some/path"
-        result = Service.parse_url(url)
+        result = parse_url(url)
 
         self.assertEqual(result["path"], "some/path")  # Leading slash removed
         self.assertEqual(result["fullpath"], "/some/path")  # Full path preserved
 
     def test_parse_url_username_password_encoding(self):
         url = "scheme://user%40domain:pass%40word@host/db"
-        result = Service.parse_url(url)
+        result = parse_url(url)
 
         # Note: urllib.parse.urlsplit doesn't automatically decode username/password
         self.assertEqual(result["username"], "user%40domain")
