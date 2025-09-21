@@ -66,16 +66,45 @@ def _get_host_and_port(netloc):
 
 
 def _cast_value(value):
-    """Cast a string value to its appropriate type (int, bool, or str)."""
+    """
+    Cast a string value to its appropriate type (int, bool, str or None).
+
+    This function automatically converts string values based on their content:
+    - Integers: String representations of numbers (e.g., "123" -> 123)
+    - Booleans: Common boolean representations:
+      - True: "true", "t", "1", "yes", "y" (case insensitive)
+      - False: "false", "f", "0", "no", "n" (case insensitive)
+    - None: "null" (case insensitive) -> None
+    - Strings: All other values remain as strings
+
+    Args:
+        value: The string value to convert
+
+    Returns:
+        The converted value as int, bool, None, or the original string
+
+    Examples:
+        >>> _cast_value("123"), _cast_value("hello")
+        (123, 'hello')
+        >>> _cast_value("true"), _cast_value("false")
+        (True, False)
+        >>> _cast_value("null"), _cast_value("NULL")
+        (None, None)
+    """
 
     casted_value = value
-    if value.isdigit():
-        casted_value = int(value)
-    elif value.lower() in ("true", "t", "1", "yes", "y"):
-        casted_value = True
-    elif value.lower() in ("false", "f", "0", "no", "n"):
-        casted_value = False
-
+    match value.lower():
+        case "true" | "t" | "1" | "yes" | "y":
+            casted_value = True
+        case "false" | "f" | "0" | "no" | "n":
+            casted_value = False
+        case "null":
+            casted_value = None
+        case _:
+            try:
+                casted_value = int(value)
+            except ValueError:
+                pass
     return casted_value
 
 

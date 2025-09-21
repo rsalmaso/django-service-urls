@@ -6,6 +6,7 @@
 * added support for django 6.0
 * exctract `Service.parse_url` staticmethod into `parse.parse_url` free function
 * refactored the `parse_url` function, now returns a dedicated dataclass
+* allowed null values in query string/fragments
 
 ## 1.9.0
 
