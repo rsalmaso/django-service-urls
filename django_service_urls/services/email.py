@@ -48,16 +48,16 @@ def email_smtp_config_url(backend, engine, scheme, url):
     config = backend.config_from_url(engine, scheme, url)
     parsed = backend.parse_url(url)
     return {
-        "HOST": parsed["hostname"] or "localhost",
-        "PORT": parsed["port"] or 25,
-        "HOST_USER": parsed["username"] or "",
-        "HOST_PASSWORD": parsed["password"] or "",
-        "USE_TLS": parsed["query"].get("use_tls", scheme in ("smtps", "smtp+tls")),
-        "USE_SSL": parsed["query"].get("use_ssl", scheme == "smtp+ssl"),
-        "SSL_CERTFILE": parsed["query"].get("ssl_certfile", None),
-        "SSL_KEYFILE": parsed["query"].get("ssl_keyfile", None),
-        "TIMEOUT": parsed["query"].get("timeout", None),
-        "USE_LOCALTIME": parsed["query"].get("use_localtime", False),
+        "HOST": parsed.hostname or "localhost",
+        "PORT": parsed.port or 25,
+        "HOST_USER": parsed.username or "",
+        "HOST_PASSWORD": parsed.password or "",
+        "USE_TLS": parsed.query.get("use_tls", scheme in ("smtps", "smtp+tls")),
+        "USE_SSL": parsed.query.get("use_ssl", scheme == "smtp+ssl"),
+        "SSL_CERTFILE": parsed.query.get("ssl_certfile", None),
+        "SSL_KEYFILE": parsed.query.get("ssl_keyfile", None),
+        "TIMEOUT": parsed.query.get("timeout", None),
+        "USE_LOCALTIME": parsed.query.get("use_localtime", False),
         **config,
     }
 
@@ -75,11 +75,11 @@ def email_console_config_url(backend, engine, scheme, url):
 def email_file_config_url(backend, engine, scheme, url):
     config = backend.config_from_url(engine, scheme, url)
     parsed = backend.parse_url(url)
-    path = f"/{parsed['path']}"
+    path = f"/{parsed.path}"
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
-    if parsed["hostname"]:
-        path = f"{parsed['hostname']}:{path}"
+    if parsed.hostname:
+        path = f"{parsed.hostname}:{path}"
     return {
         "FILE_PATH": path,
         **config,

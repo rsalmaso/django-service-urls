@@ -21,6 +21,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from dataclasses import dataclass, field
+from typing import Any
 from urllib import parse
 
 __all__ = ["parse_url"]
@@ -127,6 +129,20 @@ def _parse_querystring(data):
     return result
 
 
+@dataclass(kw_only=True)
+class UrlInfo:
+    scheme: str = ""
+    username: str | None = None
+    password: str | None = None
+    hostname: str | None = None
+    port: int | None = None
+    path: str = ""
+    fullpath: str = ""
+    query: dict[str, Any] = field(default_factory=dict)
+    location: list[str] | str = ""
+    fragment: dict[str, Any] = field(default_factory=dict)
+
+
 def parse_url(url, *, multiple_netloc=False):
     """
     Parse URLs into components with automatic type conversion and nested structure support.
@@ -150,7 +166,7 @@ def parse_url(url, *, multiple_netloc=False):
     """
 
     # This method may be called with an already parsed URL
-    if isinstance(url, dict):
+    if isinstance(url, UrlInfo):
         return url
 
     # scheme://netloc/path;parameters?query#fragment
@@ -162,16 +178,15 @@ def parse_url(url, *, multiple_netloc=False):
     netlocs = parsed.netloc.split(",") if multiple_netloc else []
     hostname, port = (None, None) if len(netlocs) > 1 else _get_host_and_port(parsed.netloc)
 
-    config = {
-        "scheme": parsed.scheme,
-        "username": parsed.username,
-        "password": parsed.password,
-        "hostname": hostname,
-        "port": port,
-        "path": parsed.path[1:],
-        "fullpath": parsed.path,
-        "query": _parse_querystring(parsed.query),
-        "location": netlocs if len(netlocs) > 1 else parsed.netloc,
-        "fragment": _parse_querystring(parsed.fragment),
-    }
-    return config
+    return UrlInfo(
+        scheme=parsed.scheme,
+        username=parsed.username,
+        password=parsed.password,
+        hostname=hostname,
+        port=port,
+        path=parsed.path[1:],
+        fullpath=parsed.path,
+        query=_parse_querystring(parsed.query),
+        location=netlocs if len(netlocs) > 1 else parsed.netloc,
+        fragment=_parse_querystring(parsed.fragment),
+    )

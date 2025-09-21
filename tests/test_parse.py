@@ -23,7 +23,7 @@
 
 import unittest
 
-from django_service_urls.parse import _get_host_and_port, parse_url
+from django_service_urls.parse import _get_host_and_port, parse_url, UrlInfo
 
 
 class GetHostAndPortTestCase(unittest.TestCase):
@@ -72,24 +72,24 @@ class GetHostAndPortTestCase(unittest.TestCase):
 class ParseUrlTestCase(unittest.TestCase):
     def test_hostname_sensitivity(self):
         parsed = parse_url("http://CaseSensitive")
-        self.assertEqual(parsed["hostname"], "CaseSensitive")
+        self.assertEqual(parsed.hostname, "CaseSensitive")
 
     def test_port_is_an_integer(self):
         parsed = parse_url("http://CaseSensitive:123")
-        self.assertIsInstance(parsed["port"], int)
+        self.assertIsInstance(parsed.port, int)
 
     def test_path_strips_leading_slash(self):
         parsed = parse_url("http://test/abc")
-        self.assertEqual(parsed["path"], "abc")
+        self.assertEqual(parsed.path, "abc")
 
     def test_query_parameters_integer(self):
         parsed = parse_url("http://test/?a=1")
-        self.assertDictEqual(parsed["query"], {"a": 1})
+        self.assertDictEqual(parsed.query, {"a": 1})
 
     def test_query_parameters_boolean(self):
         parsed = parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
         self.assertDictEqual(
-            parsed["query"],
+            parsed.query,
             {
                 "a": True,
                 "b": False,
@@ -106,15 +106,15 @@ class ParseUrlTestCase(unittest.TestCase):
 
     def test_query_multiple_parameters(self):
         parsed = parse_url("http://test/?a=one&a=two")
-        self.assertDictEqual(parsed["query"], {"a": ["one", "two"]})
+        self.assertDictEqual(parsed.query, {"a": ["one", "two"]})
 
     def test_fragment_parameters(self):
         parsed = parse_url(
             "dbengine://user:passwd@host:123/dbname?pool=true#KEY=42&ENABLED=true&TEST.default.NAME=testdb&TEST.default.ENABLED=true"
         )
-        self.assertDictEqual(parsed["query"], {"pool": True})
+        self.assertDictEqual(parsed.query, {"pool": True})
         expected = {"KEY": 42, "ENABLED": True, "TEST": {"default": {"NAME": "testdb", "ENABLED": True}}}
-        self.assertDictEqual(parsed["fragment"], expected)
+        self.assertDictEqual(parsed.fragment, expected)
 
     def test_does_not_reparse(self):
         parsed = parse_url("http://test/abc")
@@ -124,33 +124,33 @@ class ParseUrlTestCase(unittest.TestCase):
         url = "scheme://host1:1234,host2:5678/path"
         result = parse_url(url, multiple_netloc=True)
 
-        self.assertEqual(result["scheme"], "scheme")
-        self.assertEqual(result["location"], ["host1:1234", "host2:5678"])
-        self.assertIsNone(result["hostname"])
-        self.assertIsNone(result["port"])
+        self.assertEqual(result.scheme, "scheme")
+        self.assertEqual(result.location, ["host1:1234", "host2:5678"])
+        self.assertIsNone(result.hostname)
+        self.assertIsNone(result.port)
 
     def test_parse_url_without_multiple_netloc(self):
         url = "scheme://host:1234/path"
         result = parse_url(url, multiple_netloc=False)
 
-        self.assertEqual(result["scheme"], "scheme")
-        self.assertEqual(result["location"], "host:1234")
-        self.assertEqual(result["hostname"], "host")
-        self.assertEqual(result["port"], 1234)
+        self.assertEqual(result.scheme, "scheme")
+        self.assertEqual(result.location, "host:1234")
+        self.assertEqual(result.hostname, "host")
+        self.assertEqual(result.port, 1234)
 
-    def test_parse_url_with_dict_input(self):
-        test_dict = {"key": "value"}
-        result = parse_url(test_dict)
-        self.assertIs(result, test_dict)
+    def test_parse_url_with_already_parsed_url(self):
+        input = UrlInfo()
+        result = parse_url(input)
+        self.assertIs(result, input)
 
     def test_parse_url_query_parameter_types(self):
         url = "scheme://host/path?int_param=123&bool_true=true&bool_false=false&string_param=value"
         result = parse_url(url)
 
-        self.assertEqual(result["query"]["int_param"], 123)
-        self.assertEqual(result["query"]["bool_true"], True)
-        self.assertEqual(result["query"]["bool_false"], False)
-        self.assertEqual(result["query"]["string_param"], "value")
+        self.assertEqual(result.query["int_param"], 123)
+        self.assertEqual(result.query["bool_true"], True)
+        self.assertEqual(result.query["bool_false"], False)
+        self.assertEqual(result.query["string_param"], "value")
 
 
 if __name__ == "__main__":

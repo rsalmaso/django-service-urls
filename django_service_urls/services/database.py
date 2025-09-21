@@ -33,14 +33,14 @@ class DatabaseService(Service):
         parsed = self.parse_url(url)
         config = {
             "ENGINE": engine,
-            "NAME": parse.unquote(parsed["path"] or ""),
-            "USER": parse.unquote(parsed["username"] or ""),
-            "PASSWORD": parse.unquote(parsed["password"] or ""),
-            "HOST": parsed["hostname"],
-            "PORT": parsed["port"] or "",
-            "OPTIONS": parsed["query"],
+            "NAME": parse.unquote(parsed.path or ""),
+            "USER": parse.unquote(parsed.username or ""),
+            "PASSWORD": parse.unquote(parsed.password or ""),
+            "HOST": parsed.hostname,
+            "PORT": parsed.port or "",
+            "OPTIONS": parsed.query,
         }
-        config.update({k: v for k, v in parsed["fragment"].items() if k not in config})
+        config.update({k: v for k, v in parsed.fragment.items() if k not in config})
         return config
 
 
@@ -60,13 +60,13 @@ def sqlite_config_from_url(backend, engine, scheme, url):
         }
 
     parsed = backend.parse_url(url)
-    path = "/" + parsed["path"]
+    path = "/" + parsed.path
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
-    if parsed["hostname"]:
-        path = f"{parsed['hostname']}:{path}"
-        parsed["location"] = parsed["hostname"] = ""
-    parsed["path"] = path
+    if parsed.hostname:
+        path = f"{parsed.hostname}:{path}"
+        parsed.location = parsed.hostname = ""
+    parsed.path = path
     return backend.config_from_url(engine, scheme, parsed)
 
 
@@ -79,10 +79,10 @@ def sqlite_config_from_url(backend, engine, scheme, url):
 )
 def postgresql_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url)
-    host = parsed["hostname"].lower()
+    host = parsed.hostname.lower()
     # Handle postgres percent-encoded paths.
     if "%2f" in host or "%3a" in host:
-        parsed["hostname"] = parse.unquote(parsed["hostname"])
+        parsed.hostname = parse.unquote(parsed.hostname)
     config = backend.config_from_url(engine, scheme, parsed)
     if "currentSchema" in config["OPTIONS"]:
         value = config["OPTIONS"].pop("currentSchema")

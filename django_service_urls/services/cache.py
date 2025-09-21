@@ -32,22 +32,22 @@ class CacheService(Service):
         config = {
             "BACKEND": engine,
         }
-        if multiple_netloc and parsed["location"]:
-            config["LOCATION"] = parsed["location"]
+        if multiple_netloc and parsed.location:
+            config["LOCATION"] = parsed.location
         else:
-            if parsed["hostname"]:
-                config["LOCATION"] = parsed["hostname"]
-                if parsed["port"]:
-                    config["LOCATION"] = f"{config['LOCATION']}:{parsed['port']}"
+            if parsed.hostname:
+                config["LOCATION"] = parsed.hostname
+                if parsed.port:
+                    config["LOCATION"] = f"{config['LOCATION']}:{parsed.port}"
         for key in ("timeout", "key_prefix", "version"):
-            if key in parsed["query"]:
-                query = parsed["query"][key]
+            if key in parsed.query:
+                query = parsed.query[key]
                 # Only move simple values to top-level config, not nested dictionaries
                 if not isinstance(query, dict):
-                    query = parsed["query"].pop(key)
+                    query = parsed.query.pop(key)
                     config[key.upper()] = query
-        config["OPTIONS"] = parsed["query"]
-        config.update({k: v for k, v in parsed["fragment"].items() if k not in config})
+        config["OPTIONS"] = parsed.query
+        config.update({k: v for k, v in parsed.fragment.items() if k not in config})
         return config
 
 
@@ -82,9 +82,9 @@ def dummy_config_from_url(backend, engine, scheme, url):
 def pymemcached_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url, multiple_netloc=True)
     config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
-    if parsed["path"]:
+    if parsed.path:
         # We are dealing with a URI like pymemcached:///socket/path
-        config["LOCATION"] = f"unix:/{parsed['path']}"
+        config["LOCATION"] = f"unix:/{parsed.path}"
     return config
 
 
@@ -97,9 +97,9 @@ def pylibmccache_config_from_url(backend, engine, scheme, url):
     # keep a different converter until we support old django versions
     parsed = backend.parse_url(url, multiple_netloc=True)
     config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
-    if parsed["path"]:
+    if parsed.path:
         # We are dealing with a URI like pylibmccache:///socket/path
-        config["LOCATION"] = f"/{parsed['path']}"
+        config["LOCATION"] = f"/{parsed.path}"
     return config
 
 
@@ -109,10 +109,10 @@ def pylibmccache_config_from_url(backend, engine, scheme, url):
 def file_config_from_url(backend, engine, scheme, url):
     parsed = backend.parse_url(url)
     config = backend.config_from_url(engine, scheme, parsed)
-    path = f"/{parsed['path']}"
+    path = f"/{parsed.path}"
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
-    if parsed["hostname"]:
-        path = f"{parsed['hostname']}:{path}"
+    if parsed.hostname:
+        path = f"{parsed.hostname}:{path}"
     config["LOCATION"] = path
     return config

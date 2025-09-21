@@ -5,6 +5,7 @@
 * added support for python 3.14
 * added support for django 6.0
 * exctract `Service.parse_url` staticmethod into `parse.parse_url` free function
+* refactored the `parse_url` function, now returns a dedicated dataclass
 
 ## 1.9.0
 
