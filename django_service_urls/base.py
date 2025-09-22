@@ -23,14 +23,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
+from urllib.parse import urlsplit
 
 from .parse import parse_url
 
 
 class Service:
-    validation = re.compile(r"^(?P<scheme>\S+)://\S*")
-
     def config_from_url(self, engine, scheme, url, **kwargs):
         raise NotImplementedError("")
 
@@ -38,8 +36,8 @@ class Service:
         self._schemes = {}
 
     def validate(self, data):
-        match = self.validation.match(data)
-        return match.groups()[0] if match else None
+        parsed = urlsplit(data)
+        return parsed.scheme if parsed.scheme else None
 
     def _parse(self, data):
         if not isinstance(data, str):
