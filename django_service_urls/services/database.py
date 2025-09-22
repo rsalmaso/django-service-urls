@@ -29,7 +29,7 @@ from django_service_urls.base import Service
 
 
 class DatabaseService(Service):
-    def config_from_url(self, engine, scheme, url):
+    def config_from_url(self, engine, scheme, url, **kwargs):
         parsed = self.parse_url(url)
         config = {
             "ENGINE": engine,

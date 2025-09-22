@@ -27,7 +27,7 @@ from django_service_urls.base import Service
 
 
 class EmailService(Service):
-    def config_from_url(self, engine, scheme, url):
+    def config_from_url(self, engine, scheme, url, **kwargs):
         _parsed = self.parse_url(url)
         config = {
             "ENGINE": engine,

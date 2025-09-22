@@ -31,7 +31,7 @@ from .parse import parse_url
 class Service:
     validation = re.compile(r"^(?P<scheme>\S+)://\S*")
 
-    def config_from_url(self, engine, scheme, url):
+    def config_from_url(self, engine, scheme, url, **kwargs):
         raise NotImplementedError("")
 
     def __init__(self):

@@ -40,7 +40,7 @@ class MockTestService(Service):
         parsed = backend.parse_url(url)
         return {"parsed": parsed.path}
 
-    def config_from_url(self, engine, scheme, url):
+    def config_from_url(self, engine, scheme, url, **kwargs):
         return {"engine": engine, "scheme": scheme}
 
 
@@ -50,7 +50,7 @@ class ServiceTestCase(unittest.TestCase):
 
     def test_an_empty_string_should_returns_an_empty_dict(self):
         class TestService(Service):
-            def config_from_url(self, engine, scheme, url):
+            def config_from_url(self, engine, scheme, url, **kwargs):
                 return {}
 
         service = TestService()

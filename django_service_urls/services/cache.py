@@ -27,7 +27,8 @@ from django_service_urls.base import Service
 
 
 class CacheService(Service):
-    def config_from_url(self, engine, scheme, url, *, multiple_netloc=True):
+    def config_from_url(self, engine, scheme, url, **kwargs):
+        multiple_netloc = kwargs.pop("multiple_netloc", True)
         parsed = self.parse_url(url, multiple_netloc=multiple_netloc)
         config = {
             "BACKEND": engine,
