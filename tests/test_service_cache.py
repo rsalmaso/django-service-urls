@@ -29,7 +29,7 @@ from django_service_urls import cache
 
 
 class DictionaryTests(unittest.TestCase):
-    def test_caches_as_dictionary(self):
+    def test_caches_as_dictionary(self) -> None:
         result = cache.parse(
             {
                 "default": "memory://",
@@ -46,7 +46,7 @@ class DictionaryTests(unittest.TestCase):
 
 
 class CacheNestedOptionsTestCase(unittest.TestCase):
-    def test_cache_nested_options(self):
+    def test_cache_nested_options(self) -> None:
         result = cache.parse(
             "pymemcached://host:11211/?binary_protocol.enabled=true&binary_protocol.version=2&timeout.connect=5&timeout.read=10"
         )
@@ -56,17 +56,17 @@ class CacheNestedOptionsTestCase(unittest.TestCase):
 
 
 class MemoryCacheTestCase(unittest.TestCase):
-    def test_local_caching_no_params(self):
+    def test_local_caching_no_params(self) -> None:
         result = cache.parse("memory://")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
         self.assertNotIn("LOCATION", result)
 
-    def test_local_caching_with_location(self):
+    def test_local_caching_with_location(self) -> None:
         result = cache.parse("memory://location")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
         self.assertEqual(result["LOCATION"], "location")
 
-    def test_cache_with_multiple_special_options(self):
+    def test_cache_with_multiple_special_options(self) -> None:
         result = cache.parse("memory://location?timeout=300&key_prefix=app&version=1&custom=value")
         self.assertEqual(result["TIMEOUT"], 300)
         self.assertEqual(result["KEY_PREFIX"], "app")
@@ -75,26 +75,26 @@ class MemoryCacheTestCase(unittest.TestCase):
 
 
 class DatabaseCacheTestCase(unittest.TestCase):
-    def test_database_caching(self):
+    def test_database_caching(self) -> None:
         result = cache.parse("db://table-name")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.db.DatabaseCache")
         self.assertEqual(result["LOCATION"], "table-name")
 
 
 class DummyCacheTestCase(unittest.TestCase):
-    def test_dummy_caching_no_params(self):
+    def test_dummy_caching_no_params(self) -> None:
         result = cache.parse("dummy://")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.dummy.DummyCache")
         self.assertNotIn("LOCATION", result)
 
-    def test_dummy_caching_with_location(self):
+    def test_dummy_caching_with_location(self) -> None:
         result = cache.parse("dummy://abc")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.dummy.DummyCache")
         self.assertEqual(result["LOCATION"], "abc")
 
 
 class PymemcachedCacheTestCase(unittest.TestCase):
-    def test_pymemcached_with_host(self):
+    def test_pymemcached_with_host(self) -> None:
         for url, backend in [
             ("pymemcached://localhost:1567", "django.core.cache.backends.memcached.PyMemcachedCache"),
             ("memcached://localhost:1567", "django.core.cache.backends.memcached.MemcachedCache"),
@@ -104,7 +104,7 @@ class PymemcachedCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], backend)
                 self.assertEqual(result["LOCATION"], "localhost:1567")
 
-    def test_pymemcached_with_single_ip(self):
+    def test_pymemcached_with_single_ip(self) -> None:
         for url, backend in [
             ("pymemcached://1.2.3.4:1567", "django.core.cache.backends.memcached.PyMemcachedCache"),
             ("memcached://1.2.3.4:1567", "django.core.cache.backends.memcached.MemcachedCache"),
@@ -114,7 +114,7 @@ class PymemcachedCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], backend)
                 self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
 
-    def test_pymemcached_with_multiple_ips(self):
+    def test_pymemcached_with_multiple_ips(self) -> None:
         for url, backend in [
             ("pymemcached://1.2.3.4:1567,1.2.3.5:1568", "django.core.cache.backends.memcached.PyMemcachedCache"),
             ("memcached://1.2.3.4:1567,1.2.3.5:1568", "django.core.cache.backends.memcached.MemcachedCache"),
@@ -124,7 +124,7 @@ class PymemcachedCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], backend)
                 self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
-    def test_pymemcached_without_port(self):
+    def test_pymemcached_without_port(self) -> None:
         for url, backend in [
             ("pymemcached://1.2.3.4", "django.core.cache.backends.memcached.PyMemcachedCache"),
             ("memcached://1.2.3.4", "django.core.cache.backends.memcached.MemcachedCache"),
@@ -134,7 +134,7 @@ class PymemcachedCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], backend)
                 self.assertEqual(result["LOCATION"], "1.2.3.4")
 
-    def test_pymemcached_with_unix_socket(self):
+    def test_pymemcached_with_unix_socket(self) -> None:
         for url, backend in [
             ("pymemcached:///tmp/memcached.sock", "django.core.cache.backends.memcached.PyMemcachedCache"),
             ("memcached:///tmp/memcached.sock", "django.core.cache.backends.memcached.MemcachedCache"),
@@ -146,7 +146,7 @@ class PymemcachedCacheTestCase(unittest.TestCase):
 
 
 class PylibmccacheCacheTestCase(unittest.TestCase):
-    def test_pylibmccache_with_host(self):
+    def test_pylibmccache_with_host(self) -> None:
         for url in [
             "pylibmccache://localhost:1567",
             "memcached+pylibmccache://localhost:1567",
@@ -156,7 +156,7 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
                 self.assertEqual(result["LOCATION"], "localhost:1567")
 
-    def test_pylibmccache_with_single_ip(self):
+    def test_pylibmccache_with_single_ip(self) -> None:
         for url in [
             "pylibmccache://1.2.3.4:1567",
             "memcached+pylibmccache://1.2.3.4:1567",
@@ -166,7 +166,7 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
                 self.assertEqual(result["LOCATION"], "1.2.3.4:1567")
 
-    def test_pylibmccache_with_multiple_ips(self):
+    def test_pylibmccache_with_multiple_ips(self) -> None:
         for url in [
             "pylibmccache://1.2.3.4:1567,1.2.3.5:1568",
             "memcached+pylibmccache://1.2.3.4:1567,1.2.3.5:1568",
@@ -176,7 +176,7 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
                 self.assertEqual(result["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
-    def test_pylibmccache_without_port(self):
+    def test_pylibmccache_without_port(self) -> None:
         for url in [
             "pylibmccache://1.2.3.4",
             "memcached+pylibmccache://1.2.3.4",
@@ -186,7 +186,7 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["BACKEND"], "django.core.cache.backends.memcached.PyLibMCCache")
                 self.assertEqual(result["LOCATION"], "1.2.3.4")
 
-    def test_pylibmccache_with_unix_socket(self):
+    def test_pylibmccache_with_unix_socket(self) -> None:
         for url in [
             "pylibmccache:///tmp/memcached.sock",
             "memcached+pylibmccache:///tmp/memcached.sock",
@@ -198,12 +198,12 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
 
 
 class FileCacheTestCase(unittest.TestCase):
-    def test_file_cache_windows_path(self):
+    def test_file_cache_windows_path(self) -> None:
         result = cache.parse("file://C:/abc/def/xyz")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.filebased.FileBasedCache")
         self.assertEqual(result["LOCATION"], "C:/abc/def/xyz")
 
-    def test_file_cache_unix_path(self):
+    def test_file_cache_unix_path(self) -> None:
         result = cache.parse("file:///abc/def/xyz")
         self.assertEqual(result["BACKEND"], "django.core.cache.backends.filebased.FileBasedCache")
         self.assertEqual(result["LOCATION"], "/abc/def/xyz")

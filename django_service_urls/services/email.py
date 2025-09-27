@@ -23,19 +23,24 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from django_service_urls.base import Service
+from typing import Any
+
+from django_service_urls.base import ConfigDict, Service
+from django_service_urls.parse import UrlInfo
+
+__all__ = ["email"]
 
 
 class EmailService(Service):
-    def config_from_url(self, engine, scheme, url, **kwargs):
-        _parsed = self.parse_url(url)
-        config = {
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+        _parsed: UrlInfo = self.parse_url(url)  # parse the url and throws away the result
+        config: ConfigDict = {
             "ENGINE": engine,
         }
         return config
 
 
-email = EmailService()
+email: EmailService = EmailService()
 
 
 @email.register(
@@ -44,9 +49,9 @@ email = EmailService()
     ("smtp+tls", "django.core.mail.backends.smtp.EmailBackend"),
     ("smtp+ssl", "django.core.mail.backends.smtp.EmailBackend"),
 )
-def email_smtp_config_url(backend, engine, scheme, url):
+def email_smtp_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     config = backend.config_from_url(engine, scheme, url)
-    parsed = backend.parse_url(url)
+    parsed: UrlInfo = backend.parse_url(url)
     return {
         "HOST": parsed.hostname or "localhost",
         "PORT": parsed.port or 25,
@@ -65,16 +70,16 @@ def email_smtp_config_url(backend, engine, scheme, url):
 @email.register(
     ("console", "django.core.mail.backends.console.EmailBackend"),
 )
-def email_console_config_url(backend, engine, scheme, url):
+def email_console_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)
 
 
 @email.register(
     ("file", "django.core.mail.backends.filebased.EmailBackend"),
 )
-def email_file_config_url(backend, engine, scheme, url):
+def email_file_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     config = backend.config_from_url(engine, scheme, url)
-    parsed = backend.parse_url(url)
+    parsed: UrlInfo = backend.parse_url(url)
     path = f"/{parsed.path}"
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
@@ -89,12 +94,12 @@ def email_file_config_url(backend, engine, scheme, url):
 @email.register(
     ("memory", "django.core.mail.backends.locmem.EmailBackend"),
 )
-def email_memory_config_url(backend, engine, scheme, url):
+def email_memory_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)
 
 
 @email.register(
     ("dummy", "django.core.mail.backends.dummy.EmailBackend"),
 )
-def email_dummy_config_url(backend, engine, scheme, url):
+def email_dummy_config_ur(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)

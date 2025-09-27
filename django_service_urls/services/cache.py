@@ -23,14 +23,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from django_service_urls.base import Service
+from typing import Any
+
+from django_service_urls.base import ConfigDict, Service
+from django_service_urls.parse import UrlInfo
+
+__all__ = ["cache"]
 
 
 class CacheService(Service):
-    def config_from_url(self, engine, scheme, url, **kwargs):
-        multiple_netloc = kwargs.pop("multiple_netloc", True)
-        parsed = self.parse_url(url, multiple_netloc=multiple_netloc)
-        config = {
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+        multiple_netloc: bool = kwargs.pop("multiple_netloc", True)
+        parsed: UrlInfo = self.parse_url(url, multiple_netloc=multiple_netloc)
+        config: ConfigDict = {
             "BACKEND": engine,
         }
         if multiple_netloc and parsed.location:
@@ -52,27 +57,27 @@ class CacheService(Service):
         return config
 
 
-cache = CacheService()
+cache: CacheService = CacheService()
 
 
 @cache.register(
     ("memory", "django.core.cache.backends.locmem.LocMemCache"),
 )
-def memory_config_from_url(backend, engine, scheme, url):
+def memory_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)
 
 
 @cache.register(
     ("db", "django.core.cache.backends.db.DatabaseCache"),
 )
-def db_config_from_url(backend, engine, scheme, url):
+def db_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)
 
 
 @cache.register(
     ("dummy", "django.core.cache.backends.dummy.DummyCache"),
 )
-def dummy_config_from_url(backend, engine, scheme, url):
+def dummy_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)
 
 
@@ -80,9 +85,9 @@ def dummy_config_from_url(backend, engine, scheme, url):
     ("pymemcached", "django.core.cache.backends.memcached.PyMemcachedCache"),
     ("memcached", "django.core.cache.backends.memcached.MemcachedCache"),  # for django <= 4.2
 )
-def pymemcached_config_from_url(backend, engine, scheme, url):
-    parsed = backend.parse_url(url, multiple_netloc=True)
-    config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
+def pymemcached_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url, multiple_netloc=True)
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
     if parsed.path:
         # We are dealing with a URI like pymemcached:///socket/path
         config["LOCATION"] = f"unix:/{parsed.path}"
@@ -93,11 +98,11 @@ def pymemcached_config_from_url(backend, engine, scheme, url):
     ("pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),
     ("memcached+pylibmccache", "django.core.cache.backends.memcached.PyLibMCCache"),  # deprecated protocol
 )
-def pylibmccache_config_from_url(backend, engine, scheme, url):
+def pylibmccache_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     # django >= 5.0 remove the "unix:" prefix from unix location
     # keep a different converter until we support old django versions
-    parsed = backend.parse_url(url, multiple_netloc=True)
-    config = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
+    parsed: UrlInfo = backend.parse_url(url, multiple_netloc=True)
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
     if parsed.path:
         # We are dealing with a URI like pylibmccache:///socket/path
         config["LOCATION"] = f"/{parsed.path}"
@@ -107,10 +112,10 @@ def pylibmccache_config_from_url(backend, engine, scheme, url):
 @cache.register(
     ("file", "django.core.cache.backends.filebased.FileBasedCache"),
 )
-def file_config_from_url(backend, engine, scheme, url):
-    parsed = backend.parse_url(url)
-    config = backend.config_from_url(engine, scheme, parsed)
-    path = f"/{parsed.path}"
+def file_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url)
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
+    path: str = f"/{parsed.path}"
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
     if parsed.hostname:

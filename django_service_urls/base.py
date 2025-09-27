@@ -23,45 +23,85 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable, TypeAlias, TypedDict
 from urllib.parse import urlsplit
 
-from .parse import parse_url
+from .parse import parse_url, UrlInfo
+
+__all__ = ["ConfigDict", "Service"]
+
+
+ConfigDict: TypeAlias = MutableMapping[str, Any]
+ServiceCallback: TypeAlias = Callable[["Service", str, str, str], ConfigDict]
+
+
+class SchemeRegistration(TypedDict):
+    """Registration information for a URL scheme."""
+
+    engine: str
+    callback: ServiceCallback
 
 
 class Service:
-    def config_from_url(self, engine, scheme, url, **kwargs):
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
         raise NotImplementedError("")
 
-    def __init__(self):
-        self._schemes = {}
+    def __init__(self) -> None:
+        self._schemes: dict[str, SchemeRegistration] = {}
 
-    def validate(self, data):
+    def validate(self, data: str) -> str | None:
         parsed = urlsplit(data)
         return parsed.scheme if parsed.scheme else None
 
-    def _parse(self, data):
-        if not isinstance(data, str):
+    def _parse(self, data: str | ConfigDict) -> ConfigDict:
+        if isinstance(data, Mapping):
+            # return as is
             return data
 
+        if not isinstance(data, str):
+            # invalid input type
+            raise ValueError(f"Invalid input type: {type(data)}")
+
         if not data:
+            # empty string
             return {}
 
-        scheme = self.validate(data)
+        scheme: str | None = self.validate(data)
         if scheme is None:
             raise ValueError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
         try:
-            _scheme = self._schemes[scheme]
+            _scheme: SchemeRegistration = self._schemes[scheme]
         except KeyError:
             raise ValueError(f"{scheme}:// scheme not registered")
-        callback, engine = _scheme["callback"], _scheme["engine"]
-        return callback(self, engine, scheme, data)
+        callback: ServiceCallback = _scheme["callback"]
+        engine: str = _scheme["engine"]
+        result: ConfigDict = callback(self, engine, scheme, data)
+        return result
 
-    def parse(self, data):
-        if isinstance(data, dict):
+    def parse(self, data: str | ConfigDict) -> ConfigDict:
+        """
+        Parse configuration data from various input formats.
+
+        Accepts the following types of valid input:
+        - Raw URL string: "scheme://config/"
+        - Top-level dictionary: dict[str, str]
+        - Nested dictionary: dict[str, dict[str, Any]] (returned as-is)
+
+        Args:
+            data: Configuration data as URL string or dictionary mapping
+
+        Returns:
+            dict[str, Any]: Parsed configuration dictionary
+
+        Raises:
+            ValueError: For unsupported input types or invalid URLs
+        """
+        if isinstance(data, Mapping):
             return {k: self._parse(v) for k, v in data.items()}
         return self._parse(data)
 
-    def parse_url(self, url, *, multiple_netloc=False):
+    def parse_url(self, url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:
         """
         Parse URLs into components with automatic type conversion and nested structure support.
 
@@ -72,9 +112,9 @@ class Service:
         Returns:
             Parsed URL components with keys:
                 - scheme: URL scheme (e.g., 'postgresql')
-                - username: URL username
-                - password: URL password
-                - hostname: Hostname (preserves case, unlike urlsplit)
+                - username: URL username (or None)
+                - password: URL password (or None)
+                - hostname: Hostname (preserves case, unlike urlsplit, or None)
                 - port: Port as integer or None
                 - path: Path without leading slash
                 - fullpath: Original path with leading slash
@@ -85,8 +125,18 @@ class Service:
 
         return parse_url(url, multiple_netloc=multiple_netloc)
 
-    def register(self, *args):
-        def wrapper(callback):
+    def register(self, *args: tuple[str, str]) -> Callable[[ServiceCallback], ServiceCallback]:
+        """
+        Register a service callback with a scheme and engine.
+
+        Args:
+            args: Tuple of scheme and engine
+
+        Returns:
+            Callable[[ServiceCallback], ServiceCallback]: Decorator function
+        """
+
+        def wrapper(callback: ServiceCallback) -> ServiceCallback:
             for scheme, engine in args:
                 self._schemes[scheme] = {"callback": callback, "engine": engine}
             return callback

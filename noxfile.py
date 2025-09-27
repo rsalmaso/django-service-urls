@@ -33,13 +33,13 @@ MAP = [
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 
-nox.options.sessions = ["lint", "tests"]
+nox.options.sessions = ["lint", "tests", "typing"]
 nox.options.reuse_existing_virtualenvs = False
 nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv|virtualenv"
 
 
-def install(session, django):
+def install(session: nox.Session, django: str) -> None:
     pyproject = nox.project.load_toml("pyproject.toml")
     session.install(
         *nox.project.dependency_groups(pyproject, "dev"),
@@ -47,15 +47,22 @@ def install(session, django):
     )
 
 
-@nox.session(python="3.10")
-def lint(session, django="4.2"):
+@nox.session(python="3.10")  # type: ignore[misc]
+def lint(session: nox.Session, django: str = "4.2") -> None:
     install(session, django)
     session.run("ruff", "format", "--check", *FILES)
     session.run("ruff", "check", *FILES)
 
 
-@nox.session
-@nox.parametrize("python,django", DEPS)
-def tests(session, django):
+@nox.session  # type: ignore[misc]
+@nox.parametrize("python,django", DEPS)  # type: ignore[misc]
+def typing(session: nox.Session, django: str) -> None:
+    install(session, django)
+    session.run("mypy", *FILES)
+
+
+@nox.session  # type: ignore[misc]
+@nox.parametrize("python,django", DEPS)  # type: ignore[misc]
+def tests(session: nox.Session, django: str) -> None:
     install(session, django)
     session.run("pytest")

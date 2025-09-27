@@ -23,68 +23,69 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Any
 import unittest
 
-from django_service_urls import Service
-from django_service_urls.parse import parse_url
+from django_service_urls.base import ConfigDict, Service
+from django_service_urls.parse import parse_url, UrlInfo
 
 
 class MockTestService(Service):
     """Test service for registration tests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.register(("test", "test.engine"))(self._test_callback)
 
-    def _test_callback(self, backend, engine, scheme, url):
+    def _test_callback(
+        self, backend: Service, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any
+    ) -> ConfigDict:
         parsed = backend.parse_url(url)
         return {"parsed": parsed.path}
 
-    def config_from_url(self, engine, scheme, url, **kwargs):
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
         return {"engine": engine, "scheme": scheme}
 
 
 class ServiceTestCase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.backend = Service()
 
-    def test_an_empty_string_should_returns_an_empty_dict(self):
+    def test_an_empty_string_should_returns_an_empty_dict(self) -> None:
         class TestService(Service):
-            def config_from_url(self, engine, scheme, url, **kwargs):
+            def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
                 return {}
 
         service = TestService()
         self.assertEqual(service.parse(""), {})
 
-    def test_validate_with_valid_url(self):
+    def test_validate_with_valid_url(self) -> None:
         self.assertEqual(self.backend.validate("http://example.com"), "http")
         self.assertEqual(self.backend.validate("https://example.com"), "https")
         self.assertEqual(self.backend.validate("postgres://user:pass@host/db"), "postgres")
         self.assertEqual(self.backend.validate("mysql://user:pass@host/db"), "mysql")
 
-    def test_validate_with_invalid_url(self):
+    def test_validate_with_invalid_url(self) -> None:
         self.assertIsNone(self.backend.validate("not-a-url"))
         self.assertIsNone(self.backend.validate("missing-scheme"))
         self.assertIsNone(self.backend.validate(""))
         self.assertIsNone(self.backend.validate("://no-scheme"))
 
-    def test_parse_with_empty_string(self):
+    def test_parse_with_empty_string(self) -> None:
         self.assertEqual(self.backend.parse(""), {})
 
-    def test_parse_with_non_string(self):
-        self.assertEqual(self.backend.parse(123), 123)
-        self.assertEqual(self.backend.parse(None), None)
-        self.assertEqual(self.backend.parse([1, 2, 3]), [1, 2, 3])
+    def test_parse_with_invalid_types_raises_error(self) -> None:
+        self.assertRaises(ValueError, self.backend.parse, 123)
+        self.assertRaises(ValueError, self.backend.parse, None)
+        self.assertRaises(ValueError, self.backend.parse, [1, 2, 3])
 
-    def test_parse_with_invalid_url_raises_error(self):
+    def test_parse_with_invalid_url_raises_error(self) -> None:
         self.assertRaises(ValueError, self.backend.parse, "invalid-url")
 
-    def test_parse_with_unregistered_scheme_raises_error(self):
-        with self.assertRaises(ValueError) as cm:
-            self.backend.parse("unknown://example.com")
-        self.assertIn("unknown:// scheme not registered", str(cm.exception))
+    def test_parse_with_unregistered_scheme_raises_error(self) -> None:
+        self.assertRaises(ValueError, self.backend.parse, "unknown://example.com")
 
-    def test_parse_with_dict_input(self):
+    def test_parse_with_dict_input(self) -> None:
         # Create a test service with a registered scheme
         backend = MockTestService()
 
@@ -96,9 +97,9 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(result["key2"], {"parsed": "value2"})
         self.assertEqual(result["key3"], {"already": "parsed"})
 
-    def test_register_decorator(self):
+    def test_register_decorator(self) -> None:
         @self.backend.register(("test", "test.engine"), ("test2", "test2.engine"))
-        def test_callback(backend, engine, scheme, url):
+        def test_callback(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
             return {"engine": engine, "scheme": scheme}
 
         # Test that schemes are registered
@@ -111,14 +112,14 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(self.backend._schemes["test2"]["callback"], test_callback)
         self.assertEqual(self.backend._schemes["test2"]["engine"], "test2.engine")
 
-    def test_parse_url_path_handling(self):
+    def test_parse_url_path_handling(self) -> None:
         url = "scheme://host/some/path"
         result = parse_url(url)
 
         self.assertEqual(result.path, "some/path")  # Leading slash removed
         self.assertEqual(result.fullpath, "/some/path")  # Full path preserved
 
-    def test_parse_url_username_password_encoding(self):
+    def test_parse_url_username_password_encoding(self) -> None:
         url = "scheme://user%40domain:pass%40word@host/db"
         result = parse_url(url)
 

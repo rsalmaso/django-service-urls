@@ -23,15 +23,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Any
 from urllib import parse
 
-from django_service_urls.base import Service
+from django_service_urls.base import ConfigDict, Service
+from django_service_urls.parse import UrlInfo
+
+__all__ = ["db"]
 
 
 class DatabaseService(Service):
-    def config_from_url(self, engine, scheme, url, **kwargs):
-        parsed = self.parse_url(url)
-        config = {
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+        parsed: UrlInfo = self.parse_url(url)
+        config: ConfigDict = {
             "ENGINE": engine,
             "NAME": parse.unquote(parsed.path or ""),
             "USER": parse.unquote(parsed.username or ""),
@@ -44,14 +48,14 @@ class DatabaseService(Service):
         return config
 
 
-db = DatabaseService()
+db: DatabaseService = DatabaseService()
 
 
 @db.register(
     ("sqlite", "django.db.backends.sqlite3"),
     ("spatialite", "django.contrib.gis.db.backends.spatialite"),
 )
-def sqlite_config_from_url(backend, engine, scheme, url):
+def sqlite_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     # These special URLs cannot be parsed correctly.
     if url in ("sqlite://:memory:", "sqlite://"):
         return {
@@ -59,7 +63,7 @@ def sqlite_config_from_url(backend, engine, scheme, url):
             "NAME": ":memory:",
         }
 
-    parsed = backend.parse_url(url)
+    parsed: UrlInfo = backend.parse_url(url)
     path = "/" + parsed.path
     # On windows a path like C:/a/b is parsed with C as the hostname
     # and a/b/ as the path. Reconstruct the windows path here.
@@ -77,13 +81,16 @@ def sqlite_config_from_url(backend, engine, scheme, url):
     ("postgresql", "django.db.backends.postgresql"),
     ("pgsql", "django.db.backends.postgresql"),
 )
-def postgresql_config_from_url(backend, engine, scheme, url):
-    parsed = backend.parse_url(url)
-    host = parsed.hostname.lower()
-    # Handle postgres percent-encoded paths.
-    if "%2f" in host or "%3a" in host:
-        parsed.hostname = parse.unquote(parsed.hostname)
-    config = backend.config_from_url(engine, scheme, parsed)
+def postgresql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url)
+
+    if parsed.hostname:
+        host = parsed.hostname.lower()
+        # Handle postgres percent-encoded paths.
+        if "%2f" in host or "%3a" in host:
+            parsed.hostname = parse.unquote(parsed.hostname)
+
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
     if "currentSchema" in config["OPTIONS"]:
         value = config["OPTIONS"].pop("currentSchema")
         config["OPTIONS"]["options"] = f"-c search_path={value}"
@@ -94,8 +101,8 @@ def postgresql_config_from_url(backend, engine, scheme, url):
     ("mysql", "django.db.backends.mysql"),
     ("mysql+gis", "django.contrib.gis.db.backends.mysql"),
 )
-def mysql_config_from_url(backend, engine, scheme, url):
-    config = backend.config_from_url(engine, scheme, url)
+def mysql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    config: ConfigDict = backend.config_from_url(engine, scheme, url)
     if "ssl-ca" in config["OPTIONS"]:
         value = config["OPTIONS"].pop("ssl-ca")
         config["OPTIONS"]["ssl"] = {"ca": value}
@@ -106,8 +113,8 @@ def mysql_config_from_url(backend, engine, scheme, url):
     ("oracle", "django.db.backends.oracle"),
     ("oracle+gis", "django.contrib.gis.db.backends.oracle"),
 )
-def oracle_config_from_url(backend, engine, scheme, url):
-    config = backend.config_from_url(engine, scheme, url)
+def oracle_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    config: ConfigDict = backend.config_from_url(engine, scheme, url)
     # Oracle requires string ports
     config["PORT"] = str(config["PORT"])
     return config

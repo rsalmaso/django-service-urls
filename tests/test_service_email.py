@@ -89,10 +89,10 @@ EMAIL_SMTP_DEFAULT_TESTS = [
 
 
 class EmailsTests(unittest.TestCase):
-    def test_parsing_python_email_backend_should_raise_an_exception(self):
+    def test_parsing_python_email_backend_should_raise_an_exception(self) -> None:
         self.assertRaises(ValueError, email.parse, "django.core.mail.backends.console.EmailBackend")
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         for test in EMAIL_SMTP_DEFAULT_TESTS:
             urls, expected = test[0], test[1]
             for url in urls:
@@ -102,7 +102,7 @@ class EmailsTests(unittest.TestCase):
                     for k, v in expected.items():
                         self.assertEqual(result[k], v)
 
-    def test_smtp_with_all_ssl_options(self):
+    def test_smtp_with_all_ssl_options(self) -> None:
         """Test SMTP with all SSL options."""
         result = email.parse(
             "smtp://user:pass@host:587/?use_tls=true&use_ssl=false&ssl_certfile=/path/cert&ssl_keyfile=/path/key&timeout=60"
@@ -118,24 +118,24 @@ class EmailsTests(unittest.TestCase):
         self.assertEqual(result["SSL_KEYFILE"], "/path/key")
         self.assertEqual(result["TIMEOUT"], 60)
 
-    def test_smtp_with_use_localtime_option(self):
+    def test_smtp_with_use_localtime_option(self) -> None:
         """Test SMTP with use_localtime option."""
         result = email.parse("smtp://user:pass@host:587/?use_localtime=true")
         self.assertEqual(result["USE_LOCALTIME"], True)
 
-    def test_smtps_automatic_tls_setting(self):
+    def test_smtps_automatic_tls_setting(self) -> None:
         """Test that smtps:// automatically sets USE_TLS=True."""
         result = email.parse("smtps://user:pass@host:465/")
         self.assertEqual(result["USE_TLS"], True)
         self.assertEqual(result["USE_SSL"], False)
 
-    def test_smtp_tls_automatic_tls_setting(self):
+    def test_smtp_tls_automatic_tls_setting(self) -> None:
         """Test that smtp+tls:// automatically sets USE_TLS=True."""
         result = email.parse("smtp+tls://user:pass@host:587/")
         self.assertEqual(result["USE_TLS"], True)
         self.assertEqual(result["USE_SSL"], False)
 
-    def test_smtp_ssl_automatic_ssl_setting(self):
+    def test_smtp_ssl_automatic_ssl_setting(self) -> None:
         """Test that smtp+ssl:// automatically sets USE_SSL=True."""
         result = email.parse("smtp+ssl://user:pass@host:465/")
         self.assertEqual(result["USE_TLS"], False)
@@ -143,36 +143,36 @@ class EmailsTests(unittest.TestCase):
 
 
 class ConsoleEmailTestCase(unittest.TestCase):
-    def test_console(self):
+    def test_console(self) -> None:
         result = email.parse("console://")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.console.EmailBackend")
 
 
 class FileEmailTestCase(unittest.TestCase):
-    def test_file_empty(self):
+    def test_file_empty(self) -> None:
         result = email.parse("file://")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.filebased.EmailBackend")
         self.assertEqual(result["FILE_PATH"], "/")
 
-    def test_file_backend_windows_path(self):
+    def test_file_backend_windows_path(self) -> None:
         result = email.parse("file://C:/email/logs")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.filebased.EmailBackend")
         self.assertEqual(result["FILE_PATH"], "C:/email/logs")
 
-    def test_file_backend_unix_path(self):
+    def test_file_backend_unix_path(self) -> None:
         result = email.parse("file:///var/log/email")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.filebased.EmailBackend")
         self.assertEqual(result["FILE_PATH"], "/var/log/email")
 
 
 class MemoryEmailTestCase(unittest.TestCase):
-    def test_memory(self):
+    def test_memory(self) -> None:
         result = email.parse("memory://")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.locmem.EmailBackend")
 
 
 class DummyEmailTestCase(unittest.TestCase):
-    def test_dummy(self):
+    def test_dummy(self) -> None:
         result = email.parse("dummy://")
         self.assertEqual(result["ENGINE"], "django.core.mail.backends.dummy.EmailBackend")
 

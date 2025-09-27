@@ -39,14 +39,14 @@ def setup(set_prefix: bool = True) -> None:
             setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
             setattr(settings, setting, v)
 
-    django._django_service_urls_original_django_setup(set_prefix)
+    django._django_service_urls_original_django_setup(set_prefix)  # type: ignore[attr-defined]
 
 
-def patch():
+def patch() -> None:
     import django
 
     if not getattr(django, "_django_service_urls_original_setup", None):
-        django._django_service_urls_original_django_setup = django.setup
+        django._django_service_urls_original_django_setup = django.setup  # type: ignore[attr-defined]
         django.setup = setup
 
 

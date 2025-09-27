@@ -23,14 +23,22 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from mypy.plugin import Plugin
+from typing import Type, TYPE_CHECKING
 
 import django_service_urls.loads  # noqa: F401
 
+if TYPE_CHECKING:
+    from mypy.plugin import Plugin
+else:
+    try:
+        from mypy.plugin import Plugin
+    except ImportError:
+        Plugin = object  # type: ignore[misc,assignment]
 
-class ServiceUrlsPlugin(Plugin):
+
+class ServiceUrlsPlugin(Plugin):  # type: ignore[misc]
     pass
 
 
-def plugin(version: str):
+def plugin(version: str) -> Type[ServiceUrlsPlugin]:
     return ServiceUrlsPlugin

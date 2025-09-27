@@ -22,13 +22,13 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeAlias
 from urllib import parse
 
 __all__ = ["parse_url"]
 
 
-def _get_host_and_port(netloc):
+def _get_host_and_port(netloc: str) -> tuple[str, int | None]:
     """
     Parse a network location string into hostname and port components.
 
@@ -58,14 +58,14 @@ def _get_host_and_port(netloc):
         _, _, port = port.partition(":")
     else:
         hostname, _, port = hostinfo.partition(":")
-    if not port:
-        port = None
-    else:
-        port = int(port)
-    return hostname, port
+    return hostname, None if not port else int(port)
 
 
-def _cast_value(value):
+CastValue: TypeAlias = int | bool | str | None
+CastValues: TypeAlias = list[CastValue] | CastValue
+
+
+def _cast_value(value: str) -> CastValue:
     """
     Cast a string value to its appropriate type (int, bool, str or None).
 
@@ -92,7 +92,7 @@ def _cast_value(value):
         (None, None)
     """
 
-    casted_value = value
+    casted_value: CastValue = value
     match value.lower():
         case "true" | "t" | "1" | "yes" | "y":
             casted_value = True
@@ -108,7 +108,7 @@ def _cast_value(value):
     return casted_value
 
 
-def _set_nested_option(options, key, value):
+def _set_nested_option(options: dict[str, Any], key: str, value: Any) -> None:
     """
     Set a nested option using dot notation.
 
@@ -140,14 +140,16 @@ def _set_nested_option(options, key, value):
     current[parts[-1]] = value
 
 
-def _parse_querystring(data):
+def _parse_querystring(data: str) -> dict[str, Any]:
     """Parse a query string into a typed dictionary with nested structure support."""
 
-    parsed_data = parse.parse_qs(data, keep_blank_values=True)
-    result = {}
+    parsed_data: dict[str, Any] = parse.parse_qs(data, keep_blank_values=True)
+    result: dict[str, Any] = {}
     for key, values in parsed_data.items():
         # Handle multiple values as lists
-        processed_value = [_cast_value(value) for value in values] if len(values) > 1 else _cast_value(values[-1])
+        processed_value: CastValues = (
+            [_cast_value(value) for value in values] if len(values) > 1 else _cast_value(values[-1])
+        )
 
         # Handle nested config using dot notation (e.g., TESTING.DATABASES.NAME=test)
         if "." in key:
@@ -172,7 +174,7 @@ class UrlInfo:
     fragment: dict[str, Any] = field(default_factory=dict)
 
 
-def parse_url(url, *, multiple_netloc=False):
+def parse_url(url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:
     """
     Parse URLs into components with automatic type conversion and nested structure support.
 
@@ -199,12 +201,12 @@ def parse_url(url, *, multiple_netloc=False):
         return url
 
     # scheme://netloc/path;parameters?query#fragment
-    parsed = parse.urlsplit(url)
+    parsed: parse.SplitResult = parse.urlsplit(url)
     # 1) cannot have multiple files, so assume that they are always hostnames
     # 2) parsed.hostname always returns a lower-cased hostname
     #    this isn't correct if hostname is a file path, so parse with the same
     #    algorithm of _hostinfo (and cast port to int if exists)
-    netlocs = parsed.netloc.split(",") if multiple_netloc else []
+    netlocs: list[str] = parsed.netloc.split(",") if multiple_netloc else []
     hostname, port = (None, None) if len(netlocs) > 1 else _get_host_and_port(parsed.netloc)
 
     return UrlInfo(

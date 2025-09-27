@@ -24,7 +24,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def get_version(version):
+def get_version(version: tuple[int, int, int, str, int]) -> str:
     """Returns a PEP 386-compliant version number from VERSION."""
     assert len(version) == 5
     assert version[3] in ("alpha", "beta", "rc", "final", "post")

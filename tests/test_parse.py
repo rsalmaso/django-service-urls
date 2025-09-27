@@ -29,7 +29,7 @@ from django_service_urls.parse import _get_host_and_port, parse_url, UrlInfo
 class GetHostAndPortTestCase(unittest.TestCase):
     """Test get_host_and_port utility function."""
 
-    def test_get_host_and_port(self):
+    def test_get_host_and_port(self) -> None:
         """Test basic hostname and port parsing."""
         test_cases = [
             # (input, expected_hostname, expected_port, description)
@@ -70,23 +70,23 @@ class GetHostAndPortTestCase(unittest.TestCase):
 
 
 class ParseUrlTestCase(unittest.TestCase):
-    def test_hostname_sensitivity(self):
+    def test_hostname_sensitivity(self) -> None:
         parsed = parse_url("http://CaseSensitive")
         self.assertEqual(parsed.hostname, "CaseSensitive")
 
-    def test_port_is_an_integer(self):
+    def test_port_is_an_integer(self) -> None:
         parsed = parse_url("http://CaseSensitive:123")
         self.assertIsInstance(parsed.port, int)
 
-    def test_path_strips_leading_slash(self):
+    def test_path_strips_leading_slash(self) -> None:
         parsed = parse_url("http://test/abc")
         self.assertEqual(parsed.path, "abc")
 
-    def test_query_parameters_integer(self):
+    def test_query_parameters_integer(self) -> None:
         parsed = parse_url("http://test/?a=1")
         self.assertDictEqual(parsed.query, {"a": 1})
 
-    def test_query_parameters_boolean(self):
+    def test_query_parameters_boolean(self) -> None:
         parsed = parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
         self.assertDictEqual(
             parsed.query,
@@ -104,11 +104,11 @@ class ParseUrlTestCase(unittest.TestCase):
             },
         )
 
-    def test_query_multiple_parameters(self):
+    def test_query_multiple_parameters(self) -> None:
         parsed = parse_url("http://test/?a=one&a=two")
         self.assertDictEqual(parsed.query, {"a": ["one", "two"]})
 
-    def test_fragment_parameters(self):
+    def test_fragment_parameters(self) -> None:
         parsed = parse_url(
             "dbengine://user:passwd@host:123/dbname?pool=true#KEY=42&ENABLED=true&TEST.default.NAME=testdb&TEST.default.ENABLED=true"
         )
@@ -116,11 +116,11 @@ class ParseUrlTestCase(unittest.TestCase):
         expected = {"KEY": 42, "ENABLED": True, "TEST": {"default": {"NAME": "testdb", "ENABLED": True}}}
         self.assertDictEqual(parsed.fragment, expected)
 
-    def test_does_not_reparse(self):
+    def test_does_not_reparse(self) -> None:
         parsed = parse_url("http://test/abc")
         self.assertIs(parse_url(parsed), parsed)
 
-    def test_parse_url_with_multiple_netloc(self):
+    def test_parse_url_with_multiple_netloc(self) -> None:
         url = "scheme://host1:1234,host2:5678/path"
         result = parse_url(url, multiple_netloc=True)
 
@@ -129,7 +129,7 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertIsNone(result.hostname)
         self.assertIsNone(result.port)
 
-    def test_parse_url_without_multiple_netloc(self):
+    def test_parse_url_without_multiple_netloc(self) -> None:
         url = "scheme://host:1234/path"
         result = parse_url(url, multiple_netloc=False)
 
@@ -138,12 +138,12 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertEqual(result.hostname, "host")
         self.assertEqual(result.port, 1234)
 
-    def test_parse_url_with_already_parsed_url(self):
+    def test_parse_url_with_already_parsed_url(self) -> None:
         input = UrlInfo()
         result = parse_url(input)
         self.assertIs(result, input)
 
-    def test_parse_url_query_parameter_types(self):
+    def test_parse_url_query_parameter_types(self) -> None:
         url = "scheme://host/path?int_param=123&bool_true=true&bool_false=false&string_param=value"
         result = parse_url(url)
 
