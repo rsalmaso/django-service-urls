@@ -23,7 +23,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import MutableMapping
 from typing import Any, Callable, TypeAlias, TypedDict
 from urllib.parse import urlsplit
 
@@ -38,76 +38,73 @@ ServiceCallback: TypeAlias = Callable[["Service", str, str, str], ConfigDict]
 
 
 class SchemeRegistration(TypedDict):
-    """Registration information for a URL scheme."""
-
     engine: str
     callback: ServiceCallback
 
 
 class Service:
     def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+        """Convert URL to Django configuration dictionary. Must be implemented by subclasses."""
+
         raise NotImplementedError("")
 
     def __init__(self) -> None:
         self._schemes: dict[str, SchemeRegistration] = {}
 
     def validate(self, data: str) -> str | None:
+        """Extract URL scheme or return None if no scheme found."""
+
         parsed = urlsplit(data)
         return parsed.scheme if parsed.scheme else None
 
-    def _parse(self, data: str | ConfigDict) -> ConfigDict:
-        if isinstance(data, Mapping):
-            # return as is
-            return data
-
-        if not isinstance(data, str):
-            # invalid input type
-            raise ValidationError(f"Invalid input type: {type(data)}")
-
-        if not data:
-            # empty string
-            return {}
-
-        scheme: str | None = self.validate(data)
-        if scheme is None:
-            raise ValidationError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
-        try:
-            _scheme: SchemeRegistration = self._schemes[scheme]
-        except KeyError:
-            raise ValidationError(f"{scheme}:// scheme not registered")
-        callback: ServiceCallback = _scheme["callback"]
-        engine: str = _scheme["engine"]
-        result: ConfigDict = callback(self, engine, scheme, data)
-        return result
-
     def parse(self, data: str | ConfigDict) -> ConfigDict:
         """
-        Parse configuration data from various input formats.
-
-        Accepts the following types of valid input:
-        - Raw URL string: "scheme://config/"
-        - Top-level dictionary: dict[str, str]
-        - Nested dictionary: dict[str, dict[str, Any]] (returned as-is)
+        Parse URL strings or configuration dictionaries into Django configs.
 
         Args:
-            data: Configuration data as URL string or dictionary mapping
+            data: a django configuration data or an URL string
 
-        Returns:
-            dict[str, Any]: Parsed configuration dictionary
+        Examples:
+            >>> service.parse("postgres://user:password@localhost:5432/dbname")
+            {"ENGINE": "django.db.backends.postgresql", "NAME": "dbname", "USER": "user", "PASSWORD": "password", "HOST": "localhost", "PORT": 5432}
 
-        Raises:
-            ValidationError: For unsupported input types or invalid URLs
-        """
-        if isinstance(data, Mapping):
-            return {k: self._parse(v) for k, v in data.items()}
-        return self._parse(data)
+            >>> service.parse("unregistered://user:password@localhost:5432/dbname")
+            ValidationError: ["'unregistered://' scheme is not registered"]
+
+            >>> service.parse({"ENGINE": "django.db.backends.postgresql"})
+            ValidationError: {'ENGINE': ["'django.db.backends.postgresql' is invalid, only full dsn urls (scheme://host...) are allowed"]}
+
+            >>> service.parse({"default": "postgres://user:password@localhost:5432/dbname", "db2": {"ENGINE": "django.db.backends.postgresql"}})
+            {"default": {"ENGINE": "django.db.backends.postgresql", "NAME": "dbname", "USER": "user", "PASSWORD": "password", "HOST": "localhost", "PORT": 5432}, "db2": {"ENGINE": "django.db.backends.postgresql"}}
+
+            >>> service.parse({"default": {"ENGINE": "django.db.backends.postgresql", "NAME": "dbname", "USER": "user", "PASSWORD": "password", "HOST": "localhost", "PORT": 5432}, "db2": "django.db.backends.postgresql", "db3": "mydb://user:password@localhost:5432/dbname"})
+            ValidationError: {
+                'db2': ["'django.db.backends.postgresql' is invalid, only full dsn urls (scheme://host...) are allowed"],
+                'db3': ["'mydb://' scheme is not registered"],
+            }
+        """  # noqa: E501
+
+        if isinstance(data, dict):
+            errors: dict[str, ValidationError] = {}
+            parsed_data: dict[str, ConfigDict] = {}
+            for key, value in data.items():
+                try:
+                    parsed_data[key] = value if isinstance(value, dict) else self._parse(value)
+                except ValidationError as exc:
+                    errors[key] = exc
+            if errors:
+                raise ValidationError(errors)
+            return parsed_data
+        elif isinstance(data, str):
+            return self._parse(data)
+        raise ValidationError(f"Invalid input type: {type(data)}")  # invalid input type
 
     def parse_url(self, url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:
         """
         Parse URLs into components with automatic type conversion and nested structure support.
 
         Args:
-            url: The URL string to parse, or a dict (returned as-is if already parsed)
+            url: The URL string to parse, or a UrlInfo data object (returned as-is if already parsed)
             multiple_netloc: If True, split netloc on commas for multiple hosts
 
         Returns:
@@ -131,7 +128,12 @@ class Service:
         Register a service callback with a scheme and engine.
 
         Args:
-            args: Tuple of scheme and engine
+            args: (scheme, engine) tuple of schemes and engines to register
+
+        Example:
+            >>> @service.register(("postgres", "django.db.backends.postgresql"))
+            ... def postgres_config(service, engine, scheme, url):
+            ...     return service.config_from_url(engine, scheme, url)
 
         Returns:
             Callable[[ServiceCallback], ServiceCallback]: Decorator function
@@ -143,3 +145,58 @@ class Service:
             return callback
 
         return wrapper
+
+    def _parse(self, data: str) -> ConfigDict:
+        """
+        Parse URL string into Django configuration dictionary.
+
+        Accepts the following types of valid input:
+        - Raw URL string: "scheme://config/"
+        - Empty string: {}
+
+        Args:
+            data: Configuration data as URL string
+
+        Returns:
+            Parsed django configuration
+
+        Raises:
+            ValidationError: For unsupported input types or invalid URLs (ValueError)
+
+        Examples:
+            >>> service._parse("postgres://user:password@localhost:5432/dbname")
+            {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": "dbname",
+                "USER": "user",
+                "PASSWORD": "password",
+                "HOST": "localhost",
+                "PORT": 5432,
+            }
+
+            >>> service._parse("unregistered://user:password@localhost:5432/dbname")
+            ValidationError: ["'unregistered://' scheme is not registered"]
+
+            >>> service._parse("django.db.backends.postgresql")
+            ValidationError: ["'django.db.backends.postgresql' is invalid, only full dsn urls (scheme://host...) are allowed"]
+        """  # noqa: E501
+
+        if not isinstance(data, str):
+            raise ValidationError(f"Invalid input type: {type(data)}")  # invalid input type
+
+        if not data:
+            return {}  # empty string treated as empty dict
+
+        scheme: str | None = self.validate(data)
+        if scheme is None:
+            raise ValidationError(f"{data!r} is invalid, only full dsn urls (scheme://host...) are allowed")
+
+        try:
+            _scheme: SchemeRegistration = self._schemes[scheme]
+        except KeyError:
+            scheme_with_colon = f"{scheme}://"
+            raise ValidationError(f"{scheme_with_colon!r} scheme is not registered")
+        callback: ServiceCallback = _scheme["callback"]
+        engine: str = _scheme["engine"]
+        result: ConfigDict = callback(self, engine, scheme, data)
+        return result

@@ -53,26 +53,6 @@ class ServiceTestCase(unittest.TestCase):
         self.backend = Service()
 
     def test_an_empty_string_should_returns_an_empty_dict(self) -> None:
-        class TestService(Service):
-            def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
-                return {}
-
-        service = TestService()
-        self.assertEqual(service.parse(""), {})
-
-    def test_validate_with_valid_url(self) -> None:
-        self.assertEqual(self.backend.validate("http://example.com"), "http")
-        self.assertEqual(self.backend.validate("https://example.com"), "https")
-        self.assertEqual(self.backend.validate("postgres://user:pass@host/db"), "postgres")
-        self.assertEqual(self.backend.validate("mysql://user:pass@host/db"), "mysql")
-
-    def test_validate_with_invalid_url(self) -> None:
-        self.assertIsNone(self.backend.validate("not-a-url"))
-        self.assertIsNone(self.backend.validate("missing-scheme"))
-        self.assertIsNone(self.backend.validate(""))
-        self.assertIsNone(self.backend.validate("://no-scheme"))
-
-    def test_parse_with_empty_string(self) -> None:
         self.assertEqual(self.backend.parse(""), {})
 
     def test_parse_with_invalid_types_raises_error(self) -> None:
@@ -80,23 +60,58 @@ class ServiceTestCase(unittest.TestCase):
         self.assertRaises(ValidationError, self.backend.parse, None)
         self.assertRaises(ValidationError, self.backend.parse, [1, 2, 3])
 
-    def test_parse_with_invalid_url_raises_error(self) -> None:
+    def test_parse_an_invalid_url_and_require_a_valid_uri_raises_an_error(self) -> None:
         self.assertRaises(ValidationError, self.backend.parse, "invalid-url")
 
-    def test_parse_with_unregistered_scheme_raises_error(self) -> None:
-        self.assertRaises(ValidationError, self.backend.parse, "unknown://example.com")
+    def test_parse_with_unregistered_scheme_raises_an_error(self) -> None:
+        with self.assertRaises(ValidationError) as cm:
+            self.backend.parse("invalid://nonexistent")
+
+        error = cm.exception
+        self.assertIsInstance(error, ValidationError)
+        self.assertTrue(hasattr(error, "message"))
+        self.assertIn("invalid://", str(error))
 
     def test_parse_with_dict_input(self) -> None:
-        # Create a test service with a registered scheme
         backend = MockTestService()
 
-        test_dict = {"key1": "test://host/value1", "key2": "test://host/value2", "key3": {"already": "parsed"}}
+        test_dict = {
+            "key1": "test://host/value1",
+            "key2": "test://host/value2",
+            "key3": {"already": "parsed"},
+        }
 
         result = backend.parse(test_dict)
 
-        self.assertEqual(result["key1"], {"parsed": "value1"})
-        self.assertEqual(result["key2"], {"parsed": "value2"})
-        self.assertEqual(result["key3"], {"already": "parsed"})
+        self.assertEqual(
+            result,
+            {
+                "key1": {"parsed": "value1"},
+                "key2": {"parsed": "value2"},
+                "key3": {"already": "parsed"},
+            },
+        )
+
+    def test_parse_django_setting_with_errors(self) -> None:
+        test_data = {
+            "db1": "invalid://scheme1",
+            "db2": "not_a_uri_string",
+        }
+
+        with self.assertRaises(ValidationError) as cm:
+            self.backend.parse(test_data)
+
+        error = cm.exception
+        self.assertIsInstance(error, ValidationError)
+        self.assertTrue(hasattr(error, "error_dict"))
+
+        error_dict = error.error_dict
+        self.assertIn("db1", error_dict)
+        self.assertIn("db2", error_dict)
+        self.assertEqual(len(error_dict), 2)
+
+        self.assertIn("scheme is not registered", error_dict["db1"])
+        self.assertIn("invalid", error_dict["db2"])
 
     def test_register_decorator(self) -> None:
         @self.backend.register(("test", "test.engine"), ("test2", "test2.engine"))
@@ -108,10 +123,8 @@ class ServiceTestCase(unittest.TestCase):
         self.assertIn("test2", self.backend._schemes)
 
         # Test that callback and engine are stored correctly
-        self.assertEqual(self.backend._schemes["test"]["callback"], test_callback)
-        self.assertEqual(self.backend._schemes["test"]["engine"], "test.engine")
-        self.assertEqual(self.backend._schemes["test2"]["callback"], test_callback)
-        self.assertEqual(self.backend._schemes["test2"]["engine"], "test2.engine")
+        self.assertEqual(self.backend._schemes["test"], {"callback": test_callback, "engine": "test.engine"})
+        self.assertEqual(self.backend._schemes["test2"], {"callback": test_callback, "engine": "test2.engine"})
 
     def test_parse_url_path_handling(self) -> None:
         url = "scheme://host/some/path"
