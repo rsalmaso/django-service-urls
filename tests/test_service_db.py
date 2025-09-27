@@ -25,7 +25,7 @@
 
 import unittest
 
-from django_service_urls import cache, db
+from django_service_urls import cache, db, ValidationError
 
 GENERIC_TESTS = [
     ("username:password@domain/database", ("username", "password", "domain", "", "database", {})),
@@ -288,7 +288,7 @@ class OracleTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_empty_dsn_parsing(self) -> None:
         dsn = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=oraclehost)(PORT=1521)))(CONNECT_DATA=(SID=hr)))"
-        self.assertRaises(ValueError, db.parse, dsn)
+        self.assertRaises(ValidationError, db.parse, dsn)
 
     def test_oracle_gis_backend(self) -> None:
         result = db.parse("oracle+gis://user:pass@host:1521/dbname")

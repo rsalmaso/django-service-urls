@@ -27,6 +27,7 @@ from typing import Any
 import unittest
 
 from django_service_urls.base import ConfigDict, Service
+from django_service_urls.exceptions import ValidationError
 from django_service_urls.parse import parse_url, UrlInfo
 
 
@@ -75,15 +76,15 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(self.backend.parse(""), {})
 
     def test_parse_with_invalid_types_raises_error(self) -> None:
-        self.assertRaises(ValueError, self.backend.parse, 123)
-        self.assertRaises(ValueError, self.backend.parse, None)
-        self.assertRaises(ValueError, self.backend.parse, [1, 2, 3])
+        self.assertRaises(ValidationError, self.backend.parse, 123)
+        self.assertRaises(ValidationError, self.backend.parse, None)
+        self.assertRaises(ValidationError, self.backend.parse, [1, 2, 3])
 
     def test_parse_with_invalid_url_raises_error(self) -> None:
-        self.assertRaises(ValueError, self.backend.parse, "invalid-url")
+        self.assertRaises(ValidationError, self.backend.parse, "invalid-url")
 
     def test_parse_with_unregistered_scheme_raises_error(self) -> None:
-        self.assertRaises(ValueError, self.backend.parse, "unknown://example.com")
+        self.assertRaises(ValidationError, self.backend.parse, "unknown://example.com")
 
     def test_parse_with_dict_input(self) -> None:
         # Create a test service with a registered scheme

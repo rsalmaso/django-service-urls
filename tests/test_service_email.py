@@ -25,7 +25,7 @@
 
 import unittest
 
-from django_service_urls import email
+from django_service_urls import email, ValidationError
 
 EMAIL_SMTP_DEFAULT_TESTS = [
     (
@@ -90,7 +90,7 @@ EMAIL_SMTP_DEFAULT_TESTS = [
 
 class EmailsTests(unittest.TestCase):
     def test_parsing_python_email_backend_should_raise_an_exception(self) -> None:
-        self.assertRaises(ValueError, email.parse, "django.core.mail.backends.console.EmailBackend")
+        self.assertRaises(ValidationError, email.parse, "django.core.mail.backends.console.EmailBackend")
 
     def test_default_values(self) -> None:
         for test in EMAIL_SMTP_DEFAULT_TESTS:

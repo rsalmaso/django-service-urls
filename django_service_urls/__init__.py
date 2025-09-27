@@ -24,6 +24,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 from .base import ConfigDict, Service  # noqa: F401
+from .exceptions import ValidationError  # noqa: F401
 from .parse import UrlInfo  # noqa: F401
 from .services import cache, db, email  # noqa: F401
 from .version import get_version
@@ -34,4 +35,4 @@ __version__ = get_version(VERSION)
 __author__ = "Raffaele Salmaso"
 __email__ = "raffele@salmaso.org"
 
-__all__ = ["Service", "ConfigDict", "UrlInfo", "cache", "db", "email"]
+__all__ = ["Service", "ConfigDict", "ValidationError", "UrlInfo", "cache", "db", "email"]

@@ -27,6 +27,7 @@ from collections.abc import Mapping, MutableMapping
 from typing import Any, Callable, TypeAlias, TypedDict
 from urllib.parse import urlsplit
 
+from .exceptions import ValidationError
 from .parse import parse_url, UrlInfo
 
 __all__ = ["ConfigDict", "Service"]
@@ -61,7 +62,7 @@ class Service:
 
         if not isinstance(data, str):
             # invalid input type
-            raise ValueError(f"Invalid input type: {type(data)}")
+            raise ValidationError(f"Invalid input type: {type(data)}")
 
         if not data:
             # empty string
@@ -69,11 +70,11 @@ class Service:
 
         scheme: str | None = self.validate(data)
         if scheme is None:
-            raise ValueError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
+            raise ValidationError(f"{data} is invalid, only full dsn urls (scheme://host...) allowed")
         try:
             _scheme: SchemeRegistration = self._schemes[scheme]
         except KeyError:
-            raise ValueError(f"{scheme}:// scheme not registered")
+            raise ValidationError(f"{scheme}:// scheme not registered")
         callback: ServiceCallback = _scheme["callback"]
         engine: str = _scheme["engine"]
         result: ConfigDict = callback(self, engine, scheme, data)
@@ -95,7 +96,7 @@ class Service:
             dict[str, Any]: Parsed configuration dictionary
 
         Raises:
-            ValueError: For unsupported input types or invalid URLs
+            ValidationError: For unsupported input types or invalid URLs
         """
         if isinstance(data, Mapping):
             return {k: self._parse(v) for k, v in data.items()}
