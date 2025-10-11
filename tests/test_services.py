@@ -28,7 +28,7 @@ import unittest
 
 from django_service_urls.base import ConfigDict, Service
 from django_service_urls.exceptions import ValidationError
-from django_service_urls.parse import parse_url, UrlInfo
+from django_service_urls.parse import UrlInfo
 
 
 class MockTestService(Service):
@@ -125,21 +125,6 @@ class ServiceTestCase(unittest.TestCase):
         # Test that callback and engine are stored correctly
         self.assertEqual(self.backend._schemes["test"], {"callback": test_callback, "engine": "test.engine"})
         self.assertEqual(self.backend._schemes["test2"], {"callback": test_callback, "engine": "test2.engine"})
-
-    def test_parse_url_path_handling(self) -> None:
-        url = "scheme://host/some/path"
-        result = parse_url(url)
-
-        self.assertEqual(result.path, "some/path")  # Leading slash removed
-        self.assertEqual(result.fullpath, "/some/path")  # Full path preserved
-
-    def test_parse_url_username_password_encoding(self) -> None:
-        url = "scheme://user%40domain:pass%40word@host/db"
-        result = parse_url(url)
-
-        # Note: urllib.parse.urlsplit doesn't automatically decode username/password
-        self.assertEqual(result.username, "user%40domain")
-        self.assertEqual(result.password, "pass%40word")
 
 
 if __name__ == "__main__":

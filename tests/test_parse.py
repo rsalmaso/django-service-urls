@@ -152,6 +152,21 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertEqual(result.query["bool_false"], False)
         self.assertEqual(result.query["string_param"], "value")
 
+    def test_parse_url_path_handling(self) -> None:
+        url = "scheme://host/some/path"
+        result = parse_url(url)
+
+        self.assertEqual(result.path, "some/path")  # Leading slash removed
+        self.assertEqual(result.fullpath, "/some/path")  # Full path preserved
+
+    def test_parse_url_username_password_encoding(self) -> None:
+        url = "scheme://user%40domain:pass%40word@host/db"
+        result = parse_url(url)
+
+        # Note: urllib.parse.urlsplit doesn't automatically decode username/password
+        self.assertEqual(result.username, "user%40domain")
+        self.assertEqual(result.password, "pass%40word")
+
 
 if __name__ == "__main__":
     unittest.main()
