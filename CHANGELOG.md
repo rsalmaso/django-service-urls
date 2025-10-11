@@ -9,6 +9,7 @@
 * allowed null values in query string/fragments
 * added typing to the codebase
 * added `storage` service
+* added `task` service
 
 ## 1.9.0
 

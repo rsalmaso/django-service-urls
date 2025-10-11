@@ -23,16 +23,36 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from .base import ConfigDict, Service  # noqa: F401
-from .exceptions import ValidationError  # noqa: F401
-from .parse import UrlInfo  # noqa: F401
-from .services import cache, db, email, storage, task  # noqa: F401
-from .version import get_version
+from typing import Any
 
-VERSION = (1, 9, 0, "final", 0)
+from django_service_urls.base import ConfigDict, Service
+from django_service_urls.parse import UrlInfo
 
-__version__ = get_version(VERSION)
-__author__ = "Raffaele Salmaso"
-__email__ = "raffele@salmaso.org"
+__all__ = ["task"]
 
-__all__ = ["Service", "ConfigDict", "ValidationError", "UrlInfo", "cache", "db", "email", "storage", "task"]
+
+class TaskService(Service):
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+        parsed: UrlInfo = self.parse_url(url)
+        config: ConfigDict = {
+            "BACKEND": parsed.hostname if engine == "<backend>" else engine,
+            "OPTIONS": parsed.query,
+        }
+        config.update({k: v for k, v in parsed.fragment.items() if k not in config})
+        return config
+
+
+task: TaskService = TaskService()
+
+
+@task.register(
+    ("task", "<backend>"),
+    ("dummy", "django.tasks.backends.dummy.DummyBackend"),
+    ("immediate", "django.tasks.backends.immediate.ImmediateBackend"),
+    ("dummy+dt", "django_tasks.backends.dummy.DummyBackend"),
+    ("immediate+dt", "django_tasks.backends.immediate.ImmediateBackend"),
+    ("database+dt", "django_tasks.backends.database.DatabaseBackend"),
+    ("rq+dt", "django_tasks.backends.rq.RQBackend"),
+)
+def tasks_smtp_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    return backend.config_from_url(engine, scheme, url)

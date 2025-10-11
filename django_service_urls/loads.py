@@ -28,13 +28,16 @@ def setup(set_prefix: bool = True) -> None:
     import django
     from django.conf import settings
 
-    from django_service_urls.services import cache, db, email, storage
+    from django_service_urls.services import cache, db, email, storage, task
 
     settings.DATABASES = db.parse(settings.DATABASES)
     settings.CACHES = cache.parse(settings.CACHES)
 
     if hasattr(settings, "STORAGES"):
         settings.STORAGES = storage.parse(settings.STORAGES)
+
+    if hasattr(settings, "TASKS"):
+        settings.TASKS = task.parse(settings.TASKS)
 
     # preserve EMAIL_BACKEND backward compatibility
     if email.validate(settings.EMAIL_BACKEND):

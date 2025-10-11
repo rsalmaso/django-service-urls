@@ -1,6 +1,6 @@
 # django-service-urls
 
-`django-service-urls` is a setting helper for django to represent databases, caches, email and storages backends via a single string.
+`django-service-urls` is a setting helper for django to represent databases, caches, email, storages and task backends via a single string.
 
 This work is based on [dj-database-url](https://github.com/jazzband/dj-database-url) and [https://github.com/django/django/pull/8562](https://github.com/django/django/pull/8562).
 
@@ -60,6 +60,13 @@ STORAGES = {
         },
     },
 }
+
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+        "OPTIONS": {},
+    },
+}
 ```
 
 Replace with:
@@ -77,6 +84,10 @@ EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_cert
 
 STORAGES = {
     'default': os.environ.get('STORAGE_DEFAULT', 's3://?bucket_name=mybucket&region_name=us-east-1'),
+}
+
+TASKS = {
+    'default': os.environ.get('TASKS_DEFAULT', 'database+dt://'),
 }
 ```
 
@@ -150,7 +161,7 @@ URL fragments (after `#`) create top-level Django configuration keys, ideal for 
 
 ## Backends
 
-Currently `django-service-urls` supports four different services:
+Currently `django-service-urls` supports five different services:
 
 ### DATABASES (``django_service_urls.db``)
 
@@ -227,6 +238,18 @@ Dropbox | storages.backends.dropbox.DropboxStorage | dropbox://
 FTP | storages.backends.ftp.FTPStorage | ftp://
 Google Cloud | storages.backends.gcloud.GoogleCloudStorage | google://
 SFTP | storages.backends.sftpstorage.SFTPStorage | sftp://
+
+### TASKS (``django_service_urls.task``)
+
+Service | Backend | URLString
+--------|---------|-----------
+Custom backend | (specified in URL) | task://your.task.Backend
+Dummy | django.tasks.backends.dummy.DummyBackend | dummy://
+Immediate | django.tasks.backends.immediate.ImmediateBackend | immediate://
+Dummy (django-tasks) | django_tasks.backends.dummy.DummyBackend | dummy+dt://
+Immediate (django-tasks) | django_tasks.backends.immediate.ImmediateBackend | immediate+dt://
+Database (django-tasks) | django_tasks.backends.database.DatabaseBackend | database+dt://
+RQ (django-tasks) | django_tasks.backends.rq.RQBackend | rq+dt://
 
 ## Installation
 
