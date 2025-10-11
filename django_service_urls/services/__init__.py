@@ -26,5 +26,6 @@
 from .cache import cache  # noqa: F401
 from .database import db  # noqa: F401
 from .email import email  # noqa: F401
+from .storages import storage  # noqa: F401
 
-__all__ = ["cache", "db", "email"]
+__all__ = ["cache", "db", "email", "storage"]

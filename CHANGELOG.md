@@ -8,6 +8,7 @@
 * refactored the `parse_url` function, now returns a dedicated dataclass
 * allowed null values in query string/fragments
 * added typing to the codebase
+* added `storage` service
 
 ## 1.9.0
 

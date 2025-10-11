@@ -1,6 +1,6 @@
 # django-service-urls
 
-`django-service-urls` is a setting helper for django to represent databases, caches and email settings via a single string.
+`django-service-urls` is a setting helper for django to represent databases, caches, email and storages backends via a single string.
 
 This work is based on [dj-database-url](https://github.com/jazzband/dj-database-url) and [https://github.com/django/django/pull/8562](https://github.com/django/django/pull/8562).
 
@@ -50,6 +50,16 @@ SSL_CERTFILE = '/etc/ssl/cert'
 SSL_KEYFILE = '/etc/ssl/key'
 TIMEOUT = 600
 USE_LOCALTIME = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": "mybucket",
+            "region_name": "us-east-1",
+        },
+    },
+}
 ```
 
 Replace with:
@@ -64,6 +74,10 @@ CACHES = {
 }
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600')
+
+STORAGES = {
+    'default': os.environ.get('STORAGE_DEFAULT', 's3://?bucket_name=mybucket&region_name=us-east-1'),
+}
 ```
 
 ## Advanced Features (Nested dictionaries, lists, fragments, booleans and integers)
@@ -136,7 +150,7 @@ URL fragments (after `#`) create top-level Django configuration keys, ideal for 
 
 ## Backends
 
-Currently `django-service-urls` supports three different services:
+Currently `django-service-urls` supports four different services:
 
 ### DATABASES (``django_service_urls.db``)
 
@@ -192,6 +206,27 @@ SMTP+SSL | django.core.mail.backends.smtp.EmailBackend | smtp+ssl://localhost:58
 File | django.core.mail.backends.filebased.EmailBackend | file:///var/log/emails
 Memory | django.core.mail.backends.locmem.EmailBackend | memory://
 Dummy | django.core.mail.backends.dummy.EmailBackend | dummy://
+
+### STORAGES (``django_service_urls.storage``)
+
+Service | Backend | URLString
+--------|---------|-----------
+Custom backend | (specified in URL) | storage://your.storage.Backend
+FileSystem | django.core.files.storage.filesystem.FileSystemStorage | fs://
+InMemory | django.core.files.storage.memory.InMemoryStorage | memory://
+StaticFiles | django.contrib.staticfiles.storage.StaticFilesStorage | static://
+ManifestStaticFiles | django.contrib.staticfiles.storage.ManifestStaticFilesStorage | manifest://
+WhiteNoise | whitenoise.storage.CompressedStaticFilesStorage | whitenoise://
+WhiteNoise + Manifest | whitenoise.storage.CompressedManifestStaticFilesStorage | whitenoise+static://
+S3 | storages.backends.s3.S3Storage | s3://
+S3 Static | storages.backends.s3.S3StaticStorage | s3+static://
+S3 Manifest | storages.backends.s3.S3ManifestStaticStorage | s3+manifest://
+LibCloud | storages.backends.apache_libcloud.LibCloudStorage | libcloud://
+Azure | storages.backends.azure_storage.AzureStorage | azure://
+Dropbox | storages.backends.dropbox.DropboxStorage | dropbox://
+FTP | storages.backends.ftp.FTPStorage | ftp://
+Google Cloud | storages.backends.gcloud.GoogleCloudStorage | google://
+SFTP | storages.backends.sftpstorage.SFTPStorage | sftp://
 
 ## Installation
 
