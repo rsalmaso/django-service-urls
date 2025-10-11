@@ -51,12 +51,6 @@ class Service:
     def __init__(self) -> None:
         self._schemes: dict[str, SchemeRegistration] = {}
 
-    def validate(self, data: str) -> str | None:
-        """Extract URL scheme or return None if no scheme found."""
-
-        parsed = urlsplit(data)
-        return parsed.scheme if parsed.scheme else None
-
     def parse(self, data: str | ConfigDict) -> ConfigDict:
         """
         Parse URL strings or configuration dictionaries into Django configs.
@@ -187,8 +181,8 @@ class Service:
         if not data:
             return {}  # empty string treated as empty dict
 
-        scheme: str | None = self.validate(data)
-        if scheme is None:
+        scheme = urlsplit(data).scheme
+        if not scheme:
             raise ValidationError(f"{data!r} is invalid, only full dsn urls (scheme://host...) are allowed")
 
         try:

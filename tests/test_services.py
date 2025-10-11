@@ -126,6 +126,35 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(self.backend._schemes["test"], {"callback": test_callback, "engine": "test.engine"})
         self.assertEqual(self.backend._schemes["test2"], {"callback": test_callback, "engine": "test2.engine"})
 
+    def test_mixed_url_and_backend_string_pattern(self) -> None:
+        """Test the pattern for handling both URLs and backend path strings."""
+        backend = MockTestService()
+
+        # Test with valid URL - should parse successfully
+        url_string = "test://host/mypath"
+        result: ConfigDict | str | None
+        try:
+            result = backend.parse(url_string)
+            parsed_successfully = True
+        except ValidationError:
+            parsed_successfully = False
+            result = None
+
+        self.assertTrue(parsed_successfully)
+        self.assertEqual(result, {"parsed": "mypath"})
+
+        # Test with backend path string - should raise ValidationError
+        backend_path = "my.backend.BackendClass"
+        try:
+            result = backend.parse(backend_path)
+            parsed_successfully = True
+        except ValidationError:
+            parsed_successfully = False
+            result = backend_path  # Use the original string as fallback
+
+        self.assertFalse(parsed_successfully)
+        self.assertEqual(result, "my.backend.BackendClass")
+
 
 if __name__ == "__main__":
     unittest.main()

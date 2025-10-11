@@ -28,6 +28,7 @@ def setup(set_prefix: bool = True) -> None:
     import django
     from django.conf import settings
 
+    from django_service_urls.exceptions import ValidationError
     from django_service_urls.services import cache, db, email, storage, task
 
     settings.DATABASES = db.parse(settings.DATABASES)
@@ -39,9 +40,16 @@ def setup(set_prefix: bool = True) -> None:
     if hasattr(settings, "TASKS"):
         settings.TASKS = task.parse(settings.TASKS)
 
-    # preserve EMAIL_BACKEND backward compatibility
-    if email.validate(settings.EMAIL_BACKEND):
-        for k, v in email.parse(settings.EMAIL_BACKEND).items():
+    # Preserve EMAIL_BACKEND backward compatibility
+    # Try to parse as URL; if it's not a URL, it's already a backend path
+    try:
+        email_config = email.parse(settings.EMAIL_BACKEND)
+    except ValidationError:
+        # EMAIL_BACKEND is not a URL, leave it as-is (it's a backend path)
+        pass
+    else:
+        # Only process if parse was successful
+        for k, v in email_config.items():
             setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
             setattr(settings, setting, v)
 

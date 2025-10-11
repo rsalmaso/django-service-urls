@@ -308,6 +308,31 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
 application = get_wsgi_application()
 ```
 
+## Handling Mixed URL and Backend Strings
+
+In some cases, you may want to support both URL strings and traditional Django backend paths (e.g., for backward compatibility). You can use a try-except pattern with `ValidationError`:
+
+```python
+from django_service_urls import email, ValidationError
+
+# Try to parse as URL; if it fails, treat it as a backend path
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+try:
+    email_config = email.parse(EMAIL_BACKEND)
+except ValidationError:
+    # Not a URL, use as-is (it's a backend path string)
+    pass
+else:
+    # Successfully parsed as URL, extract configuration
+    EMAIL_BACKEND = email_config.get('ENGINE')
+    EMAIL_HOST = email_config.get('HOST')
+    EMAIL_PORT = email_config.get('PORT')
+    # ... etc
+```
+
+This pattern is especially useful when migrating from traditional Django settings to URL-based configuration, allowing you to support both formats during the transition.
+
 ## Extend `django-service-urls`
 
 ### Add another handler
