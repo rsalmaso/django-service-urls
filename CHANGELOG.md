@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 2.0.0
 
 * added support for python 3.14
 * added support for django 6.0
