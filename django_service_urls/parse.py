@@ -211,12 +211,12 @@ def parse_url(url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:
 
     return UrlInfo(
         scheme=parsed.scheme,
-        username=parsed.username,
-        password=parsed.password,
-        hostname=hostname,
+        username=parse.unquote(parsed.username) if parsed.username else parsed.username,
+        password=parse.unquote(parsed.password) if parsed.password else parsed.password,
+        hostname=parse.unquote(hostname) if hostname else hostname,
         port=port,
-        path=parsed.path[1:],
-        fullpath=parsed.path,
+        path=parse.unquote(parsed.path[1:]) if parsed.path else parsed.path[1:],
+        fullpath=parse.unquote(parsed.path) if parsed.path else parsed.path,
         query=_parse_querystring(parsed.query),
         location=netlocs if len(netlocs) > 1 else parsed.netloc,
         fragment=_parse_querystring(parsed.fragment),

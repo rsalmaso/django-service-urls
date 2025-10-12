@@ -13,6 +13,7 @@
 * added Mysql GIS and Oracle GIS dj-database-url alias
 * added MSSQL, Redshift, CockroachDB and Timescale service urls
 * removed `Service.validate()` method
+* automatically unquote UrlInfo attributes (username, password, hostname, path and fullpath)
 
 ## 1.9.0
 

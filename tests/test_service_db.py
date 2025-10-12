@@ -102,6 +102,49 @@ class DatabaseTestCaseMixin:
 
         self.assertEqual(result["OPTIONS"], expected_options)  # type: ignore[attr-defined]
 
+    def test_url_encoded_username_and_password(self) -> None:
+        if self.SCHEME is None:
+            return
+        # Test @ symbol and # symbol which are special in URLs
+        result = db.parse(f"{self.SCHEME}://user%40domain:p%40ss%23word@host:5432/dbname")
+        self.assertEqual(result["USER"], "user@domain")  # type: ignore[attr-defined]
+        self.assertEqual(result["PASSWORD"], "p@ss#word")  # type: ignore[attr-defined]
+
+    def test_url_encoded_complex_username_and_password(self) -> None:
+        if self.SCHEME is None:
+            return
+        # Test slash, space, and other special characters
+        result = db.parse(f"{self.SCHEME}://my%2Fuser:pass%20word%21%40%23%24@host:5432/database")
+        self.assertEqual(result["USER"], "my/user")  # type: ignore[attr-defined]
+        self.assertEqual(result["PASSWORD"], "pass word!@#$")  # type: ignore[attr-defined]
+        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "database")  # type: ignore[attr-defined]
+
+    def test_url_encoded_hostname(self) -> None:
+        if self.SCHEME is None:
+            return
+        # Test hostname with encoded special characters and mixed case
+        result = db.parse(f"{self.SCHEME}://user:pass@My%2DServer%2EExample%2ECom:5432/database")
+        self.assertEqual(result["HOST"], "My-Server.Example.Com")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "database")  # type: ignore[attr-defined]
+
+    def test_url_encoded_database_name(self) -> None:
+        if self.SCHEME is None:
+            return
+        # Test database name with spaces and special characters
+        result = db.parse(f"{self.SCHEME}://user:pass@host:5432/My%20Database%2DName")
+        self.assertEqual(result["NAME"], "My Database-Name")  # type: ignore[attr-defined]
+        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
+
+    def test_url_encoded_complex_database_path(self) -> None:
+        if self.SCHEME is None:
+            return
+        # Test path with @, #, and other special chars
+        result = db.parse(f"{self.SCHEME}://user:pass@host:5432/path%2Fto%2Fdb%40company%23123")
+        self.assertEqual(result["NAME"], "path/to/db@company#123")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
+
 
 class SqliteTests(unittest.TestCase):
     def test_empty_url(self) -> None:
@@ -114,10 +157,10 @@ class SqliteTests(unittest.TestCase):
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], ":memory:")
 
-    def _test_file(self, dbname: str) -> None:
+    def _test_file(self, dbname: str, expected: str | None = None) -> None:
         result = db.parse(f"sqlite://{dbname}")
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
-        self.assertEqual(result["NAME"], dbname)
+        self.assertEqual(result["NAME"], dbname if expected is None else expected)
         self.assertEqual(result["HOST"], "")
         self.assertEqual(result["USER"], "")
         self.assertEqual(result["PASSWORD"], "")
@@ -132,6 +175,19 @@ class SqliteTests(unittest.TestCase):
 
     def test_windows_path_with_drive_letter_and_subdirs(self) -> None:
         self._test_file("C:/home/user/projects/project/app.sqlite3")
+
+    def test_url_encoded_path(self) -> None:
+        self._test_file("/My%20Database%20File.db", "/My Database File.db")
+
+    def test_url_encoded_path_with_spaces_and_special_chars(self) -> None:
+        self._test_file("/path%2Fto%2Fmy%20db%40company%23123.db", "/path/to/my db@company#123.db")
+
+    def test_url_encoded_windows_path(self) -> None:
+        # Note: SQLite URLs with three slashes have the leading slash preserved
+        self._test_file("/C%3A/Users/My%20User/AppData/database.db", "/C:/Users/My User/AppData/database.db")
+
+    def test_case_sensitive_path(self) -> None:
+        self._test_file("/MyDatabase/TestDB/CamelCaseFile.db", "/MyDatabase/TestDB/CamelCaseFile.db")
 
     def test_spatialite_file_database(self) -> None:
         result = db.parse("spatialite:///path/to/spatial.db")

@@ -30,7 +30,6 @@ class GetHostAndPortTestCase(unittest.TestCase):
     """Test get_host_and_port utility function."""
 
     def test_get_host_and_port(self) -> None:
-        """Test basic hostname and port parsing."""
         test_cases = [
             # (input, expected_hostname, expected_port, description)
             # Test basic hostname and port parsing.
@@ -70,17 +69,29 @@ class GetHostAndPortTestCase(unittest.TestCase):
 
 
 class ParseUrlTestCase(unittest.TestCase):
-    def test_hostname_sensitivity(self) -> None:
+    def test_hostname_preserve_case_sensitivity(self) -> None:
         parsed = parse_url("http://CaseSensitive")
         self.assertEqual(parsed.hostname, "CaseSensitive")
+
+    def test_hostname_is_url_encoded(self) -> None:
+        parsed = parse_url("http://Host%2DName.Example%2ECom:8080/path")
+
+        self.assertEqual(parsed.hostname, "Host-Name.Example.Com")
+        self.assertEqual(parsed.port, 8080)
+
+    def test_hostname_is_url_encoded_with_special_chars(self) -> None:
+        parsed = parse_url("http://my%2Dserver%2Ename:3306/db")
+
+        self.assertEqual(parsed.hostname, "my-server.name")
+        self.assertEqual(parsed.port, 3306)
 
     def test_port_is_an_integer(self) -> None:
         parsed = parse_url("http://CaseSensitive:123")
         self.assertIsInstance(parsed.port, int)
 
     def test_path_strips_leading_slash(self) -> None:
-        parsed = parse_url("http://test/abc")
-        self.assertEqual(parsed.path, "abc")
+        parsed = parse_url("http://test/abc/def")
+        self.assertEqual(parsed.path, "abc/def")
 
     def test_query_parameters_integer(self) -> None:
         parsed = parse_url("http://test/?a=1")
@@ -159,13 +170,47 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertEqual(result.path, "some/path")  # Leading slash removed
         self.assertEqual(result.fullpath, "/some/path")  # Full path preserved
 
-    def test_parse_url_username_password_encoding(self) -> None:
+    def test_parse_url_with_encoded_path(self) -> None:
+        url = "scheme://host/My%20Database/Test%2DDB"
+        result = parse_url(url)
+
+        self.assertEqual(result.path, "My Database/Test-DB")
+        self.assertEqual(result.fullpath, "/My Database/Test-DB")
+
+    def test_parse_url_path_with_special_chars(self) -> None:
+        url = "scheme://host/path%2Fwith%2Fslashes/name%40domain/file%23123.db"
+        result = parse_url(url)
+
+        self.assertEqual(result.path, "path/with/slashes/name@domain/file#123.db")
+        self.assertEqual(result.fullpath, "/path/with/slashes/name@domain/file#123.db")
+
+    def test_parse_url_preserve_case_sensitivity(self) -> None:
+        url = "scheme://host/MyDatabase/TestDB/CamelCase%20Path"
+        result = parse_url(url)
+
+        self.assertEqual(result.path, "MyDatabase/TestDB/CamelCase Path")
+        self.assertEqual(result.fullpath, "/MyDatabase/TestDB/CamelCase Path")
+
+    def test_parse_url_path_windows_style(self) -> None:
+        url = "scheme://host/C%3A/Users/MyApp/database.db"
+        result = parse_url(url)
+
+        self.assertEqual(result.path, "C:/Users/MyApp/database.db")
+        self.assertEqual(result.fullpath, "/C:/Users/MyApp/database.db")
+
+    def test_parse_url_username_and_password_encoding(self) -> None:
         url = "scheme://user%40domain:pass%40word@host/db"
         result = parse_url(url)
 
-        # Note: urllib.parse.urlsplit doesn't automatically decode username/password
-        self.assertEqual(result.username, "user%40domain")
-        self.assertEqual(result.password, "pass%40word")
+        self.assertEqual(result.username, "user@domain")
+        self.assertEqual(result.password, "pass@word")
+
+    def test_parse_url_username_and_password_with_special_chars(self) -> None:
+        url = "scheme://user%2Fname:p%40ss%23word%20123@host/db"
+        result = parse_url(url)
+
+        self.assertEqual(result.username, "user/name")
+        self.assertEqual(result.password, "p@ss#word 123")
 
 
 if __name__ == "__main__":

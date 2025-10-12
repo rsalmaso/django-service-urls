@@ -159,6 +159,62 @@ URL fragments (after `#`) create top-level Django configuration keys, ideal for 
 #   }
 ```
 
+## URL Encoding for Credentials, Hostnames, and Paths
+
+Username, password, hostname, and path fields are **automatically URL-decoded**,
+allowing you to use special characters without manual encoding in your configuration:
+
+```python
+# Special characters in credentials are automatically decoded
+'postgres://user%40domain:p%40ss%23word@localhost:5432/mydb'
+# → USER: 'user@domain', PASSWORD: 'p@ss#word'
+
+# Complex passwords with spaces and special characters
+'postgres://my%2Fuser:pass%20word%21%40%23%24@localhost:5432/db'
+# → USER: 'my/user', PASSWORD: 'pass word!@#$'
+
+# Hostnames with special characters (case-sensitive)
+'postgres://user:pass@My%2DServer%2EExample%2ECom:5432/db'
+# → HOST: 'My-Server.Example.Com' (case preserved)
+
+# Database names/paths with spaces and special characters (case-sensitive)
+'postgres://user:pass@host:5432/My%20Database%2DName'
+# → NAME: 'My Database-Name'
+
+# SQLite file paths with spaces and special characters
+'sqlite:///C%3A/Users/My%20User/AppData/My%20Database%20File.db'
+# → NAME: 'C:/Users/My User/AppData/My Database File.db'
+
+# Complex paths with multiple special characters
+'postgres://user:pass@host:5432/path%2Fto%2Fdb%40company%23123'
+# → NAME: 'path/to/db@company#123'
+```
+
+**When to URL-encode:**
+- `@` symbol: `%40` (separates credentials from host)
+- `:` symbol: `%3A` (separates username from password, or port)
+- `/` symbol: `%2F` (separates components)
+- `#` symbol: `%23` (starts fragment)
+- `?` symbol: `%3F` (starts query string)
+- `.` symbol: `%2E` (in hostnames if you need literal dots in server names)
+- `-` symbol: `%2D` (in hostnames if needed)
+- Space: `%20`
+- Other special chars: `!` → `%21`, `$` → `%24`, etc.
+
+**Note:** Case sensitivity is preserved for hostnames and paths during URL decoding.
+
+**Example with environment variables:**
+```python
+# In your .env file or environment
+DATABASE_URL="postgres://admin%40company:P%40ssw0rd%21@db.example.com:5432/production"
+
+# In settings.py
+DATABASES = {
+    'default': os.environ['DATABASE_URL']
+}
+# → USER: 'admin@company', PASSWORD: 'P@ssw0rd!'
+```
+
 ## Backends
 
 Currently `django-service-urls` supports five different services:
