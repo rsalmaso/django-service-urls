@@ -85,7 +85,7 @@ Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG
 "Bug Reports" = "https://github.com/rsalmaso/django-service-urls/discussions"
 
 [tool.setuptools]
-packages = ["django_service_urls", "service_urls"]
+packages = ["django_service_urls"]
 zip-safe = false
 
 [tool.setuptools.dynamic]
@@ -135,7 +135,6 @@ force-sort-within-sections = true
 force-wrap-aliases = true
 known-first-party = [
     "django_service_urls",
-    "service_urls",
 ]
 known-third-party = [
     "django",

@@ -23,7 +23,7 @@
 
 import nox
 
-FILES = ["django_service_urls", "service_urls", "tests", "noxfile.py"]
+FILES = ["django_service_urls", "tests", "noxfile.py"]
 MAP = [
     ("3.10", ("3.2", "4.0", "4.1", "4.2", "5.0", "5.1", "5.2")),
     ("3.11", ("4.1", "4.2", "5.0", "5.1", "5.2")),

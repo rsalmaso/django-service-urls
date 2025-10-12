@@ -14,6 +14,7 @@
 * added MSSQL, Redshift, CockroachDB and Timescale service urls
 * removed `Service.validate()` method
 * automatically unquote UrlInfo attributes (username, password, hostname, path and fullpath)
+* BREAKING: removed `service_urls` shim
 
 ## 1.9.0
 
