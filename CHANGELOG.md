@@ -10,6 +10,7 @@
 * added typing to the codebase
 * added `storage` service
 * added `task` service
+* added Mysql GIS and Oracle GIS dj-database-url alias
 
 ## 1.9.0
 

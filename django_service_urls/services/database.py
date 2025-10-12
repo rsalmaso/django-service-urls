@@ -100,6 +100,8 @@ def postgresql_config_from_url(backend: Service, engine: str, scheme: str, url: 
 @db.register(
     ("mysql", "django.db.backends.mysql"),
     ("mysql+gis", "django.contrib.gis.db.backends.mysql"),
+    # dj_database_url compat alias
+    ("mysqlgis", "django.contrib.gis.db.backends.mysql"),
 )
 def mysql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     config: ConfigDict = backend.config_from_url(engine, scheme, url)
@@ -112,6 +114,8 @@ def mysql_config_from_url(backend: Service, engine: str, scheme: str, url: str) 
 @db.register(
     ("oracle", "django.db.backends.oracle"),
     ("oracle+gis", "django.contrib.gis.db.backends.oracle"),
+    # dj_database_url compat alias
+    ("oraclegis", "django.contrib.gis.db.backends.oracle"),
 )
 def oracle_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     config: ConfigDict = backend.config_from_url(engine, scheme, url)

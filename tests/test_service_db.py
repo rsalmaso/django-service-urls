@@ -115,7 +115,7 @@ class SqliteTests(unittest.TestCase):
         self.assertEqual(result["NAME"], ":memory:")
 
     def _test_file(self, dbname: str) -> None:
-        result = db.parse("sqlite://{}".format(dbname))
+        result = db.parse(f"sqlite://{dbname}")
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], dbname)
         self.assertEqual(result["HOST"], "")
@@ -264,6 +264,11 @@ class MysqlTests(DatabaseTestCaseMixin, unittest.TestCase):
         self.assertEqual(result["OPTIONS"]["ssl"]["ca"], "/path/to/ca.pem")
         self.assertNotIn("ssl-ca", result["OPTIONS"])
 
+    def test_mysqlgis_alias(self) -> None:
+        result = db.parse("mysqlgis://user:password@host:3306/database")
+        self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.mysql")
+        self.assertEqual(result["NAME"], "database")
+
 
 class OracleTests(DatabaseTestCaseMixin, unittest.TestCase):
     SCHEME = "oracle"
@@ -299,6 +304,12 @@ class OracleTests(DatabaseTestCaseMixin, unittest.TestCase):
     def test_oracle_port_string_conversion(self) -> None:
         result = db.parse("oracle://user:pass@host:1521/dbname")
         self.assertIsInstance(result["PORT"], str)
+        self.assertEqual(result["PORT"], "1521")
+
+    def test_oraclegis_alias(self) -> None:
+        result = db.parse("oraclegis://user:pass@host:1521/dbname")
+        self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.oracle")
+        self.assertEqual(result["NAME"], "dbname")
         self.assertEqual(result["PORT"], "1521")
 
 

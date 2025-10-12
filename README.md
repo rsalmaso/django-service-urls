@@ -178,8 +178,10 @@ Spatialite (memory) | django.contrib.gis.db.backends.spatialite | spatialite://:
 Spatialite (file) | django.contrib.gis.db.backends.spatialite | spatialite:///var/db/database.db
 Mysql | django.db.backends.mysql | mysql://user:passwd@host:port/db
 Mysql + GIS | django.contrib.gis.db.backends.mysql | mysql+gis://user:passwd@host:port/db
+Mysql GIS (dj-database-url compat alias) | django.contrib.gis.db.backends.mysql | mysqlgis://user:passwd@host:port/db
 Oracle | django.db.backends.oracle | oracle://user:passwd@host:port/db
 Oracle + GIS | django.contrib.gis.db.backends.oracle | oracle+gis://user:passwd@host:port/db
+Oracle GIS (dj-database-url compat alias) | django.contrib.gis.db.backends.oracle | oraclegis://user:passwd@host:port/db
 
 ### CACHES (``django_service_urls.cache``)
 
