@@ -182,6 +182,13 @@ Mysql GIS (dj-database-url compat alias) | django.contrib.gis.db.backends.mysql 
 Oracle | django.db.backends.oracle | oracle://user:passwd@host:port/db
 Oracle + GIS | django.contrib.gis.db.backends.oracle | oracle+gis://user:passwd@host:port/db
 Oracle GIS (dj-database-url compat alias) | django.contrib.gis.db.backends.oracle | oraclegis://user:passwd@host:port/db
+MSSQL | sql_server.pyodbc | mssql://user:passwd@host:port/db
+MSSQL (Microsoft driver) | mssql | mssqlms://user:passwd@host:port/db
+Redshift | django_redshift_backend | redshift://user:passwd@host:port/db
+CockroachDB | django_cockroachdb | cockroach://user:passwd@host:port/db
+Timescale | timescale.db.backends.postgresql | timescale://user:passwd@host:port/db
+Timescale + GIS | timescale.db.backend.postgis | timescale+gis://user:passwd@host:port/db
+Timescale GIS (dj-database-url compat alias) | timescale.db.backend.postgis | timescalegis://user:passwd@host:port/db
 
 ### CACHES (``django_service_urls.cache``)
 

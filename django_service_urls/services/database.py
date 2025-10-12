@@ -51,6 +51,32 @@ class DatabaseService(Service):
 db: DatabaseService = DatabaseService()
 
 
+def _handle_postgres_like_config(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url)
+
+    if parsed.hostname:
+        host = parsed.hostname.lower()
+        # Handle percent-encoded paths for Unix sockets
+        if "%2f" in host or "%3a" in host:
+            parsed.hostname = parse.unquote(parsed.hostname)
+
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
+
+    # Convert currentSchema option to PostgreSQL search_path
+    if "currentSchema" in config["OPTIONS"]:
+        value = config["OPTIONS"].pop("currentSchema")
+        config["OPTIONS"]["options"] = f"-c search_path={value}"
+
+    return config
+
+
+def _handle_string_port_config(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    config: ConfigDict = backend.config_from_url(engine, scheme, url)
+    # Convert port to string as required by Oracle and MSSQL
+    config["PORT"] = str(config["PORT"])
+    return config
+
+
 @db.register(
     ("sqlite", "django.db.backends.sqlite3"),
     ("spatialite", "django.contrib.gis.db.backends.spatialite"),
@@ -82,19 +108,7 @@ def sqlite_config_from_url(backend: Service, engine: str, scheme: str, url: str)
     ("pgsql", "django.db.backends.postgresql"),
 )
 def postgresql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
-    parsed: UrlInfo = backend.parse_url(url)
-
-    if parsed.hostname:
-        host = parsed.hostname.lower()
-        # Handle postgres percent-encoded paths.
-        if "%2f" in host or "%3a" in host:
-            parsed.hostname = parse.unquote(parsed.hostname)
-
-    config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
-    if "currentSchema" in config["OPTIONS"]:
-        value = config["OPTIONS"].pop("currentSchema")
-        config["OPTIONS"]["options"] = f"-c search_path={value}"
-    return config
+    return _handle_postgres_like_config(backend, engine, scheme, url)
 
 
 @db.register(
@@ -118,7 +132,36 @@ def mysql_config_from_url(backend: Service, engine: str, scheme: str, url: str) 
     ("oraclegis", "django.contrib.gis.db.backends.oracle"),
 )
 def oracle_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
-    config: ConfigDict = backend.config_from_url(engine, scheme, url)
-    # Oracle requires string ports
-    config["PORT"] = str(config["PORT"])
-    return config
+    return _handle_string_port_config(backend, engine, scheme, url)
+
+
+@db.register(
+    ("mssql", "sql_server.pyodbc"),
+    ("mssqlms", "mssql"),
+)
+def mssql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    return _handle_string_port_config(backend, engine, scheme, url)
+
+
+@db.register(
+    ("redshift", "django_redshift_backend"),
+)
+def redshift_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    return _handle_postgres_like_config(backend, engine, scheme, url)
+
+
+@db.register(
+    ("cockroach", "django_cockroachdb"),
+)
+def cockroachdb_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    return backend.config_from_url(engine, scheme, url)
+
+
+@db.register(
+    ("timescale", "timescale.db.backends.postgresql"),
+    ("timescale+gis", "timescale.db.backend.postgis"),
+    # dj_database_url compat alias
+    ("timescalegis", "timescale.db.backend.postgis"),
+)
+def timescale_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    return _handle_postgres_like_config(backend, engine, scheme, url)

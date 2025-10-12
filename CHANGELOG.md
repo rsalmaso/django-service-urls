@@ -11,6 +11,7 @@
 * added `storage` service
 * added `task` service
 * added Mysql GIS and Oracle GIS dj-database-url alias
+* added MSSQL, Redshift, CockroachDB and Timescale service urls
 
 ## 1.9.0
 
