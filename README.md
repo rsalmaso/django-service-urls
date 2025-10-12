@@ -230,6 +230,7 @@ Postgresql (dj-database-url compat alias) | django.db.backends.postgresql | pgsq
 Postgis | django.contrib.gis.db.backends.postgis | postgis://user:passwd@host:port/db
 Sqlite (memory) | django.db.backends.sqlite3 | sqlite://:memory: or sqlite://
 Sqlite (file) | django.db.backends.sqlite3 | sqlite:///var/db/database.db
+Sqlite+ (production settings) | django.db.backends.sqlite3 | sqlite+:///var/db/database.db
 Spatialite (memory) | django.contrib.gis.db.backends.spatialite | spatialite://:memory: or spatialite://
 Spatialite (file) | django.contrib.gis.db.backends.spatialite | spatialite:///var/db/database.db
 Mysql | django.db.backends.mysql | mysql://user:passwd@host:port/db
@@ -245,6 +246,81 @@ CockroachDB | django_cockroachdb | cockroach://user:passwd@host:port/db
 Timescale | timescale.db.backends.postgresql | timescale://user:passwd@host:port/db
 Timescale + GIS | timescale.db.backend.postgis | timescale+gis://user:passwd@host:port/db
 Timescale GIS (dj-database-url compat alias) | timescale.db.backend.postgis | timescalegis://user:passwd@host:port/db
+
+#### SQLite+ for Production
+
+The `sqlite+://` protocol provides an optimized SQLite configuration for production use,
+based on recommendations from [dj-lite](https://github.com/adamghill/dj-lite).
+It automatically includes:
+
+- **WAL (Write-Ahead Logging)** mode for better concurrency
+- **IMMEDIATE** transaction mode to reduce lock contention
+- **Memory-mapped I/O** for improved performance
+- **Optimized PRAGMA settings** for production workloads
+
+```python
+# Simple production-ready configuration
+DATABASES = {
+    'default': 'sqlite+:///path/to/database.db'
+}
+
+# Resulting configuration:
+# {
+#     'ENGINE': 'django.db.backends.sqlite3',
+#     'NAME': '/path/to/database.db',
+#     'OPTIONS': {
+#         'transaction_mode': 'IMMEDIATE',
+#         'timeout': 5,
+#         'init_command': '''PRAGMA journal_mode=WAL;
+# PRAGMA synchronous=NORMAL;
+# PRAGMA temp_store=MEMORY;
+# PRAGMA mmap_size=134217728;
+# PRAGMA journal_size_limit=27103364;
+# PRAGMA cache_size=2000;'''
+#     }
+# }
+```
+
+You can override any default setting using query parameters:
+
+```python
+# Custom timeout and transaction mode
+'sqlite+:///db.sqlite3?timeout=10&transaction_mode=DEFERRED'
+```
+
+**Overriding PRAGMA settings**: Use URL fragments with `PRAGMA.` prefix to override or add PRAGMA values:
+
+```python
+# Override default journal_mode
+'sqlite+:///db.sqlite3#PRAGMA.journal_mode=DELETE'
+
+# Override multiple PRAGMA settings
+'sqlite+:///db.sqlite3#PRAGMA.journal_mode=DELETE&PRAGMA.synchronous=FULL'
+
+# Add new PRAGMA settings while keeping defaults
+'sqlite+:///db.sqlite3#PRAGMA.busy_timeout=5000'
+
+# Combine with other fragment settings
+'sqlite+:///db.sqlite3#PRAGMA.journal_mode=WAL&CONN_MAX_AGE=600'
+```
+
+#### SQLite with Custom PRAGMA Settings
+
+The regular `sqlite://` protocol also supports PRAGMA settings via URL fragments:
+
+```python
+# Add PRAGMA settings to standard SQLite
+DATABASES = {
+    'default': 'sqlite:///path/to/db.sqlite3#PRAGMA.journal_mode=WAL&PRAGMA.synchronous=NORMAL'
+}
+
+# Works with spatialite too
+DATABASES = {
+    'default': 'spatialite:///path/to/spatial.db#PRAGMA.journal_mode=WAL'
+}
+```
+
+This allows you to customize SQLite behavior without using the production defaults from `sqlite+://`.
 
 ### CACHES (``django_service_urls.cache``)
 

@@ -77,6 +77,32 @@ def _handle_string_port_config(backend: Service, engine: str, scheme: str, url: 
     return config
 
 
+def _build_pragma_init_command(pragmas: dict[str, str], pragma_overrides: dict[str, str]) -> str:
+    pragmas = {**pragmas, **pragma_overrides}
+    if pragmas:
+        return "\n".join(f"PRAGMA {key}={value};" for key, value in pragmas.items())
+    return ""
+
+
+def _sqlite_parse_path(backend: Service, engine: str, scheme: str, url: str, pragmas: dict[str, str]) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url)
+    path = "/" + parsed.path
+    # On windows a path like C:/a/b is parsed with C as the hostname
+    # and a/b/ as the path. Reconstruct the windows path here.
+    if parsed.hostname:
+        path = f"{parsed.hostname}:{path}"
+        parsed.location = parsed.hostname = ""
+    parsed.path = path
+
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
+
+    pragmas_overrides = config.pop("PRAGMA", {})
+    if init_command := _build_pragma_init_command(pragmas, pragmas_overrides):
+        config["OPTIONS"]["init_command"] = init_command
+
+    return config
+
+
 @db.register(
     ("sqlite", "django.db.backends.sqlite3"),
     ("spatialite", "django.contrib.gis.db.backends.spatialite"),
@@ -89,15 +115,37 @@ def sqlite_config_from_url(backend: Service, engine: str, scheme: str, url: str)
             "NAME": ":memory:",
         }
 
-    parsed: UrlInfo = backend.parse_url(url)
-    path = "/" + parsed.path
-    # On windows a path like C:/a/b is parsed with C as the hostname
-    # and a/b/ as the path. Reconstruct the windows path here.
-    if parsed.hostname:
-        path = f"{parsed.hostname}:{path}"
-        parsed.location = parsed.hostname = ""
-    parsed.path = path
-    return backend.config_from_url(engine, scheme, parsed)
+    config: ConfigDict = _sqlite_parse_path(backend, engine, scheme, url, {})
+
+    return config
+
+
+@db.register(
+    ("sqlite+", "django.db.backends.sqlite3"),
+)
+def sqlite_plus_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    # SQLite configuration optimized for production use.
+    # Based on recommendations from https://github.com/adamghill/dj-lite
+    # Includes:
+    # - WAL (Write-Ahead Logging) journal mode for better concurrency
+    # - IMMEDIATE transaction mode to reduce lock contention
+    # - Memory-mapped I/O for improved performance
+    # - Optimized PRAGMA settings for production workloads
+
+    pragmas = {
+        "journal_mode": "WAL",
+        "synchronous": "NORMAL",
+        "temp_store": "MEMORY",
+        "mmap_size": "134217728",
+        "journal_size_limit": "27103364",
+        "cache_size": "2000",
+    }
+
+    config: ConfigDict = _sqlite_parse_path(backend, engine, scheme, url, pragmas)
+    config["OPTIONS"].setdefault("transaction_mode", "IMMEDIATE")
+    config["OPTIONS"].setdefault("timeout", 5)
+
+    return config
 
 
 @db.register(

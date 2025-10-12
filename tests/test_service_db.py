@@ -194,6 +194,58 @@ class SqliteTests(unittest.TestCase):
         self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.spatialite")
         self.assertEqual(result["NAME"], "/path/to/spatial.db")
 
+    def test_pragma_with_fragment(self) -> None:
+        result = db.parse(
+            "sqlite:///path/to/db.sqlite3#PRAGMA.journal_mode=WAL&PRAGMA.synchronous=NORMAL&CONN_MAX_AGE=300"
+        )
+        init_command = result["OPTIONS"]["init_command"]
+        self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
+        self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
+        self.assertIn("PRAGMA journal_mode=WAL;", init_command)
+        self.assertIn("PRAGMA synchronous=NORMAL;", init_command)
+        self.assertEqual(result["CONN_MAX_AGE"], 300)
+        # Verify PRAGMA is not in top-level config
+        self.assertNotIn("PRAGMA", result)
+
+    def test_spatialite_with_pragma(self) -> None:
+        result = db.parse("spatialite:///path/to/spatial.db#PRAGMA.journal_mode=WAL")
+        self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.spatialite")
+        self.assertEqual(result["NAME"], "/path/to/spatial.db")
+        self.assertEqual(result["OPTIONS"]["init_command"], "PRAGMA journal_mode=WAL;")
+
+
+class SqlitePlusTests(unittest.TestCase):
+    def test_file_database_with_production_defaults(self) -> None:
+        result = db.parse("sqlite+:///path/to/db.sqlite3")
+        self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
+        self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
+        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
+        self.assertEqual(result["OPTIONS"]["timeout"], 5)
+        self.assertIn("PRAGMA journal_mode=WAL", result["OPTIONS"]["init_command"])
+        self.assertIn("PRAGMA synchronous=NORMAL", result["OPTIONS"]["init_command"])
+        self.assertIn("PRAGMA temp_store=MEMORY", result["OPTIONS"]["init_command"])
+
+    def test_override_defaults(self) -> None:
+        result = db.parse(
+            "sqlite+:///path/to/db.sqlite3#PRAGMA.journal_mode=DELETE&PRAGMA.synchronous=FULL&CONN_MAX_AGE=300"
+        )
+        self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
+        self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
+        init_command = result["OPTIONS"]["init_command"]
+        self.assertIn("PRAGMA journal_mode=DELETE;", init_command)
+        self.assertIn("PRAGMA synchronous=FULL;", init_command)
+        self.assertNotIn("PRAGMA journal_mode=WAL;", init_command)
+        self.assertNotIn("PRAGMA synchronous=NORMAL;", init_command)
+        self.assertEqual(result["CONN_MAX_AGE"], 300)
+        # Other defaults should still be present
+        self.assertIn("PRAGMA temp_store=MEMORY", result["OPTIONS"]["init_command"])
+
+    def test_windows_path(self) -> None:
+        result = db.parse("sqlite+:///C:/Users/data/db.sqlite3")
+        # Note: SQLite URLs with three slashes have the leading slash preserved
+        self.assertEqual(result["NAME"], "/C:/Users/data/db.sqlite3")
+        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
+
 
 class PostgresTests(DatabaseTestCaseMixin, unittest.TestCase):
     SCHEME = "postgres"

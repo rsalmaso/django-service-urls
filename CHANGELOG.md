@@ -15,6 +15,8 @@
 * removed `Service.validate()` method
 * automatically unquote UrlInfo attributes (username, password, hostname, path and fullpath)
 * BREAKING: removed `service_urls` shim
+* added `sqlite+://` protocol for production-optimized SQLite configuration
+* added PRAGMA configuration support via URL fragments for `sqlite://`, `spatialite://`, and `sqlite+://` protocols
 
 ## 1.9.0
 
