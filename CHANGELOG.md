@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* drop support for django < 5.2
+
 ## 2.1.0
 
 * BREAKING: avoid to convert 0/1 to False/True in querystring/fragment parsing

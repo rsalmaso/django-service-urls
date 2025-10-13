@@ -21,8 +21,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-import django
-
 DATABASES = {
     "default": "postgres://myuser:mypasswd@localhost:5432/mydb",
     "analytics": "sqlite:///tmp/analytics.db",
@@ -50,8 +48,6 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 USE_TZ = True
-if django.VERSION < (4, 0):
-    USE_L10N = True
 
 INSTALLED_APPS = [
     "django.contrib.auth",

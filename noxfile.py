@@ -25,10 +25,10 @@ import nox
 
 FILES = ["django_service_urls", "tests", "noxfile.py"]
 MAP = [
-    ("3.10", ("3.2", "4.0", "4.1", "4.2", "5.0", "5.1", "5.2")),
-    ("3.11", ("4.1", "4.2", "5.0", "5.1", "5.2")),
-    ("3.12", ("4.2", "5.0", "5.1", "5.2", "6.0", "main")),
-    ("3.13", ("5.1", "5.2", "6.0", "main")),
+    ("3.10", ("5.2",)),
+    ("3.11", ("5.2",)),
+    ("3.12", ("5.2", "6.0", "main")),
+    ("3.13", ("5.2", "6.0", "main")),
     ("3.14", ("5.2", "6.0", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
@@ -48,7 +48,7 @@ def install(session: nox.Session, django: str) -> None:
 
 
 @nox.session(python="3.10")  # type: ignore[untyped-decorator]
-def lint(session: nox.Session, django: str = "4.2") -> None:
+def lint(session: nox.Session, django: str = "5.2") -> None:
     install(session, django)
     session.run("ruff", "format", "--check", *FILES)
     session.run("ruff", "check", *FILES)
