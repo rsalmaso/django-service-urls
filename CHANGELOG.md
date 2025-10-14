@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 2.0.1
 
 * refactor Django integration (and preserve django < 5.1 STORAGES setting behaviour)
 
