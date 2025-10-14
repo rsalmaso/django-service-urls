@@ -34,6 +34,15 @@ CACHES = {
 
 EMAIL_BACKEND = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
 
+STORAGES = {
+    "default": "fs://",
+    "staticfiles": "static://",
+}
+
+TASKS = {
+    "default": "immediate://",
+}
+
 SECRET_KEY = "django_service_urls_tests_secret_key"
 
 # Use a fast hasher to speed up tests.

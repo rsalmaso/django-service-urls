@@ -68,6 +68,25 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertEqual(settings.EMAIL_SSL_KEYFILE, None)
         self.assertEqual(settings.EMAIL_TIMEOUT, 30)
 
+    def test_storages(self) -> None:
+        from django.conf import settings
+
+        STORAGES = settings.STORAGES
+        default_storage = STORAGES["default"]
+        self.assertTrue(isinstance(default_storage, dict))
+        self.assertEqual(default_storage["BACKEND"], "django.core.files.storage.filesystem.FileSystemStorage")
+        staticfiles_storage = STORAGES["staticfiles"]
+        self.assertTrue(isinstance(staticfiles_storage, dict))
+        self.assertEqual(staticfiles_storage["BACKEND"], "django.contrib.staticfiles.storage.StaticFilesStorage")
+
+    def test_tasks(self) -> None:
+        from django.conf import settings
+
+        TASKS = settings.TASKS
+        default_task = TASKS["default"]
+        self.assertTrue(isinstance(default_task, dict))
+        self.assertEqual(default_task["BACKEND"], "django.tasks.backends.immediate.ImmediateBackend")
+
     def test_ensure_that_locale_keep_the_right_path(self) -> None:
         import datetime as dt
 

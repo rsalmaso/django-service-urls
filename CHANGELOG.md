@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* refactor Django integration (and preserve django < 5.1 STORAGES setting behaviour)
+
 ## 2.0.0
 
 * added support for python 3.14

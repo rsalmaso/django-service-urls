@@ -24,44 +24,51 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def setup(set_prefix: bool = True) -> None:
-    import django
-    from django.conf import settings
+def patch() -> None:
+    """
+    Patch Django's Settings.__init__ to handle all service URL parsing before
+    Django's initialization completes.
+    """
+
+    import importlib
+
+    from django.conf import Settings
 
     from django_service_urls.exceptions import ValidationError
     from django_service_urls.services import cache, db, email, storage, task
 
-    settings.DATABASES = db.parse(settings.DATABASES)
-    settings.CACHES = cache.parse(settings.CACHES)
+    if not hasattr(Settings, "_django_service_urls_original_init"):
+        original_init = Settings.__init__
 
-    if hasattr(settings, "STORAGES"):
-        settings.STORAGES = storage.parse(settings.STORAGES)
+        def patched_init(self: Settings, settings_module: str) -> None:
+            module = importlib.import_module(settings_module)
 
-    if hasattr(settings, "TASKS"):
-        settings.TASKS = task.parse(settings.TASKS)
+            if databases_config := getattr(module, "DATABASES", None):
+                module.DATABASES = db.parse(databases_config)  # type: ignore[attr-defined]
 
-    # Preserve EMAIL_BACKEND backward compatibility
-    # Try to parse as URL; if it's not a URL, it's already a backend path
-    try:
-        email_config = email.parse(settings.EMAIL_BACKEND)
-    except ValidationError:
-        # EMAIL_BACKEND is not a URL, leave it as-is (it's a backend path)
-        pass
-    else:
-        # Only process if parse was successful
-        for k, v in email_config.items():
-            setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
-            setattr(settings, setting, v)
+            if caches_config := getattr(module, "CACHES", None):
+                module.CACHES = cache.parse(caches_config)  # type: ignore[attr-defined]
 
-    django._django_service_urls_original_django_setup(set_prefix)  # type: ignore[attr-defined]
+            if storages_config := getattr(module, "STORAGES", None):
+                module.STORAGES = storage.parse(storages_config)  # type: ignore[attr-defined]
 
+            if tasks_config := getattr(module, "TASKS", None):
+                module.TASKS = task.parse(tasks_config)  # type: ignore[attr-defined]
 
-def patch() -> None:
-    import django
+            # Try to parse as URL; if it's not a URL, it's already a backend path
+            if email_backend := getattr(module, "EMAIL_BACKEND", None):
+                try:
+                    email_config = email.parse(email_backend)
+                    for k, v in email_config.items():
+                        setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
+                        setattr(module, setting, v)
+                except ValidationError:
+                    pass
 
-    if not getattr(django, "_django_service_urls_original_setup", None):
-        django._django_service_urls_original_django_setup = django.setup  # type: ignore[attr-defined]
-        django.setup = setup
+            original_init(self, settings_module)
+
+        Settings._django_service_urls_original_init = original_init  # type: ignore[attr-defined]
+        Settings.__init__ = patched_init  # type: ignore[method-assign]
 
 
 patch()
