@@ -98,7 +98,8 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertDictEqual(parsed.query, {"a": 1})
 
     def test_query_parameters_boolean(self) -> None:
-        parsed = parse_url("http://test/?a=true&b=false&c=t&d=f&e=1&f=0&g=yes&h=no&i=y&j=n")
+        # Note: "0" and "1" are parsed as integers, not booleans
+        parsed = parse_url("http://test/?a=true&b=false&c=t&d=f&g=yes&h=no&i=y&j=n")
         self.assertDictEqual(
             parsed.query,
             {
@@ -106,14 +107,31 @@ class ParseUrlTestCase(unittest.TestCase):
                 "b": False,
                 "c": True,
                 "d": False,
-                "e": True,
-                "f": False,
                 "g": True,
                 "h": False,
                 "i": True,
                 "j": False,
             },
         )
+
+    def test_query_parameters_numeric_zero_and_one(self) -> None:
+        # "0" and "1" should be parsed as integers, not booleans
+        # This is important for numeric config like pool.min_size=0
+        parsed = parse_url("http://test/?a=0&b=1&c=2&d=10")
+        self.assertDictEqual(
+            parsed.query,
+            {
+                "a": 0,
+                "b": 1,
+                "c": 2,
+                "d": 10,
+            },
+        )
+        # Verify they are integers, not booleans
+        self.assertIsInstance(parsed.query["a"], int)
+        self.assertIsInstance(parsed.query["b"], int)
+        self.assertNotIsInstance(parsed.query["a"], bool)
+        self.assertNotIsInstance(parsed.query["b"], bool)
 
     def test_query_multiple_parameters(self) -> None:
         parsed = parse_url("http://test/?a=one&a=two")

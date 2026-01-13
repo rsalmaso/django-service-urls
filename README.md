@@ -95,7 +95,7 @@ TASKS = {
 
 `django-service-urls` supports **nested dictionaries** using dot notation, **lists** using repeated parameters, and **URL fragments** for top-level configuration keys.
 
-**Boolean values** are automatically recognized: `true`, `false`, `t`, `f`, `1`, `0`, `yes`, `no`, `y`, `n` (case-insensitive).
+**Boolean values** are automatically recognized: `true`, `false`, `t`, `f`, `yes`, `no`, `y`, `n` (case-insensitive).
 **Integer values** are automatically converted: `123`, `0`, `999` → `int` type.
 
 ```python

@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* BREAKING: avoid to convert 0/1 to False/True in querystring/fragment parsing
+
 ## 2.0.1
 
 * refactor Django integration (and preserve django < 5.1 STORAGES setting behaviour)

@@ -70,12 +70,15 @@ def _cast_value(value: str) -> CastValue:
     Cast a string value to its appropriate type (int, bool, str or None).
 
     This function automatically converts string values based on their content:
-    - Integers: String representations of numbers (e.g., "123" -> 123)
-    - Booleans: Common boolean representations:
-      - True: "true", "t", "1", "yes", "y" (case insensitive)
-      - False: "false", "f", "0", "no", "n" (case insensitive)
+    - Integers: String representations of numbers (e.g., "123" -> 123, "0" -> 0, "1" -> 1)
+    - Booleans: Common boolean representations (excluding numeric strings):
+      - True: "true", "t", "yes", "y" (case insensitive)
+      - False: "false", "f", "no", "n" (case insensitive)
     - None: "null" (case insensitive) -> None
     - Strings: All other values remain as strings
+
+    Note: "0" and "1" are parsed as integers, not booleans, to support numeric
+    configuration values like pool.min_size=0.
 
     Args:
         value: The string value to convert
@@ -86,26 +89,30 @@ def _cast_value(value: str) -> CastValue:
     Examples:
         >>> _cast_value("123"), _cast_value("hello")
         (123, 'hello')
+        >>> _cast_value("0"), _cast_value("1")
+        (0, 1)
         >>> _cast_value("true"), _cast_value("false")
         (True, False)
         >>> _cast_value("null"), _cast_value("NULL")
         (None, None)
     """
+    # Try integer parsing first - this ensures "0" and "1" become integers, not booleans
+    try:
+        return int(value)
+    except ValueError:
+        pass
 
-    casted_value: CastValue = value
+    # Then try boolean/null patterns (numeric strings already handled above)
     match value.lower():
-        case "true" | "t" | "1" | "yes" | "y":
-            casted_value = True
-        case "false" | "f" | "0" | "no" | "n":
-            casted_value = False
+        case "true" | "t" | "yes" | "y":
+            return True
+        case "false" | "f" | "no" | "n":
+            return False
         case "null":
-            casted_value = None
-        case _:
-            try:
-                casted_value = int(value)
-            except ValueError:
-                pass
-    return casted_value
+            return None
+
+    # Default: return as string
+    return value
 
 
 def _set_nested_option(options: dict[str, Any], key: str, value: Any) -> None:
