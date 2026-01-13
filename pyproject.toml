@@ -46,11 +46,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "django-stubs>=5.2.2",
-    "mypy>=1.17.1",
-    "nox[uv]>=2025.5.1",
-    "pytest>=8.4.2",
-    "ruff>=0.12.12",
+    "django-stubs>=5.2.8",
+    "mypy>=1.19.1",
+    "nox[uv]>=2025.11.12",
+    "pytest>=9.0.2",
+    "ruff>=0.14.11",
 ]
 django32 = [ "django>=3.2,<4.0 ; python_version>='3.10'", "psycopg2-binary" ]
 django40 = [ "django>=4.0,<4.1 ; python_version>='3.10'", "psycopg2-binary" ]
@@ -59,7 +59,7 @@ django42 = [ "django>=4.2,<5.0 ; python_version>='3.10'", "psycopg[binary]" ]
 django50 = [ "django>=5.0,<5.1 ; python_version>='3.10'", "psycopg[binary]" ]
 django51 = [ "django>=5.1,<5.2 ; python_version>='3.10'", "psycopg[binary]" ]
 django52 = [ "django>=5.2,<6.0 ; python_version>='3.10'", "psycopg[binary]" ]
-django60 = [ "django>=6.0a1,<6.1 ; python_version>='3.12'", "psycopg[binary]" ]
+django60 = [ "django>=6.0,<6.1 ; python_version>='3.12'", "psycopg[binary]" ]
 djangomain = ["django @ git+https://github.com/django/django@main ; python_version>='3.12'", "psycopg[binary]"]
 
 [tool.uv]
