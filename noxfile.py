@@ -47,22 +47,22 @@ def install(session: nox.Session, django: str) -> None:
     )
 
 
-@nox.session(python="3.10")  # type: ignore[misc]
+@nox.session(python="3.10")  # type: ignore[untyped-decorator]
 def lint(session: nox.Session, django: str = "4.2") -> None:
     install(session, django)
     session.run("ruff", "format", "--check", *FILES)
     session.run("ruff", "check", *FILES)
 
 
-@nox.session  # type: ignore[misc]
-@nox.parametrize("python,django", DEPS)  # type: ignore[misc]
+@nox.session  # type: ignore[untyped-decorator]
+@nox.parametrize("python,django", DEPS)  # type: ignore[untyped-decorator]
 def typing(session: nox.Session, django: str) -> None:
     install(session, django)
     session.run("mypy", *FILES)
 
 
-@nox.session  # type: ignore[misc]
-@nox.parametrize("python,django", DEPS)  # type: ignore[misc]
+@nox.session  # type: ignore[untyped-decorator]
+@nox.parametrize("python,django", DEPS)  # type: ignore[untyped-decorator]
 def tests(session: nox.Session, django: str) -> None:
     install(session, django)
     session.run("pytest")
