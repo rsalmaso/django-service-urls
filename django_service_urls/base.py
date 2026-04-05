@@ -78,19 +78,11 @@ class Service:
             }
         """  # noqa: E501
 
-        if isinstance(data, dict):
-            errors: dict[str, ValidationError] = {}
-            parsed_data: dict[str, ConfigDict] = {}
-            for key, value in data.items():
-                try:
-                    parsed_data[key] = value if isinstance(value, dict) else self._parse(value)
-                except ValidationError as exc:
-                    errors[key] = exc
-            if errors:
-                raise ValidationError(errors)
-            return parsed_data
-        elif isinstance(data, str):
-            return self._parse(data)
+        match data:
+            case dict():
+                return self._parse_dict(data)
+            case str():
+                return self._parse_str(data)
         raise ValidationError(f"Invalid input type: {type(data)}")  # invalid input type
 
     def parse_url(self, url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:
@@ -140,7 +132,43 @@ class Service:
 
         return wrapper
 
-    def _parse(self, data: str) -> ConfigDict:
+    def _parse_dict(self, data: ConfigDict) -> ConfigDict:
+        """
+        Parse a Django settings dictionary, converting any URL string values to config dicts.
+
+        Iterates over the dictionary entries. Values that are already dicts are kept as-is;
+        string values are parsed as service URLs via ``_parse_str``. Collects all errors
+        and raises a single ``ValidationError`` with an error dict mapping keys to their errors.
+
+        Args:
+            data: Configuration dictionary mapping names to URL strings or config dicts
+
+        Returns:
+            Dictionary with all string values replaced by their parsed config dicts
+
+        Raises:
+            ValidationError: With an error dict if any string values fail to parse
+
+        Examples:
+            >>> service._parse_dict({"default": "postgres://user:password@localhost:5432/dbname", "other": {"ENGINE": "django.db.backends.postgresql"}})
+            {"default": {"ENGINE": "django.db.backends.postgresql", "NAME": "dbname", ...}, "other": {"ENGINE": "django.db.backends.postgresql"}}
+
+            >>> service._parse_dict({"db1": "invalid://host", "db2": "not_a_url"})
+            ValidationError: {'db1': "'invalid://' scheme is not registered", 'db2': "'not_a_url' is invalid, ..."}
+        """  # noqa: E501
+
+        errors: dict[str, ValidationError] = {}
+        parsed_data: dict[str, ConfigDict] = {}
+        for key, value in data.items():
+            try:
+                parsed_data[key] = value if isinstance(value, dict) else self._parse_str(value)
+            except ValidationError as exc:
+                errors[key] = exc
+        if errors:
+            raise ValidationError(errors)
+        return parsed_data
+
+    def _parse_str(self, data: str) -> ConfigDict:
         """
         Parse URL string into Django configuration dictionary.
 
@@ -174,9 +202,6 @@ class Service:
             >>> service._parse("django.db.backends.postgresql")
             ValidationError: ["'django.db.backends.postgresql' is invalid, only full dsn urls (scheme://host...) are allowed"]
         """  # noqa: E501
-
-        if not isinstance(data, str):
-            raise ValidationError(f"Invalid input type: {type(data)}")  # invalid input type
 
         if not data:
             return {}  # empty string treated as empty dict
