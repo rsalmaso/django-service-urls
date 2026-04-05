@@ -6,6 +6,7 @@
 * fix email and tasks function name typos
 * refactor Service.parse internals
 * removed duplicated parsing in email service
+* cleanup database url decoding
 
 ## 2.1.0
 

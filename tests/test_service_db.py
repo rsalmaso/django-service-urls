@@ -145,6 +145,28 @@ class DatabaseTestCaseMixin:
         self.assertEqual(result["NAME"], "path/to/db@company#123")  # type: ignore[attr-defined]
         self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
 
+    def test_double_encoded_values_decoded_once(self) -> None:
+        if self.SCHEME is None:
+            return
+        # %2540 should decode to literal %40, not @
+        result = db.parse(f"{self.SCHEME}://user%2540name:pass%2540word@host:5432/db%2520name")
+        self.assertEqual(result["USER"], "user%40name")  # type: ignore[attr-defined]
+        self.assertEqual(result["PASSWORD"], "pass%40word")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "db%20name")  # type: ignore[attr-defined]
+
+    def test_fragment_cannot_override_core_keys(self) -> None:
+        # Fragment should not override ENGINE, NAME, USER, PASSWORD, HOST, PORT, OPTIONS
+        result = db.parse(
+            f"{self.SCHEME}://user:pass@host:5432/dbname"
+            "#ENGINE=evil&NAME=evil&USER=evil&PASSWORD=evil&HOST=evil&PORT=9999&OPTIONS=evil"
+        )
+        self.assertNotEqual(result["ENGINE"], "evil")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "dbname")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
+        self.assertEqual(result["PASSWORD"], "pass")  # type: ignore[attr-defined]
+        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
+        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)  # type: ignore[attr-defined]
+
 
 class SqliteTests(unittest.TestCase):
     def test_empty_url(self) -> None:
@@ -188,6 +210,13 @@ class SqliteTests(unittest.TestCase):
 
     def test_case_sensitive_path(self) -> None:
         self._test_file("/MyDatabase/TestDB/CamelCaseFile.db", "/MyDatabase/TestDB/CamelCaseFile.db")
+
+    def test_file_database_with_query_options(self) -> None:
+        result = db.parse("sqlite:///path/to/db.sqlite3?timeout=10&check_same_thread=false")
+        self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
+        self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
+        self.assertEqual(result["OPTIONS"]["timeout"], 10)
+        self.assertEqual(result["OPTIONS"]["check_same_thread"], False)
 
     def test_spatialite_file_database(self) -> None:
         result = db.parse("spatialite:///path/to/spatial.db")
@@ -244,6 +273,18 @@ class SqlitePlusTests(unittest.TestCase):
         result = db.parse("sqlite+:///C:/Users/data/db.sqlite3")
         # Note: SQLite URLs with three slashes have the leading slash preserved
         self.assertEqual(result["NAME"], "/C:/Users/data/db.sqlite3")
+        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
+
+    def test_override_transaction_mode_via_query(self) -> None:
+        result = db.parse("sqlite+:///path/to/db.sqlite3?transaction_mode=DEFERRED")
+        self.assertEqual(result["OPTIONS"]["transaction_mode"], "DEFERRED")
+        # timeout should still get its default
+        self.assertEqual(result["OPTIONS"]["timeout"], 5)
+
+    def test_override_timeout_via_query(self) -> None:
+        result = db.parse("sqlite+:///path/to/db.sqlite3?timeout=30")
+        self.assertEqual(result["OPTIONS"]["timeout"], 30)
+        # transaction_mode should still get its default
         self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
 
 

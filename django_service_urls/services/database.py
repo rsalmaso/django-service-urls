@@ -24,7 +24,6 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Any
-from urllib import parse
 
 from django_service_urls.base import ConfigDict, Service
 from django_service_urls.parse import UrlInfo
@@ -37,9 +36,9 @@ class DatabaseService(Service):
         parsed: UrlInfo = self.parse_url(url)
         config: ConfigDict = {
             "ENGINE": engine,
-            "NAME": parse.unquote(parsed.path or ""),
-            "USER": parse.unquote(parsed.username or ""),
-            "PASSWORD": parse.unquote(parsed.password or ""),
+            "NAME": parsed.path or "",
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
             "HOST": parsed.hostname,
             "PORT": parsed.port or "",
             "OPTIONS": parsed.query,
@@ -53,13 +52,6 @@ db: DatabaseService = DatabaseService()
 
 def _handle_postgres_like_config(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     parsed: UrlInfo = backend.parse_url(url)
-
-    if parsed.hostname:
-        host = parsed.hostname.lower()
-        # Handle percent-encoded paths for Unix sockets
-        if "%2f" in host or "%3a" in host:
-            parsed.hostname = parse.unquote(parsed.hostname)
-
     config: ConfigDict = backend.config_from_url(engine, scheme, parsed)
 
     # Convert currentSchema option to PostgreSQL search_path
