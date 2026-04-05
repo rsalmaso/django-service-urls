@@ -33,6 +33,6 @@ VERSION = (2, 1, 0, "final", 0)
 
 __version__ = get_version(VERSION)
 __author__ = "Raffaele Salmaso"
-__email__ = "raffele@salmaso.org"
+__email__ = "raffaele@salmaso.org"
 
 __all__ = ["Service", "ConfigDict", "ValidationError", "UrlInfo", "cache", "db", "email", "storage", "task"]
