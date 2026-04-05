@@ -33,7 +33,6 @@ __all__ = ["email"]
 
 class EmailService(Service):
     def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
-        _parsed: UrlInfo = self.parse_url(url)  # parse the url and throws away the result
         config: ConfigDict = {
             "ENGINE": engine,
         }

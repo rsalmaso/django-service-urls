@@ -5,6 +5,7 @@
 * drop support for django < 5.2
 * fix email and tasks function name typos
 * refactor Service.parse internals
+* removed duplicated parsing in email service
 
 ## 2.1.0
 
