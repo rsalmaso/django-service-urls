@@ -69,7 +69,7 @@ class ServiceTestCase(unittest.TestCase):
 
         error = cm.exception
         self.assertIsInstance(error, ValidationError)
-        self.assertTrue(hasattr(error, "message"))
+        self.assertIsNotNone(error.message)
         self.assertIn("invalid://", str(error))
 
     def test_parse_with_dict_input(self) -> None:
@@ -103,15 +103,15 @@ class ServiceTestCase(unittest.TestCase):
 
         error = cm.exception
         self.assertIsInstance(error, ValidationError)
-        self.assertTrue(hasattr(error, "error_dict"))
+        self.assertIsNotNone(error.error_dict)
 
         error_dict = error.error_dict
-        self.assertIn("db1", error_dict)
-        self.assertIn("db2", error_dict)
-        self.assertEqual(len(error_dict), 2)
+        self.assertIn("db1", error_dict)  # type: ignore[arg-type]
+        self.assertIn("db2", error_dict)  # type: ignore[arg-type]
+        self.assertEqual(len(error_dict), 2)  # type: ignore[arg-type]
 
-        self.assertIn("scheme is not registered", error_dict["db1"])
-        self.assertIn("invalid", error_dict["db2"])
+        self.assertIn("scheme is not registered", error_dict["db1"])  # type: ignore[index]
+        self.assertIn("invalid", error_dict["db2"])  # type: ignore[index]
 
     def test_register_decorator(self) -> None:
         @self.backend.register(("test", "test.engine"), ("test2", "test2.engine"))

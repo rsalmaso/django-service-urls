@@ -33,7 +33,7 @@ class ValidationErrorTestCase(unittest.TestCase):
         error = ValidationError("This is an error")
 
         self.assertEqual(error.message, "This is an error")
-        self.assertFalse(hasattr(error, "error_dict"))
+        self.assertIsNone(error.error_dict)
         self.assertEqual(str(error), "'This is an error'")
         self.assertEqual(repr(error), "ValidationError('This is an error')")
 
@@ -45,9 +45,9 @@ class ValidationErrorTestCase(unittest.TestCase):
         }
         error = ValidationError(error_dict)
 
-        self.assertTrue(hasattr(error, "error_dict"))
-        self.assertFalse(hasattr(error, "message"))
-        self.assertEqual(len(error.error_dict), 3)
+        self.assertIsNotNone(error.error_dict)
+        self.assertIsNone(error.message)
+        self.assertEqual(len(error.error_dict), 3)  # type: ignore[arg-type]
 
         self.assertEqual(error.error_dict, error_dict)
 
@@ -59,8 +59,8 @@ class ValidationErrorTestCase(unittest.TestCase):
         }
         error = ValidationError(error_dict)
 
-        self.assertTrue(hasattr(error, "error_dict"))
-        self.assertEqual(len(error.error_dict), 2)
+        self.assertIsNotNone(error.error_dict)
+        self.assertEqual(len(error.error_dict), 2)  # type: ignore[arg-type]
         self.assertEqual(error.error_dict, {"key1": "Simple string error", "key2": "Nested error message"})
 
     def test_nested_parse_error_with_message(self) -> None:
@@ -68,15 +68,15 @@ class ValidationErrorTestCase(unittest.TestCase):
         nested_error = ValidationError(original_error)
 
         self.assertEqual(nested_error.message, "Original error")
-        self.assertFalse(hasattr(nested_error, "error_dict"))
+        self.assertIsNone(nested_error.error_dict)
 
     def test_nested_parse_error_with_dict(self) -> None:
         original_error = ValidationError({"key1": "Error 1", "key2": "Error 2"})
         nested_error = ValidationError(original_error)
 
-        self.assertTrue(hasattr(nested_error, "error_dict"))
-        self.assertFalse(hasattr(nested_error, "message"))
-        self.assertEqual(len(nested_error.error_dict), 2)
+        self.assertIsNotNone(nested_error.error_dict)
+        self.assertIsNone(nested_error.message)
+        self.assertEqual(len(nested_error.error_dict), 2)  # type: ignore[arg-type]
         self.assertEqual(nested_error.error_dict, {"key1": "Error 1", "key2": "Error 2"})
 
     def test_iteration_with_simple_message(self) -> None:
@@ -119,8 +119,8 @@ class ValidationErrorTestCase(unittest.TestCase):
     def test_empty_dict(self) -> None:
         error = ValidationError({})
 
-        self.assertTrue(hasattr(error, "error_dict"))
-        self.assertEqual(len(error.error_dict), 0)
+        self.assertIsNotNone(error.error_dict)
+        self.assertEqual(len(error.error_dict), 0)  # type: ignore[arg-type]
 
     def test_dict_with_mixed_value_types(self) -> None:
         error = ValidationError(
@@ -130,12 +130,12 @@ class ValidationErrorTestCase(unittest.TestCase):
             }
         )
 
-        self.assertTrue(hasattr(error, "error_dict"))
-        self.assertEqual(len(error.error_dict), 2)
+        self.assertIsNotNone(error.error_dict)
+        self.assertEqual(len(error.error_dict), 2)  # type: ignore[arg-type]
 
         # All values should be converted to message strings
-        self.assertEqual(error.error_dict["string_key"], "String error")
-        self.assertEqual(error.error_dict["parse_error_key"], "Nested error")
+        self.assertEqual(error.error_dict["string_key"], "String error")  # type: ignore[index]
+        self.assertEqual(error.error_dict["parse_error_key"], "Nested error")  # type: ignore[index]
 
     def test_deeply_nested_parse_errors(self) -> None:
         # Create a chain: inner -> middle -> outer
@@ -145,15 +145,15 @@ class ValidationErrorTestCase(unittest.TestCase):
 
         # Should resolve to the innermost message
         self.assertEqual(outer_error.message, "Inner error message")
-        self.assertFalse(hasattr(outer_error, "error_dict"))
+        self.assertIsNone(outer_error.error_dict)
 
     def test_nested_dict_extraction(self) -> None:
         outer_error = ValidationError(ValidationError({"inner_key1": "Inner error 1", "inner_key2": "Inner error 2"}))
 
-        self.assertTrue(hasattr(outer_error, "error_dict"))
-        self.assertEqual(len(outer_error.error_dict), 2)
-        self.assertEqual(outer_error.error_dict["inner_key1"], "Inner error 1")
-        self.assertEqual(outer_error.error_dict["inner_key2"], "Inner error 2")
+        self.assertIsNotNone(outer_error.error_dict)
+        self.assertEqual(len(outer_error.error_dict), 2)  # type: ignore[arg-type]
+        self.assertEqual(outer_error.error_dict["inner_key1"], "Inner error 1")  # type: ignore[index]
+        self.assertEqual(outer_error.error_dict["inner_key2"], "Inner error 2")  # type: ignore[index]
 
     def test_composition_dict_with_parse_error_values(self) -> None:
         composed_error = ValidationError(
@@ -164,8 +164,8 @@ class ValidationErrorTestCase(unittest.TestCase):
             }
         )
 
-        self.assertTrue(hasattr(composed_error, "error_dict"))
-        self.assertEqual(len(composed_error.error_dict), 3)
+        self.assertIsNotNone(composed_error.error_dict)
+        self.assertEqual(len(composed_error.error_dict), 3)  # type: ignore[arg-type]
 
         self.assertEqual(
             composed_error.error_dict,

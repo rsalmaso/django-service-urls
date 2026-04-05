@@ -41,9 +41,9 @@ class ValidationError(ValueError):
         Initialize a ValidationError with error message or error dictionary.
 
         The `message` argument can be:
-        - A single error string: Creates a simple error with .message attribute
-        - A dictionary mapping keys to errors: Creates .error_dict attribute
-        - Another ValidationError instance: Extracts its error or error_dict
+        - A single error string: Sets .message, .error_dict is None
+        - A dictionary mapping keys to errors: Sets .error_dict, .message is None
+        - Another ValidationError instance: Copies its state
 
         Args:
             message: Error message as string, key->error dict, or ValidationError instance
@@ -62,11 +62,11 @@ class ValidationError(ValueError):
             >>> ValidationError({"field1": ValidationError("Error 1"), "field2": ValidationError("Error 2")})
             ValidationError({'field1': 'Error 1', 'field2': 'Error 2'})
         """
-        self.error_dict: dict[str, Union[str, "ValidationError"]]
-        self.message: str
+        self.error_dict: dict[str, Union[str, "ValidationError"]] | None = None
+        self.message: str | None = None
 
         if isinstance(message, ValidationError):
-            if hasattr(message, "error_dict"):
+            if message.error_dict is not None:
                 self.error_dict = message.error_dict.copy()
             else:
                 self.message = message.message
@@ -74,7 +74,7 @@ class ValidationError(ValueError):
             self.error_dict = {}
             for key, value in message.items():
                 if isinstance(value, ValidationError):
-                    self.error_dict[key] = value.message
+                    self.error_dict[key] = value.message  # type: ignore[assignment]
                 else:
                     # value is a string
                     self.error_dict[key] = value
@@ -82,7 +82,7 @@ class ValidationError(ValueError):
             self.message = message
 
     def __str__(self) -> str:
-        if hasattr(self, "error_dict"):
+        if self.error_dict is not None:
             return repr(self.error_dict)
         return repr(self.message)
 
@@ -90,8 +90,8 @@ class ValidationError(ValueError):
         return f"ValidationError({self})"
 
     def __iter__(self) -> Generator[Union[tuple[str, str], str], None, None]:
-        if hasattr(self, "error_dict"):
+        if self.error_dict is not None:
             for key, message in self.error_dict.items():
                 yield key, str(message)
         else:
-            yield self.message
+            yield self.message  # type: ignore[misc]

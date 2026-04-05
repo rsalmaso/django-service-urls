@@ -7,6 +7,7 @@
 * refactor Service.parse internals
 * removed duplicated parsing in email service
 * cleanup database url decoding
+* always set ValidationError error_dict and message
 
 ## 2.1.0
 
