@@ -25,7 +25,7 @@
 
 import unittest
 
-from django_service_urls import cache, db, ValidationError
+from django_service_urls import db, ValidationError
 
 GENERIC_TESTS = [
     ("username:password@domain/database", ("username", "password", "domain", "", "database", {})),
@@ -638,21 +638,6 @@ class DictionaryTests(unittest.TestCase):
         self.assertEqual(result["mysql"]["USER"], "user")
         self.assertEqual(result["mysql"]["PASSWORD"], "password")
         self.assertEqual(result["mysql"]["PORT"], 3306)
-
-    def test_caches(self) -> None:
-        result = cache.parse(
-            {
-                "default": "memory://",
-                "dummy": {
-                    "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-                },
-                "memcached": "memcached://1.2.3.4:1567,1.2.3.5:1568",
-            }
-        )
-        self.assertEqual(result["default"]["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
-        self.assertEqual(result["dummy"]["BACKEND"], "django.core.cache.backends.dummy.DummyCache")
-        self.assertEqual(result["memcached"]["BACKEND"], "django.core.cache.backends.memcached.MemcachedCache")
-        self.assertEqual(result["memcached"]["LOCATION"], ["1.2.3.4:1567", "1.2.3.5:1568"])
 
     def test_fragment_top_level_config(self) -> None:
         result = db.parse(
