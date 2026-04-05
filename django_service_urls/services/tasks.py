@@ -54,5 +54,5 @@ task: TaskService = TaskService()
     ("database+dt", "django_tasks.backends.database.DatabaseBackend"),
     ("rq+dt", "django_tasks.backends.rq.RQBackend"),
 )
-def tasks_smtp_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+def tasks_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)

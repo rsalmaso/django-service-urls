@@ -101,5 +101,5 @@ def email_memory_config_url(backend: Service, engine: str, scheme: str, url: str
 @email.register(
     ("dummy", "django.core.mail.backends.dummy.EmailBackend"),
 )
-def email_dummy_config_ur(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+def email_dummy_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)

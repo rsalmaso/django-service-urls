@@ -3,6 +3,7 @@
 ## dev
 
 * drop support for django < 5.2
+* fix email and tasks function name typos
 
 ## 2.1.0
 
