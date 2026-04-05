@@ -167,7 +167,7 @@ def _parse_querystring(data: str) -> dict[str, Any]:
     return result
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, repr=False)
 class UrlInfo:
     scheme: str = ""
     username: str | None = None
@@ -179,6 +179,15 @@ class UrlInfo:
     query: dict[str, Any] = field(default_factory=dict)
     location: list[str] | str = ""
     fragment: dict[str, Any] = field(default_factory=dict)
+
+    def __repr__(self) -> str:
+        password = "***" if self.password else repr(self.password)
+        return (
+            f"UrlInfo(scheme={self.scheme!r}, username={self.username!r}, password={password}, "
+            f"hostname={self.hostname!r}, port={self.port!r}, path={self.path!r}, "
+            f"fullpath={self.fullpath!r}, query={self.query!r}, location={self.location!r}, "
+            f"fragment={self.fragment!r})"
+        )
 
 
 def parse_url(url: str | UrlInfo, *, multiple_netloc: bool = False) -> UrlInfo:

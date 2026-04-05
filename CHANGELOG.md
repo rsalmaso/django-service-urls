@@ -9,6 +9,7 @@
 * cleanup database url decoding
 * always set ValidationError error_dict and message
 * added `redis://` cache backend (alias to `django.core.cache.backends.redis.RedisCache`)
+* redact password in UrlInfo repr
 
 ## 2.1.0
 
