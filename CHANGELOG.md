@@ -8,6 +8,7 @@
 * removed duplicated parsing in email service
 * cleanup database url decoding
 * always set ValidationError error_dict and message
+* added `redis://` cache backend (alias to `django.core.cache.backends.redis.RedisCache`)
 
 ## 2.1.0
 

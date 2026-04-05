@@ -110,6 +110,21 @@ def pylibmccache_config_from_url(backend: Service, engine: str, scheme: str, url
 
 
 @cache.register(
+    ("redis", "django.core.cache.backends.redis.RedisCache"),
+)
+def redis_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
+    parsed: UrlInfo = backend.parse_url(url, multiple_netloc=True)
+    config: ConfigDict = backend.config_from_url(engine, scheme, parsed, multiple_netloc=True)
+    # Django's RedisCache expects LOCATION as redis:// URL(s)
+    db = f"/{parsed.path}" if parsed.path else ""
+    if isinstance(parsed.location, list):
+        config["LOCATION"] = [f"redis://{loc}{db}" for loc in parsed.location]
+    else:
+        config["LOCATION"] = f"redis://{parsed.location}{db}"
+    return config
+
+
+@cache.register(
     ("file", "django.core.cache.backends.filebased.FileBasedCache"),
 )
 def file_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:

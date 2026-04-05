@@ -197,6 +197,75 @@ class PylibmccacheCacheTestCase(unittest.TestCase):
                 self.assertEqual(result["LOCATION"], "/tmp/memcached.sock")
 
 
+class RedisCacheTestCase(unittest.TestCase):
+    def test_redis_single_host(self) -> None:
+        result = cache.parse("redis://localhost:6379/0")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://localhost:6379/0")
+
+    def test_redis_single_host_no_db(self) -> None:
+        result = cache.parse("redis://localhost:6379")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://localhost:6379")
+
+    def test_redis_with_query_options(self) -> None:
+        result = cache.parse("redis://localhost:6379/1?timeout=300&key_prefix=prod&version=2")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://localhost:6379/1")
+        self.assertEqual(result["TIMEOUT"], 300)
+        self.assertEqual(result["KEY_PREFIX"], "prod")
+        self.assertEqual(result["VERSION"], 2)
+
+    def test_redis_with_fragment_config(self) -> None:
+        result = cache.parse("redis://localhost:6379/1?timeout=300#KEY_PREFIX=prod&VERSION=2&TEST.CACHE.BACKEND=dummy")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://localhost:6379/1")
+        self.assertEqual(result["TIMEOUT"], 300)
+        self.assertEqual(result["KEY_PREFIX"], "prod")
+        self.assertEqual(result["VERSION"], 2)
+        self.assertEqual(result["TEST"], {"CACHE": {"BACKEND": "dummy"}})
+
+    def test_redis_multiple_hosts(self) -> None:
+        result = cache.parse("redis://host1:6379,host2:6379/0")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], ["redis://host1:6379/0", "redis://host2:6379/0"])
+
+    def test_redis_with_password(self) -> None:
+        result = cache.parse("redis://:secretpass@localhost:6379/0")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://:secretpass@localhost:6379/0")
+
+    def test_redis_without_port(self) -> None:
+        result = cache.parse("redis://localhost/0")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], "redis://localhost/0")
+
+    def test_redis_multiple_hosts_with_query(self) -> None:
+        result = cache.parse("redis://host1:6379,host2:6379/0?timeout=300&key_prefix=prod")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], ["redis://host1:6379/0", "redis://host2:6379/0"])
+        self.assertEqual(result["TIMEOUT"], 300)
+        self.assertEqual(result["KEY_PREFIX"], "prod")
+
+    def test_redis_multiple_hosts_with_fragment(self) -> None:
+        result = cache.parse("redis://host1:6379,host2:6379/0#KEY_PREFIX=prod&VERSION=2")
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], ["redis://host1:6379/0", "redis://host2:6379/0"])
+        self.assertEqual(result["KEY_PREFIX"], "prod")
+        self.assertEqual(result["VERSION"], 2)
+
+    def test_redis_multiple_hosts_with_query_and_fragment(self) -> None:
+        result = cache.parse(
+            "redis://host1:6379,host2:6379/1?timeout=300#KEY_PREFIX=prod&VERSION=2&TEST.CACHE.BACKEND=dummy"
+        )
+        self.assertEqual(result["BACKEND"], "django.core.cache.backends.redis.RedisCache")
+        self.assertEqual(result["LOCATION"], ["redis://host1:6379/1", "redis://host2:6379/1"])
+        self.assertEqual(result["TIMEOUT"], 300)
+        self.assertEqual(result["KEY_PREFIX"], "prod")
+        self.assertEqual(result["VERSION"], 2)
+        self.assertEqual(result["TEST"], {"CACHE": {"BACKEND": "dummy"}})
+
+
 class FileCacheTestCase(unittest.TestCase):
     def test_file_cache_windows_path(self) -> None:
         result = cache.parse("file://C:/abc/def/xyz")
