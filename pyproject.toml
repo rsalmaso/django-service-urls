@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
 
 [project]
 name = "django-service-urls"
@@ -66,15 +66,8 @@ GitHub = "https://github.com/rsalmaso/django-service-urls"
 Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG.md"
 "Bug Reports" = "https://github.com/rsalmaso/django-service-urls/discussions"
 
-[tool.setuptools]
-packages = ["django_service_urls"]
-zip-safe = false
-
-[tool.setuptools.dynamic]
-version = {attr = "django_service_urls.__version__"}
-
-[tool.distutils.bdist_wheel]
-universal = false
+[tool.hatch.version]
+path = "django_service_urls/__init__.py"
 
 [tool.ruff]
 line-length = 120

@@ -29,11 +29,8 @@ from .parse import UrlInfo  # noqa: F401
 from .plugins import discover_plugins  # noqa: F401
 from .registry import register_setting  # noqa: F401
 from .services import cache, db, email, storage, task  # noqa: F401
-from .version import get_version
 
-VERSION = (2, 1, 0, "final", 0)
-
-__version__ = get_version(VERSION)
+__version__ = "2.1.0"
 __author__ = "Raffaele Salmaso"
 __email__ = "raffaele@salmaso.org"
 

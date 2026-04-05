@@ -16,6 +16,9 @@ conflicts = [[
     { package = "django-service-urls", group = "djangomain" },
 ]]
 
+[manifest]
+overrides = [{ name = "packaging", specifier = "<26" }]
+
 [[package]]
 name = "argcomplete"
 version = "3.6.3"
