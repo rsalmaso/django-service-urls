@@ -61,7 +61,7 @@ STORAGES = {
 
 TASKS = {
     "default": {
-        "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+        "BACKEND": "django_tasks_db.DatabaseBackend",
         "OPTIONS": {},
     },
 }
@@ -469,8 +469,8 @@ Dummy | django.tasks.backends.dummy.DummyBackend | dummy://
 Immediate | django.tasks.backends.immediate.ImmediateBackend | immediate://
 Dummy (django-tasks) | django_tasks.backends.dummy.DummyBackend | dummy+dt://
 Immediate (django-tasks) | django_tasks.backends.immediate.ImmediateBackend | immediate+dt://
-Database (django-tasks) | django_tasks.backends.database.DatabaseBackend | database+dt://
-RQ (django-tasks) | django_tasks.backends.rq.RQBackend | rq+dt://
+Database (django-tasks-db) | django_tasks_db.DatabaseBackend | database+dt://
+RQ (django-tasks-rq) | django_tasks_rq.RQBackend | rq+dt://
 
 ## Handling Mixed URL and Backend Strings
 

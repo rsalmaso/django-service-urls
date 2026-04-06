@@ -60,14 +60,14 @@ class DjangoTasksBackendsTestCase(unittest.TestCase):
 
     def test_database_dt_backend(self) -> None:
         result = task.parse("database+dt://?db_table=tasks&retry.max_attempts=5&retry.delay=10")
-        self.assertEqual(result["BACKEND"], "django_tasks.backends.database.DatabaseBackend")
+        self.assertEqual(result["BACKEND"], "django_tasks_db.DatabaseBackend")
         self.assertEqual(result["OPTIONS"]["db_table"], "tasks")
         self.assertEqual(result["OPTIONS"]["retry"]["max_attempts"], 5)
         self.assertEqual(result["OPTIONS"]["retry"]["delay"], 10)
 
     def test_rq_dt_backend(self) -> None:
         result = task.parse("rq+dt://?queue_name=high_priority&redis.host=localhost&redis.port=6379&redis.db=0")
-        self.assertEqual(result["BACKEND"], "django_tasks.backends.rq.RQBackend")
+        self.assertEqual(result["BACKEND"], "django_tasks_rq.RQBackend")
         self.assertEqual(result["OPTIONS"]["queue_name"], "high_priority")
         self.assertEqual(result["OPTIONS"]["redis"]["host"], "localhost")
         self.assertEqual(result["OPTIONS"]["redis"]["port"], 6379)

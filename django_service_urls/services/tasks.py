@@ -51,8 +51,8 @@ task: TaskService = TaskService()
     ("immediate", "django.tasks.backends.immediate.ImmediateBackend"),
     ("dummy+dt", "django_tasks.backends.dummy.DummyBackend"),
     ("immediate+dt", "django_tasks.backends.immediate.ImmediateBackend"),
-    ("database+dt", "django_tasks.backends.database.DatabaseBackend"),
-    ("rq+dt", "django_tasks.backends.rq.RQBackend"),
+    ("database+dt", "django_tasks_db.DatabaseBackend"),
+    ("rq+dt", "django_tasks_rq.RQBackend"),
 )
 def tasks_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     return backend.config_from_url(engine, scheme, url)

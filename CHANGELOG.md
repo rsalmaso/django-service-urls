@@ -11,6 +11,7 @@
 * added `redis://` cache backend (alias to `django.core.cache.backends.redis.RedisCache`)
 * redact password in UrlInfo repr
 * added automatic plugin discovery via `pyproject.toml` entry points (`django_service_urls` group)
+* BREAKING: updated `database+dt` and `rq+dt` task backends to use split packages (`django_tasks_db`, `django_tasks_rq`)
 
 ## 2.1.0
 
