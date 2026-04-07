@@ -1,6 +1,4 @@
 # Copyright (C) Raffaele Salmaso <raffaele@salmaso.org>
-# Copyright (C) Tom Forbes
-# Copyright (C) Kenneth Reitz
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,30 +21,41 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from .base import ConfigDict, Service  # noqa: F401
-from .exceptions import ValidationError  # noqa: F401
-from .parse import UrlInfo  # noqa: F401
-from .plugins import discover_plugins  # noqa: F401
-from .registry import register_setting  # noqa: F401
-from .services import cache, db, email, storage, task  # noqa: F401
-from .version import get_version
+import importlib.metadata
+import warnings
 
-VERSION = (2, 1, 0, "final", 0)
+__all__ = ["discover_plugins"]
 
-__version__ = get_version(VERSION)
-__author__ = "Raffaele Salmaso"
-__email__ = "raffaele@salmaso.org"
+ENTRY_POINT_GROUP = "django_service_urls"
 
-__all__ = [
-    "Service",
-    "ConfigDict",
-    "ValidationError",
-    "UrlInfo",
-    "cache",
-    "db",
-    "discover_plugins",
-    "email",
-    "register_setting",
-    "storage",
-    "task",
-]
+
+class PluginDiscovery:
+    """Discover and load plugins registered via the 'django_service_urls' entry point group.
+
+    Each entry point should point to a module that registers schemes using
+    @service.register() decorators. Loading the module triggers the registration
+    as a side effect.
+
+    This callable is idempotent — calling it multiple times has no effect after
+    the first successful run.
+    """
+
+    def __init__(self) -> None:
+        self._loaded = False
+
+    def __call__(self) -> None:
+        if self._loaded:
+            return
+        self._loaded = True
+
+        for ep in importlib.metadata.entry_points(group=ENTRY_POINT_GROUP):
+            try:
+                ep.load()
+            except Exception as exc:
+                warnings.warn(
+                    f"Failed to load django_service_urls plugin {ep.name!r} ({ep.value}): {exc}",
+                    stacklevel=2,
+                )
+
+
+discover_plugins = PluginDiscovery()

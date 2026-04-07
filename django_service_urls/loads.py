@@ -35,7 +35,10 @@ def patch() -> None:
     from django.conf import Settings
 
     from django_service_urls.exceptions import ValidationError
+    from django_service_urls.plugins import discover_plugins
     from django_service_urls.services import cache, db, email, storage, task
+
+    discover_plugins()
 
     if not hasattr(Settings, "_django_service_urls_original_init"):
         original_init = Settings.__init__
@@ -64,6 +67,10 @@ def patch() -> None:
                         setattr(module, setting, v)
                 except ValidationError:
                     pass
+
+            from django_service_urls.registry import register_setting
+
+            register_setting.apply(module)
 
             original_init(self, settings_module)
 

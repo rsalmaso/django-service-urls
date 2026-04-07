@@ -10,6 +10,7 @@
 * always set ValidationError error_dict and message
 * added `redis://` cache backend (alias to `django.core.cache.backends.redis.RedisCache`)
 * redact password in UrlInfo repr
+* added automatic plugin discovery via `pyproject.toml` entry points (`django_service_urls` group)
 
 ## 2.1.0
 

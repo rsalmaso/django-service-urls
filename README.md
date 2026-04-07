@@ -501,37 +501,51 @@ This pattern is especially useful when migrating from traditional Django setting
 
 ## Extend `django-service-urls`
 
-### Add another handler
+### Automatic plugin discovery (entry points)
 
-You can add another handler to an already existing handler:
+Third-party packages can register new schemes automatically by declaring an
+entry point in their `pyproject.toml`. Just install the package and the schemes
+are available — no manual imports needed in `manage.py` or `settings.py`.
 
-`my_postgres_backend/service_url.py`
+```toml
+[project.entry-points."django_service_urls"]
+my_backend = "my_package.service_urls"
+```
+
+#### Tier 1 — new scheme on an existing service
+
+Add a URL scheme to one of the built-in services (`db`, `cache`, `email`, `storage`, `task`).
+`loads.py` already auto-parses the corresponding Django setting, so the new scheme
+works transparently:
 
 ```python
-from django_service_urls.services import db
+# my_postgres_backend/service_urls.py
+from django_service_urls import db
 from django_service_urls.services.database import postgresql_config_from_url
 
-# postgresql fork
-postgresql_config_from_url = db.register(("mypgbackend", "my_postgres_backend"))(postgresql_config_from_url)
+postgresql_config_from_url = db.register(
+    ("mypgbackend", "my_postgres_backend")
+)(postgresql_config_from_url)
 ```
 
-`yourapp/settings.py`
+Consumer's `settings.py` — unchanged:
 
 ```python
-import my_postgres_backend.service_url
-
-
-DATABASES = {"default": "mypgbackend://user:pwd@:/mydb"}
+DATABASES = {"default": "mypgbackend://user:pwd@localhost/mydb"}
 ```
 
-### Add another service
+#### Tier 2 — entirely new service type
+
+Create a brand-new `Service` instance with its own schemes, and use
+`register_setting()` to opt a custom Django setting into auto-parsing:
 
 ```python
-from django_service_urls import Service
+# my_search_plugin/service_urls.py
+from django_service_urls import ConfigDict, register_setting, Service, UrlInfo
 
 
 class SearchService(Service):
-    def config_from_url(self, engine, scheme, url):
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
         parsed = self.parse_url(url)
         return {
             "ENGINE": engine,
@@ -540,11 +554,71 @@ class SearchService(Service):
 
 
 search = SearchService()
+register_setting("SEARCH_ENGINES", search)
 
-
-@search.register(("myengine", "my_search_engine"))
+@search.register(("myengine", "my_search_engine.Engine"))
 def search_config_from_url(backend, engine, scheme, url):
     return backend.config_from_url(engine, scheme, url)
+```
+
+Consumer's `settings.py` — strings are replaced automatically, just like `CACHES`, `DATABASES`, etc:
+
+```python
+SEARCH_ENGINES = {
+    "default": "service://user:pass@host:27017/mydb",
+}
+```
+
+For settings that fan out into multiple Django settings (similar to `EMAIL_BACKEND`),
+pass a custom `handler` function:
+
+```python
+from types import ModuleType
+from django_service_urls import ConfigDict, register_setting, Service, UrlInfo, ValidationError
+
+
+class CustomService(Service):
+    ...
+
+
+my_service = CustomService()
+
+def _handler(module: ModuleType) -> None:
+    if backend := getattr(module, "MY_CUSTOM_SERVICE_BACKEND", None):
+        try:
+            config = my_service.parse(backend)
+            for k, v in config.items():
+                setattr(module, f"MY_CUSTOM_SERVICE_{'BACKEND' if k == 'ENGINE' else k}", v)
+        except ValidationError:
+            pass
+
+register_setting("MY_CUSTOM_SERVICE_BACKEND", my_service, handler=_handler)
+```
+
+### Add another handler (manual import)
+
+> **Tip:** If you are distributing your extension as a standalone package,
+> consider using entry points (described above) so users do not need to
+> add an import to their `manage.py` or `settings.py`.
+
+You can also register a handler by manually importing the module:
+
+`my_postgres_backend/service_urls.py`
+
+```python
+from django_service_urls import db
+from django_service_urls.services.database import postgresql_config_from_url
+
+postgresql_config_from_url = db.register(("mypgbackend", "my_postgres_backend"))(postgresql_config_from_url)
+```
+
+`yourapp/settings.py`
+
+```python
+import my_postgres_backend.service_urls
+
+
+DATABASES = {"default": "mypgbackend://user:pwd@:/mydb"}
 ```
 
 ## mypy integration
