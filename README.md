@@ -106,58 +106,20 @@ Install package
 $ uv add django-service-urls
 ```
 
-add `import django_service_urls.loads` in your `manage.py`
+That's it — activation is automatic. `django-service-urls` ships a `.pth` file that Python's
+`site` module runs at startup, patching `django.conf.Settings` before any of your code runs.
+No changes to `manage.py`, `wsgi.py`, `asgi.py`, or `celery.py` are needed.
+
+### Explicit activation (edge cases)
+
+If you are using `settings.configure()` directly, or running in a CI environment where
+`site-packages` are not loaded (e.g. `python -S`), you can activate manually:
 
 ```python
-#!/usr/bin/env python
-import os
-import sys
-
-import django_service_urls.loads
-
-
-def main():
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_name.settings")
-    try:
-        from django.core.management import execute_from_command_line
-    except ImportError as exc:
-        raise ImportError(
-            "Couldn"t import Django. Are you sure it"s installed and "
-            "available on your PYTHONPATH environment variable? Did you "
-            "forget to activate a virtual environment?"
-        ) from exc
-    execute_from_command_line(sys.argv)
-
-
-if __name__ == "__main__":
-    main()
+import django_service_urls.loads  # noqa: F401
 ```
 
-and in `wsgi.py`
-
-```python
-import os
-import django_service_urls.loads
-
-from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_name.settings")
-
-application = get_wsgi_application()
-```
-
-and in `asgi.py`
-
-```python
-import os
-import django_service_urls.loads
-
-from django.core.asgi import get_asgi_application
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_name.settings")
-
-application = get_asgi_application()
-```
+Add this import **before** any call that triggers settings loading.
 
 ## Advanced Features (Nested dictionaries, lists, fragments, booleans and integers)
 

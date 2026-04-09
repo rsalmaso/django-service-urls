@@ -13,6 +13,7 @@
 * added automatic plugin discovery via `pyproject.toml` entry points (`django_service_urls` group)
 * BREAKING: updated `database+dt` and `rq+dt` task backends to use split packages (`django_tasks_db`, `django_tasks_rq`)
 * switched build system from setuptools to hatchling
+* BREAKING: ship `.pth` file for zero-config auto-activation — `import django_service_urls.loads` in entry points is no longer needed
 
 ## 2.1.0
 

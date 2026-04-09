@@ -69,6 +69,10 @@ Changelog = "https://github.com/rsalmaso/django-service-urls/blob/main/CHANGELOG
 [tool.hatch.version]
 path = "django_service_urls/__init__.py"
 
+[tool.hatch.build.targets.wheel]
+packages = ["django_service_urls"]
+force-include = {"django_service_urls.pth" = "django_service_urls.pth"}
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
