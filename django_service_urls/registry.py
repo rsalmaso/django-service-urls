@@ -23,10 +23,12 @@
 
 from __future__ import annotations
 
-from types import ModuleType
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import ModuleType
+
     from django_service_urls.base import Service
 
 __all__ = ["register_setting"]

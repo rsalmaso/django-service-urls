@@ -23,8 +23,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Any
-
 from django_service_urls.base import ConfigDict, Service
 from django_service_urls.parse import UrlInfo
 
@@ -32,19 +30,18 @@ __all__ = ["cache"]
 
 
 class CacheService(Service):
-    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
-        multiple_netloc: bool = kwargs.pop("multiple_netloc", True)
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
+        multiple_netloc: bool = bool(kwargs.pop("multiple_netloc", True))
         parsed: UrlInfo = self.parse_url(url, multiple_netloc=multiple_netloc)
         config: ConfigDict = {
             "BACKEND": engine,
         }
         if multiple_netloc and parsed.location:
             config["LOCATION"] = parsed.location
-        else:
-            if parsed.hostname:
-                config["LOCATION"] = parsed.hostname
-                if parsed.port:
-                    config["LOCATION"] = f"{config['LOCATION']}:{parsed.port}"
+        elif parsed.hostname:
+            config["LOCATION"] = parsed.hostname
+            if parsed.port:
+                config["LOCATION"] = f"{config['LOCATION']}:{parsed.port}"
         for key in ("timeout", "key_prefix", "version"):
             if key in parsed.query:
                 query = parsed.query[key]

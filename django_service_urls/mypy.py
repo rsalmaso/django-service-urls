@@ -23,7 +23,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Type, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import django_service_urls.loads  # noqa: F401
 
@@ -40,5 +40,5 @@ class ServiceUrlsPlugin(Plugin):  # type: ignore[misc]
     pass
 
 
-def plugin(version: str) -> Type[ServiceUrlsPlugin]:
+def plugin(version: str) -> type[ServiceUrlsPlugin]:
     return ServiceUrlsPlugin

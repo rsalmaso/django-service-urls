@@ -79,22 +79,114 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
+    "ANN", # flake8-annotations: type annotation checks
+    "ASYNC", # flake8-async: a highly opinionated plugin for Trio-related problems
     "B", # flake8-bugbear
+    "C4", # flake8-comprehension: help you write better list/set/dict comprehensions
     "C9", # mccabe
-    "DJ", # flake8-django
+    "DJ", # flake8-django: catch bad style specific to Django Projects
+    "DTZ", # flake8-datetimez: ban the usage of unsafe naive datetime class
     "E", # pycodestyle
+    "EXE", # flake8-executable: check executable permissions and shebangs
+    "FLY", # flynt: convert a python %-formatted strings to f-strings
     "F", # pyflakes
-    "I", #
+    "FURB", # refurb: a tool for refurbishing and modernizing Python codebases
+    "G010", # flake8-logging-format: checks for uses of logging.warn and logging.Logger.warn
+    "G201", # flake8-logging-format: checks for uses of logging.error that pass exc_info=True
+    "G202", # flake8-logging-format: checks for redundant exc_info keyword arguments in logging statements
+    "I", # isort
+    "INP", # flake8-no-pep420: ban PEP-420 implicit namespace packages
+    "INT", # flake8-gettext
+    "ISC", # flake8-implicit-str-concat: encourage correct string literal concatenation
+    "LOG", # flake8-logging: checks for issues using the standard library logging module.
+    "PERF", # perflint*: pylint extension with performance anti-patterns
+    "PGH", # pygrep-hooks:
+    "PIE", # flake8-pie: misc. lints
+    "PL", # pylint
+    "PTH", # flake8-use-pathlib: find use of functions that can be replaced by pathlib module
+    "PYI", # flake8-pyi: enable linting .pyi stub files
+    "Q", # flake8-quotes: lint for quotes
+    "RET", # flake8-return: checks return values
+    "RSE", # flake8-raise: finds improvements for raise statements
+    "RUF", # ruff: ruff specific rules
+    "SIM", # flake8-simplify: checks for code that can be simplified
+    "SLOT", # flake8-slot: require __slots__ to be defined for subclasses of immutable types
+    "T10", # flake8-debugger: ipdb/pdb statement checke
+    "TC", # flake8-typechecking: manage type-checking imports & forward reference
+    "TID", # flake8-tidy-import: write tidier imports
+    "TRY", # tryceratops: Prevent Exception Handling AntiPatterns
+    "UP", # pyupgrade: automatically upgrade syntax for newer version
     "W", # pycodestyle
-
+    "YTT", # flake8-2020: checks for misuse of `sys.version` or `sys.version_info`
 ]
 ignore = [
+    "A", # flake8-builtins: check for python builtins being used as variables or parameters
+    "AIR", # Airflow
+    "ARG", # flake8-unused-arguments: warn on unused function arguments
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to
             # distinguish them from errors in exception handling.
+    "COM",  # flake8-commas: lint for trailing commas
+    "CPY", # flake8-copyright: copyright checks
     "E722", # Do not use bare except, specify exception instead
+    "EM", # flake8-errmsg: checker for raw literals inside raises
+    "ERA", # eradicate
+    "FA", # flake8-future-annotations: verifies python 3.7+ files use from __future__ import annotations
+    "FAST", # FastAPI
+    "FBT", # flake8-boolean-trap: forbids boolean positional arguments
+    "FIX", # flake8-fixme: check for FIXME, TODO and other temporary developer notes
+    "G001", # flake8-logging-format: checks for uses of str.format to format logging messages
+    "G002", # flake8-logging-format: checks for uses of printf-style format strings to format logging messages
+    "G003", # flake8-logging-format: checks for uses string concatenation via the + operator to format logging messages
+    "G004", # flake8-logging-format: checks for uses of f-strings to format logging messages
+    "G101", # flake8-logging-format: checks for extra keywords in logging statements that clash with LogRecord attributes
+    "ICN", # flake8-import-conventions: an opinionated plugin on how certain packages should be imported or aliased
+    "N", # pep8-naming*: PEP-8 naming conventions
+    "NPY", # numpy*
+    "PD", # pandas*
+    "PLE0604", # pylint: checks for the inclusion of invalid objects in __all__
+    "PLC0415", # pylint: checks for import statements outside of a module's top-level scope, such as within a function or class definition
+    "PLR0911", # pylint: checks for functions or methods with too many return statements
+    "PLR0913", # pylint: checks for function definitions that include too many arguments.
+    "PLR0915", # pylint: checks for functions or methods with too many statements
+    "PT", # flake8-pytest-style: check common style issues or inconsistencies with pytest-based tests
+    "SLF", # flake8-self: private member access linting
+    "T20", # flake8-print: print statement checker
+    "TD", # flake8-todo: lint TODO comments
+    "TRY003", # Checks for long exception messages that are not defined in the exception class itself
+    "TRY201", # to be checked
+    "TRY300", # to be checked
+    "TRY301", # Checks for raise statements within try blocks. The only raises caught are those that throw
+              # exceptions caught by the try statement itself.
 ]
 fixable = [
-    "I",
+    "ANN", # flake8-annotations
+    "ASYNC", # flake8-async
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehension
+    "E", # pycodestyle
+    "EXE", # flake8-executable
+    "FLY", # flynt
+    "F", # pyflakes
+    "FURB", # refurb
+    "G", # flake8-logging-format
+    "I", # isort
+    "ISC", # flake8-implicit-str-concat
+    "LOG", # flake8-logging
+    "PERF", # perflint
+    "PIE", # flake8-pie: misc. lints
+    "PL", # pylint
+    "PTH", # flake8-use-pathlib
+    "PYI", # flake8-pyi
+    "Q", # flake8-quotes
+    "RET", # flake8-return
+    "RSE", # flake8-raise
+    "RUF", # ruff
+    "SIM", # flake8-simplify
+    "TC", # flake8-typechecking
+    "TID", # flake8-tidy-import
+    "TRY", # tryceratops
+    "UP", # pyupgrade
+    "W", # pycodestyle
 ]
 unfixable = [
     "F401", # don't remove unused import

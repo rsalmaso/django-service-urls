@@ -21,7 +21,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Any
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -29,7 +28,9 @@ from django_service_urls.base import ConfigDict, Service
 from django_service_urls.plugins import PluginDiscovery
 
 
-def _make_entry_point(name: str, value: str, load_return: Any = None, load_error: Exception | None = None) -> MagicMock:
+def _make_entry_point(
+    name: str, value: str, load_return: object = None, load_error: Exception | None = None
+) -> MagicMock:
     ep = MagicMock()
     ep.name = name
     ep.value = value
@@ -54,7 +55,7 @@ class PluginDiscoveryTestCase(unittest.TestCase):
                 return backend.config_from_url(engine, scheme, url)
 
         ep = _make_entry_point("test", "test_module")
-        ep.load.side_effect = lambda: fake_plugin()
+        ep.load.side_effect = fake_plugin
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep]):
             discover = PluginDiscovery()

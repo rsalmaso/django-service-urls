@@ -115,7 +115,7 @@ def _cast_value(value: str) -> CastValue:
     return value
 
 
-def _set_nested_option(options: dict[str, Any], key: str, value: Any) -> None:
+def _set_nested_option(options: dict[str, Any], key: str, value: CastValues) -> None:
     """
     Set a nested option using dot notation.
 

@@ -23,8 +23,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from collections.abc import MutableMapping
-from typing import Any, Callable, TypeAlias, TypedDict
+from collections.abc import Callable, MutableMapping
+from typing import Any, TypeAlias, TypedDict
 from urllib.parse import urlsplit
 
 from .exceptions import ValidationError
@@ -43,7 +43,7 @@ class SchemeRegistration(TypedDict):
 
 
 class Service:
-    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         """Convert URL to Django configuration dictionary. Must be implemented by subclasses."""
 
         raise NotImplementedError("")
@@ -162,7 +162,7 @@ class Service:
         for key, value in data.items():
             try:
                 parsed_data[key] = value if isinstance(value, dict) else self._parse_str(value)
-            except ValidationError as exc:
+            except ValidationError as exc:  # noqa: PERF203
                 errors[key] = exc
         if errors:
             raise ValidationError(errors)

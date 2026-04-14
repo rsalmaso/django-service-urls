@@ -52,9 +52,9 @@ class DatabaseTestCaseMixin:
         if self.SCHEME is None:
             return
         for value, (user, passw, host, port, database, options) in GENERIC_TESTS:
-            value = f"{self.SCHEME}://{value}"
-            with self.subTest(item=f"Parsing {value!r}"):  # type: ignore[attr-defined]
-                result = db.parse(value)
+            url = f"{self.SCHEME}://{value}"
+            with self.subTest(item=f"Parsing {url!r}"):  # type: ignore[attr-defined]
+                result = db.parse(url)
                 self.assertEqual(result["NAME"], database)  # type: ignore[attr-defined]
                 self.assertEqual(result["HOST"], host)  # type: ignore[attr-defined]
                 self.assertEqual(result["USER"], user)  # type: ignore[attr-defined]

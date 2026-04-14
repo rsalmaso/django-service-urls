@@ -25,8 +25,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Generator, TypeAlias, Union
+from collections.abc import Generator, Mapping
+from typing import TypeAlias, Union
 
 __all__ = ["ValidationError"]
 
@@ -62,7 +62,7 @@ class ValidationError(ValueError):
             >>> ValidationError({"field1": ValidationError("Error 1"), "field2": ValidationError("Error 2")})
             ValidationError({'field1': 'Error 1', 'field2': 'Error 2'})
         """
-        self.error_dict: dict[str, Union[str, "ValidationError"]] | None = None
+        self.error_dict: dict[str, str | ValidationError] | None = None
         self.message: str | None = None
 
         if isinstance(message, ValidationError):
@@ -89,7 +89,7 @@ class ValidationError(ValueError):
     def __repr__(self) -> str:
         return f"ValidationError({self})"
 
-    def __iter__(self) -> Generator[Union[tuple[str, str], str], None, None]:
+    def __iter__(self) -> Generator[tuple[str, str] | str, None, None]:
         if self.error_dict is not None:
             for key, message in self.error_dict.items():
                 yield key, str(message)

@@ -51,7 +51,7 @@ class PluginDiscovery:
         for ep in importlib.metadata.entry_points(group=ENTRY_POINT_GROUP):
             try:
                 ep.load()
-            except Exception as exc:
+            except Exception as exc:  # noqa: PERF203
                 warnings.warn(
                     f"Failed to load django_service_urls plugin {ep.name!r} ({ep.value}): {exc}",
                     stacklevel=2,

@@ -23,8 +23,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Any
-
 from django_service_urls.base import ConfigDict, Service
 from django_service_urls.parse import UrlInfo
 
@@ -32,7 +30,7 @@ __all__ = ["task"]
 
 
 class TaskService(Service):
-    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         parsed: UrlInfo = self.parse_url(url)
         config: ConfigDict = {
             "BACKEND": parsed.hostname if engine == "<backend>" else engine,

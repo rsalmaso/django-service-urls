@@ -23,7 +23,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Any
 import unittest
 
 from django_service_urls.base import ConfigDict, Service
@@ -39,12 +38,12 @@ class MockTestService(Service):
         self.register(("test", "test.engine"))(self._test_callback)
 
     def _test_callback(
-        self, backend: Service, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any
+        self, backend: Service, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object
     ) -> ConfigDict:
         parsed = backend.parse_url(url)
         return {"parsed": parsed.path}
 
-    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: Any) -> ConfigDict:
+    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         return {"engine": engine, "scheme": scheme}
 
 

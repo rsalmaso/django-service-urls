@@ -23,22 +23,22 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from .base import ConfigDict, Service  # noqa: F401
-from .exceptions import ValidationError  # noqa: F401
-from .parse import UrlInfo  # noqa: F401
-from .plugins import discover_plugins  # noqa: F401
-from .registry import register_setting  # noqa: F401
-from .services import cache, db, email, storage, task  # noqa: F401
+from .base import ConfigDict, Service
+from .exceptions import ValidationError
+from .parse import UrlInfo
+from .plugins import discover_plugins
+from .registry import register_setting
+from .services import cache, db, email, storage, task
 
 __version__ = "2.1.0"
 __author__ = "Raffaele Salmaso"
 __email__ = "raffaele@salmaso.org"
 
 __all__ = [
-    "Service",
     "ConfigDict",
-    "ValidationError",
+    "Service",
     "UrlInfo",
+    "ValidationError",
     "cache",
     "db",
     "discover_plugins",
