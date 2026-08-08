@@ -1,5 +1,10 @@
 # Changelog
 
+## dev
+
+* security: avoid leaking the connection password in cleartext via the `location`
+  field of `UrlInfo.__repr__`
+
 ## 3.0.0
 
 * drop support for django < 5.2

@@ -167,6 +167,13 @@ def _parse_querystring(data: str) -> dict[str, Any]:
     return result
 
 
+def _redact_netloc(netloc: str) -> str:
+    """Strip userinfo (``user:password@``) from a netloc so credentials never appear in a repr."""
+
+    _, separator, host = netloc.rpartition("@")
+    return host if separator else netloc
+
+
 @dataclass(kw_only=True, repr=False)
 class UrlInfo:
     scheme: str = ""
@@ -182,10 +189,15 @@ class UrlInfo:
 
     def __repr__(self) -> str:
         password = "***" if self.password else repr(self.password)
+        location: list[str] | str = (
+            [_redact_netloc(netloc) for netloc in self.location]
+            if isinstance(self.location, list)
+            else _redact_netloc(self.location)
+        )
         return (
             f"UrlInfo(scheme={self.scheme!r}, username={self.username!r}, password={password}, "
             f"hostname={self.hostname!r}, port={self.port!r}, path={self.path!r}, "
-            f"fullpath={self.fullpath!r}, query={self.query!r}, location={self.location!r}, "
+            f"fullpath={self.fullpath!r}, query={self.query!r}, location={location!r}, "
             f"fragment={self.fragment!r})"
         )
 

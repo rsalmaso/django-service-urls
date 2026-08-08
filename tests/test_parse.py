@@ -230,6 +230,38 @@ class ParseUrlTestCase(unittest.TestCase):
         self.assertEqual(result.username, "user/name")
         self.assertEqual(result.password, "p@ss#word 123")
 
+    def test_repr_masks_password_field(self) -> None:
+        text = repr(parse_url("postgres://svc:S3cret@db:5432/app"))
+        self.assertIn("password=***", text)
+        self.assertNotIn("S3cret", text)
+
+    def test_repr_redacts_credentials_from_location(self) -> None:
+        result = parse_url("postgres://svc:S3cret@db:5432/app")
+        # The stored location keeps the raw netloc for consumers...
+        self.assertEqual(result.location, "svc:S3cret@db:5432")
+        # ...but the repr must not re-expose the credential it masks in the password field.
+        text = repr(result)
+        self.assertIn("location='db:5432'", text)
+        self.assertNotIn("S3cret", text)
+
+    def test_repr_redacts_credentials_from_multiple_netloc(self) -> None:
+        result = parse_url("redis://user:S3cret@host1:6379,user:S3cret@host2:6379/0", multiple_netloc=True)
+        self.assertEqual(result.location, ["user:S3cret@host1:6379", "user:S3cret@host2:6379"])
+        text = repr(result)
+        self.assertIn("location=['host1:6379', 'host2:6379']", text)
+        self.assertNotIn("S3cret", text)
+
+    def test_repr_redacts_password_containing_at_sign(self) -> None:
+        result = parse_url("scheme://user:complex@pass@host:1234/db")
+        self.assertEqual(result.password, "complex@pass")
+        text = repr(result)
+        self.assertIn("location='host:1234'", text)
+        self.assertNotIn("complex@pass", text)
+
+    def test_repr_keeps_location_without_credentials(self) -> None:
+        text = repr(parse_url("scheme://host:1234/db"))
+        self.assertIn("location='host:1234'", text)
+
 
 if __name__ == "__main__":
     unittest.main()
