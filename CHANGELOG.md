@@ -10,6 +10,8 @@
   raise `ImproperlyConfigured` when a settings module uses a service its
   Django version cannot consume: `MAILERS` before Django 6.1, or an `EMAIL_BACKEND`
   service URL on Django 7.0+ (where the `EMAIL_*` settings are removed)
+* test with the pure python `psycopg` implementation instead of `psycopg[binary]`
+  (requires a system libpq)
 
 ## 3.0.0
 
