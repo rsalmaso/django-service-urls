@@ -12,6 +12,8 @@
   service URL on Django 7.0+ (where the `EMAIL_*` settings are removed)
 * test with the pure python `psycopg` implementation instead of `psycopg[binary]`
   (requires a system libpq)
+* added support for python 3.15, with PEP 829 `.start` file for auto-activation on python >= 3.15
+  (`.pth` is still shipped for older versions)
 
 ## 3.0.0
 

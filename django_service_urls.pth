@@ -1,1 +1,1 @@
-import django_service_urls.loads
+import django_service_urls.loads; django_service_urls.loads.patch()

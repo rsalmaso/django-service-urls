@@ -124,9 +124,18 @@ Install package
 $ uv add django-service-urls
 ```
 
-That's it — activation is automatic. `django-service-urls` ships a `.pth` file that Python's
+That's it — activation is automatic. `django-service-urls` ships activation files that Python's
 `site` module runs at startup, patching `django.conf.Settings` before any of your code runs.
 No changes to `manage.py`, `wsgi.py`, `asgi.py`, or `celery.py` are needed.
+
+Two files are shipped so every supported Python is covered:
+
+* `django_service_urls.start` — a [PEP 829](https://peps.python.org/pep-0829/) startup file
+  naming the `django_service_urls.loads:patch` entry point, used on Python >= 3.15.
+* `django_service_urls.pth` — the classic `.pth` import line, used on Python < 3.15.
+
+On Python >= 3.15 the `.pth` import line is ignored, because a matching `.start` file exists,
+so the patch is applied exactly once either way.
 
 ### Explicit activation (edge cases)
 

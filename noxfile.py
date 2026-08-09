@@ -30,6 +30,7 @@ MAP = [
     ("3.12", ("5.2", "6.0", "6.1", "main")),
     ("3.13", ("5.2", "6.0", "6.1", "main")),
     ("3.14", ("5.2", "6.0", "6.1", "main")),
+    ("3.15", ("5.2", "6.1", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 # django-stubs needs python >= 3.11. Nothing is lost by skipping 3.10: mypy.ini pins
