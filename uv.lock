@@ -276,7 +276,7 @@ djangomain = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "django" }]
+requires-dist = [{ name = "django", specifier = ">=5.2" }]
 
 [package.metadata.requires-dev]
 dev = [
