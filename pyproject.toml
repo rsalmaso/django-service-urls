@@ -82,6 +82,7 @@ force-include = {"django_service_urls.pth" = "django_service_urls.pth", "django_
 filterwarnings = [
     "ignore:The EMAIL_.* setting is deprecated",
 ]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
