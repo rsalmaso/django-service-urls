@@ -1,0 +1,28 @@
+volumes:
+  nox:
+  venv:
+  uv-cache:
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: "1"
+      UV_LINK_MODE: copy
+      # The bind mount carries the host's __pycache__ directories, whose bytecode
+      # records host paths; keep the container's bytecode separate from them.
+      PYTHONPYCACHEPREFIX: /tmp/pycache
+      # Build the environments outside the bind-mounted checkout. They hold absolute
+      # paths and binaries that only work in the image, so they must not collide with
+      # the ones built on the host -- and a volume mounted *inside* the bind mount
+      # would make docker create its mount point in the checkout, owned by root.
+      NOX_ENVDIR: /home/ubuntu/nox
+    volumes:
+      - .:/app
+      - nox:/home/ubuntu/nox
+      - venv:/home/ubuntu/venv
+      - uv-cache:/home/ubuntu/.cache/uv

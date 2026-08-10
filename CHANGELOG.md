@@ -14,6 +14,7 @@
   (requires a system libpq)
 * added support for python 3.15, with PEP 829 `.start` file for auto-activation on python >= 3.15
   (`.pth` is still shipped for older versions)
+* added a docker development environment
 
 ## 3.0.0
 

@@ -21,6 +21,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 import nox
 
 FILES = ["django_service_urls", "tests", "noxfile.py"]
@@ -41,6 +43,7 @@ nox.options.sessions = ["lint", "tests", "typing"]
 nox.options.reuse_existing_virtualenvs = False
 nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv|virtualenv"
+nox.options.envdir = os.environ.get("NOX_ENVDIR", ".nox")
 
 
 def install(session: nox.Session, django: str) -> None:

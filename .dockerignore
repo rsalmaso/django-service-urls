@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Version control
+.git/
+.gitignore
+.hg/
+.hgignore
+.hgtags
+
+# nox
+.nox/
+
+# Documentation
+*.md
+!README.md
+
+# CI/CD
+.github/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# UV
+.uv/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
