@@ -4,6 +4,7 @@
 
 * security: avoid leaking the connection password in cleartext via the `location`
   field of `UrlInfo.__repr__`
+* added support for django 6.1
 
 ## 3.0.0
 

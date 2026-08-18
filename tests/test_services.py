@@ -109,8 +109,8 @@ class ServiceTestCase(unittest.TestCase):
         self.assertIn("db2", error_dict)  # type: ignore[arg-type]
         self.assertEqual(len(error_dict), 2)  # type: ignore[arg-type]
 
-        self.assertIn("scheme is not registered", error_dict["db1"])  # type: ignore[index]
-        self.assertIn("invalid", error_dict["db2"])  # type: ignore[index]
+        self.assertIn("scheme is not registered", error_dict["db1"])
+        self.assertIn("invalid", error_dict["db2"])
 
     def test_register_decorator(self) -> None:
         @self.backend.register(("test", "test.engine"), ("test2", "test2.engine"))

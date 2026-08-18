@@ -24,6 +24,7 @@ classifiers = [
     "Framework :: Django",
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -40,20 +41,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "django-stubs>=6.0.2",
-    "mypy>=1.20.0",
-    "nox[uv]>=2026.2.9",
-    "pytest>=9.0.2",
-    "ruff>=0.15.9",
+    "django-stubs>=6.1.0 ; python_version>='3.11'",
+    "mypy>=2.3.0",
+    "nox[uv]>=2026.7.11",
+    "pytest>=9.1.1",
+    "ruff>=0.16.2",
 ]
 django52 = [ "django>=5.2,<6.0 ; python_version>='3.10'", "psycopg[binary]" ]
 django60 = [ "django>=6.0,<6.1 ; python_version>='3.12'", "psycopg[binary]" ]
+django61 = [ "django>=6.1,<6.2 ; python_version>='3.12'", "psycopg[binary]" ]
 djangomain = ["django @ git+https://github.com/django/django@main ; python_version>='3.12'", "psycopg[binary]"]
 
 [tool.uv]
 conflicts = [[
     { group = "django52" },
     { group = "django60" },
+    { group = "django61" },
     { group = "djangomain" },
 ]]
 # Ensure Nox always gets a fresh package.
@@ -72,6 +75,11 @@ path = "django_service_urls/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["django_service_urls"]
 force-include = {"django_service_urls.pth" = "django_service_urls.pth"}
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:The EMAIL_.* setting is deprecated",
+]
 
 [tool.ruff]
 line-length = 120

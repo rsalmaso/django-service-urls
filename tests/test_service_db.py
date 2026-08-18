@@ -23,9 +23,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import TYPE_CHECKING
 import unittest
 
 from django_service_urls import db, ValidationError
+
+if TYPE_CHECKING:
+    _TestCaseBase = unittest.TestCase
+else:
+    _TestCaseBase = object
+
 
 GENERIC_TESTS = [
     ("username:password@domain/database", ("username", "password", "domain", "", "database", {})),
@@ -44,7 +51,7 @@ GENERIC_TESTS = [
 ]
 
 
-class DatabaseTestCaseMixin:
+class DatabaseTestCaseMixin(_TestCaseBase):
     SCHEME: str | None = None
     STRING_PORTS = False  # Workaround for Oracle and MSSQL
 
@@ -53,14 +60,14 @@ class DatabaseTestCaseMixin:
             return
         for value, (user, passw, host, port, database, options) in GENERIC_TESTS:
             url = f"{self.SCHEME}://{value}"
-            with self.subTest(item=f"Parsing {url!r}"):  # type: ignore[attr-defined]
+            with self.subTest(item=f"Parsing {url!r}"):
                 result = db.parse(url)
-                self.assertEqual(result["NAME"], database)  # type: ignore[attr-defined]
-                self.assertEqual(result["HOST"], host)  # type: ignore[attr-defined]
-                self.assertEqual(result["USER"], user)  # type: ignore[attr-defined]
-                self.assertEqual(result["PASSWORD"], passw)  # type: ignore[attr-defined]
-                self.assertEqual(result["PORT"], str(port) if self.STRING_PORTS else port)  # type: ignore[attr-defined]
-                self.assertDictEqual(result["OPTIONS"], options)  # type: ignore[attr-defined]
+                self.assertEqual(result["NAME"], database)
+                self.assertEqual(result["HOST"], host)
+                self.assertEqual(result["USER"], user)
+                self.assertEqual(result["PASSWORD"], passw)
+                self.assertEqual(result["PORT"], str(port) if self.STRING_PORTS else port)
+                self.assertDictEqual(result["OPTIONS"], options)
 
     def test_multiple_nested_groups(self) -> None:
         result = db.parse(
@@ -84,15 +91,15 @@ class DatabaseTestCaseMixin:
             },
             "ssl": {"mode": "require", "cert": "/path/to/cert"},
         }
-        self.assertIn(self.SCHEME, result["ENGINE"])  # type: ignore[attr-defined]
-        self.assertEqual(result["NAME"], "dbname")  # type: ignore[attr-defined]
-        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
-        self.assertEqual(result["PASSWORD"], "passwd")  # type: ignore[attr-defined]
-        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
-        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)  # type: ignore[attr-defined]
-        self.assertEqual(result["OPTIONS"], expected_options)  # type: ignore[attr-defined]
-        self.assertEqual(result["CONN_MAX_AGE"], 42)  # type: ignore[attr-defined]
-        self.assertEqual(result["TEST"], {"default": {"NAME": "testdb"}})  # type: ignore[attr-defined]
+        self.assertIn(self.SCHEME, result["ENGINE"])
+        self.assertEqual(result["NAME"], "dbname")
+        self.assertEqual(result["USER"], "user")
+        self.assertEqual(result["PASSWORD"], "passwd")
+        self.assertEqual(result["HOST"], "host")
+        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)
+        self.assertEqual(result["OPTIONS"], expected_options)
+        self.assertEqual(result["CONN_MAX_AGE"], 42)
+        self.assertEqual(result["TEST"], {"default": {"NAME": "testdb"}})
 
     def test_conflict_resolution_flat_to_nested(self) -> None:
         # This tests the conflict resolution where we have pool=something and pool.min_size=4
@@ -100,59 +107,59 @@ class DatabaseTestCaseMixin:
         result = db.parse(f"{self.SCHEME}://user:pass@host:5432/dbname?pool=legacy&pool.min_size=4")
         expected_options = {"pool": {"min_size": 4}}
 
-        self.assertEqual(result["OPTIONS"], expected_options)  # type: ignore[attr-defined]
+        self.assertEqual(result["OPTIONS"], expected_options)
 
     def test_url_encoded_username_and_password(self) -> None:
         if self.SCHEME is None:
             return
         # Test @ symbol and # symbol which are special in URLs
         result = db.parse(f"{self.SCHEME}://user%40domain:p%40ss%23word@host:5432/dbname")
-        self.assertEqual(result["USER"], "user@domain")  # type: ignore[attr-defined]
-        self.assertEqual(result["PASSWORD"], "p@ss#word")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "user@domain")
+        self.assertEqual(result["PASSWORD"], "p@ss#word")
 
     def test_url_encoded_complex_username_and_password(self) -> None:
         if self.SCHEME is None:
             return
         # Test slash, space, and other special characters
         result = db.parse(f"{self.SCHEME}://my%2Fuser:pass%20word%21%40%23%24@host:5432/database")
-        self.assertEqual(result["USER"], "my/user")  # type: ignore[attr-defined]
-        self.assertEqual(result["PASSWORD"], "pass word!@#$")  # type: ignore[attr-defined]
-        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
-        self.assertEqual(result["NAME"], "database")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "my/user")
+        self.assertEqual(result["PASSWORD"], "pass word!@#$")
+        self.assertEqual(result["HOST"], "host")
+        self.assertEqual(result["NAME"], "database")
 
     def test_url_encoded_hostname(self) -> None:
         if self.SCHEME is None:
             return
         # Test hostname with encoded special characters and mixed case
         result = db.parse(f"{self.SCHEME}://user:pass@My%2DServer%2EExample%2ECom:5432/database")
-        self.assertEqual(result["HOST"], "My-Server.Example.Com")  # type: ignore[attr-defined]
-        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
-        self.assertEqual(result["NAME"], "database")  # type: ignore[attr-defined]
+        self.assertEqual(result["HOST"], "My-Server.Example.Com")
+        self.assertEqual(result["USER"], "user")
+        self.assertEqual(result["NAME"], "database")
 
     def test_url_encoded_database_name(self) -> None:
         if self.SCHEME is None:
             return
         # Test database name with spaces and special characters
         result = db.parse(f"{self.SCHEME}://user:pass@host:5432/My%20Database%2DName")
-        self.assertEqual(result["NAME"], "My Database-Name")  # type: ignore[attr-defined]
-        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "My Database-Name")
+        self.assertEqual(result["HOST"], "host")
 
     def test_url_encoded_complex_database_path(self) -> None:
         if self.SCHEME is None:
             return
         # Test path with @, #, and other special chars
         result = db.parse(f"{self.SCHEME}://user:pass@host:5432/path%2Fto%2Fdb%40company%23123")
-        self.assertEqual(result["NAME"], "path/to/db@company#123")  # type: ignore[attr-defined]
-        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
+        self.assertEqual(result["NAME"], "path/to/db@company#123")
+        self.assertEqual(result["USER"], "user")
 
     def test_double_encoded_values_decoded_once(self) -> None:
         if self.SCHEME is None:
             return
         # %2540 should decode to literal %40, not @
         result = db.parse(f"{self.SCHEME}://user%2540name:pass%2540word@host:5432/db%2520name")
-        self.assertEqual(result["USER"], "user%40name")  # type: ignore[attr-defined]
-        self.assertEqual(result["PASSWORD"], "pass%40word")  # type: ignore[attr-defined]
-        self.assertEqual(result["NAME"], "db%20name")  # type: ignore[attr-defined]
+        self.assertEqual(result["USER"], "user%40name")
+        self.assertEqual(result["PASSWORD"], "pass%40word")
+        self.assertEqual(result["NAME"], "db%20name")
 
     def test_fragment_cannot_override_core_keys(self) -> None:
         # Fragment should not override ENGINE, NAME, USER, PASSWORD, HOST, PORT, OPTIONS
@@ -160,12 +167,12 @@ class DatabaseTestCaseMixin:
             f"{self.SCHEME}://user:pass@host:5432/dbname"
             "#ENGINE=evil&NAME=evil&USER=evil&PASSWORD=evil&HOST=evil&PORT=9999&OPTIONS=evil"
         )
-        self.assertNotEqual(result["ENGINE"], "evil")  # type: ignore[attr-defined]
-        self.assertEqual(result["NAME"], "dbname")  # type: ignore[attr-defined]
-        self.assertEqual(result["USER"], "user")  # type: ignore[attr-defined]
-        self.assertEqual(result["PASSWORD"], "pass")  # type: ignore[attr-defined]
-        self.assertEqual(result["HOST"], "host")  # type: ignore[attr-defined]
-        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)  # type: ignore[attr-defined]
+        self.assertNotEqual(result["ENGINE"], "evil")
+        self.assertEqual(result["NAME"], "dbname")
+        self.assertEqual(result["USER"], "user")
+        self.assertEqual(result["PASSWORD"], "pass")
+        self.assertEqual(result["HOST"], "host")
+        self.assertEqual(result["PORT"], "5432" if self.STRING_PORTS else 5432)
 
 
 class SqliteTests(unittest.TestCase):

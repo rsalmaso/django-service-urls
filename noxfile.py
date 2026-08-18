@@ -27,11 +27,14 @@ FILES = ["django_service_urls", "tests", "noxfile.py"]
 MAP = [
     ("3.10", ("5.2",)),
     ("3.11", ("5.2",)),
-    ("3.12", ("5.2", "6.0", "main")),
-    ("3.13", ("5.2", "6.0", "main")),
-    ("3.14", ("5.2", "6.0", "main")),
+    ("3.12", ("5.2", "6.0", "6.1", "main")),
+    ("3.13", ("5.2", "6.0", "6.1", "main")),
+    ("3.14", ("5.2", "6.0", "6.1", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
+# django-stubs needs python >= 3.11. Nothing is lost by skipping 3.10: mypy.ini pins
+# python_version = 3.10, so every session checks 3.10 semantics whatever runs it.
+TYPING_DEPS = [(python, django) for python, django in DEPS if python != "3.10"]
 
 nox.options.sessions = ["lint", "tests", "typing"]
 nox.options.reuse_existing_virtualenvs = False
@@ -55,7 +58,7 @@ def lint(session: nox.Session, django: str = "5.2") -> None:
 
 
 @nox.session  # type: ignore[untyped-decorator]
-@nox.parametrize("python,django", DEPS)  # type: ignore[untyped-decorator]
+@nox.parametrize("python,django", TYPING_DEPS)  # type: ignore[untyped-decorator]
 def typing(session: nox.Session, django: str) -> None:
     install(session, django)
     session.run("mypy", *FILES)
