@@ -24,6 +24,9 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 from types import ModuleType
+from typing import Final
+
+ORIGINAL_INIT: Final[str] = "_django_service_urls_original_init"
 
 
 def email_settings_supported() -> bool:
@@ -69,21 +72,21 @@ def apply_service_urls(module: ModuleType) -> None:
     from django_service_urls.services import cache, db, email, mailer, storage, task
 
     if databases_config := getattr(module, "DATABASES", None):
-        module.DATABASES = db.parse(databases_config)  # type: ignore[attr-defined]
+        module.DATABASES = db.parse(databases_config)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
     if caches_config := getattr(module, "CACHES", None):
-        module.CACHES = cache.parse(caches_config)  # type: ignore[attr-defined]
+        module.CACHES = cache.parse(caches_config)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
     if storages_config := getattr(module, "STORAGES", None):
-        module.STORAGES = storage.parse(storages_config)  # type: ignore[attr-defined]
+        module.STORAGES = storage.parse(storages_config)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
     if tasks_config := getattr(module, "TASKS", None):
-        module.TASKS = task.parse(tasks_config)  # type: ignore[attr-defined]
+        module.TASKS = task.parse(tasks_config)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
     if mailers_config := getattr(module, "MAILERS", None):
         if not mailers_supported():
             raise ImproperlyConfigured("The MAILERS setting requires Django 6.1 or later; use EMAIL_BACKEND instead.")
-        module.MAILERS = mailer.parse(mailers_config)  # type: ignore[attr-defined]
+        module.MAILERS = mailer.parse(mailers_config)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
     if email_backend := getattr(module, "EMAIL_BACKEND", None):
         try:
@@ -102,7 +105,7 @@ def apply_service_urls(module: ModuleType) -> None:
                 setting = f"EMAIL_{'BACKEND' if k == 'ENGINE' else k}"
                 setattr(module, setting, v)
 
-    register_setting.apply(module)  # type: ignore[arg-type]
+    register_setting.apply(module)
 
 
 def patch() -> None:
@@ -119,7 +122,7 @@ def patch() -> None:
 
     discover_plugins()
 
-    if not hasattr(Settings, "_django_service_urls_original_init"):
+    if not hasattr(Settings, ORIGINAL_INIT):
         original_init = Settings.__init__
 
         def patched_init(self: Settings, settings_module: str) -> None:
@@ -127,7 +130,7 @@ def patch() -> None:
             apply_service_urls(module)
             original_init(self, settings_module)
 
-        Settings._django_service_urls_original_init = original_init  # type: ignore[attr-defined]
+        setattr(Settings, ORIGINAL_INIT, original_init)
         Settings.__init__ = patched_init  # type: ignore[method-assign]
 
 

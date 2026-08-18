@@ -64,10 +64,10 @@ class StartFileTestCase(unittest.TestCase):
         patch = pkgutil.resolve_name(ENTRY_POINT)
         patch()
         first = Settings.__init__
-        original = Settings._django_service_urls_original_init  # type: ignore[attr-defined]
+        original = Settings._django_service_urls_original_init  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
         patch()
         self.assertIs(Settings.__init__, first)
-        self.assertIs(Settings._django_service_urls_original_init, original)  # type: ignore[attr-defined]
+        self.assertIs(Settings._django_service_urls_original_init, original)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
 
 class PthFileTestCase(unittest.TestCase):

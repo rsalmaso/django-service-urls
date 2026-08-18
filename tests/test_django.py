@@ -54,7 +54,7 @@ def build_settings(name: str, **settings: object) -> Settings:
     """
 
     module = types.ModuleType(name)
-    module.SECRET_KEY = "test"  # type: ignore[attr-defined]
+    module.SECRET_KEY = "test"  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     for key, value in settings.items():
         setattr(module, key, value)
     sys.modules[name] = module

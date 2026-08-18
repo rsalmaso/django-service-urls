@@ -24,6 +24,7 @@
 import os
 
 import nox
+import nox.command
 
 FILES = ["django_service_urls", "tests", "noxfile.py"]
 MAP = [
@@ -65,7 +66,15 @@ def lint(session: nox.Session, django: str = "5.2") -> None:
 @nox.parametrize("python,django", TYPING_DEPS)  # type: ignore[untyped-decorator]
 def typing(session: nox.Session, django: str) -> None:
     install(session, django)
-    session.run("mypy", *FILES)
+
+    failures: list[str] = []
+    for checker, *args in (("mypy",), ("pyrefly", "check"), ("ty", "check")):
+        try:
+            session.run(checker, *args, *FILES)
+        except nox.command.CommandFailed as ex:  # noqa: PERF203
+            failures.append(f"{checker} ({ex})")
+    if failures:
+        session.error(f"type checks failed: {', '.join(failures)}")
 
 
 @nox.session  # type: ignore[untyped-decorator]

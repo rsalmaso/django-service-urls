@@ -26,13 +26,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping
-from typing import TypeAlias, Union
+from typing import TypeAlias
 
 __all__ = ["ValidationError"]
-
-# Type alias for ValidationError message parameter
-ErrorMessageMapping: TypeAlias = Mapping[str, Union[str, "ValidationError", object]]
-ErrorMessage: TypeAlias = Union[str, ErrorMessageMapping, "ValidationError"]
 
 
 class ValidationError(ValueError):
@@ -62,7 +58,7 @@ class ValidationError(ValueError):
             >>> ValidationError({"field1": ValidationError("Error 1"), "field2": ValidationError("Error 2")})
             ValidationError({'field1': 'Error 1', 'field2': 'Error 2'})
         """
-        self.error_dict: dict[str, str | ValidationError] | None = None
+        self.error_dict: dict[str, str] | None = None
         self.message: str | None = None
 
         if isinstance(message, ValidationError):
@@ -74,9 +70,8 @@ class ValidationError(ValueError):
             self.error_dict = {}
             for key, value in message.items():
                 if isinstance(value, ValidationError):
-                    self.error_dict[key] = value.message  # type: ignore[assignment]
+                    self.error_dict[key] = str(value) if value.message is None else value.message
                 else:
-                    # value is a string
                     self.error_dict[key] = value
         elif isinstance(message, str):
             self.message = message
@@ -93,5 +88,10 @@ class ValidationError(ValueError):
         if self.error_dict is not None:
             for key, message in self.error_dict.items():
                 yield key, str(message)
-        else:
-            yield self.message  # type: ignore[misc]
+        elif self.message is not None:
+            # An error with neither a message nor a dict yields nothing.
+            yield self.message
+
+
+ErrorMessageMapping: TypeAlias = Mapping[str, str | ValidationError]
+ErrorMessage: TypeAlias = str | ErrorMessageMapping | ValidationError

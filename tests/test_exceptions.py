@@ -21,6 +21,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Any
 import unittest
 
 from django_service_urls.exceptions import ValidationError
@@ -45,22 +46,17 @@ class ValidationErrorTestCase(unittest.TestCase):
         }
         error = ValidationError(error_dict)
 
-        self.assertIsNotNone(error.error_dict)
         self.assertIsNone(error.message)
-        self.assertEqual(len(error.error_dict), 3)  # type: ignore[arg-type]
-
         self.assertEqual(error.error_dict, error_dict)
 
     def test_dict_with_parse_error_values(self) -> None:
         nested_error = ValidationError("Nested error message")
-        error_dict = {
+        error_dict: dict[str, str | ValidationError] = {
             "key1": "Simple string error",
             "key2": nested_error,
         }
         error = ValidationError(error_dict)
 
-        self.assertIsNotNone(error.error_dict)
-        self.assertEqual(len(error.error_dict), 2)  # type: ignore[arg-type]
         self.assertEqual(error.error_dict, {"key1": "Simple string error", "key2": "Nested error message"})
 
     def test_nested_parse_error_with_message(self) -> None:
@@ -74,10 +70,17 @@ class ValidationErrorTestCase(unittest.TestCase):
         original_error = ValidationError({"key1": "Error 1", "key2": "Error 2"})
         nested_error = ValidationError(original_error)
 
-        self.assertIsNotNone(nested_error.error_dict)
         self.assertIsNone(nested_error.message)
-        self.assertEqual(len(nested_error.error_dict), 2)  # type: ignore[arg-type]
         self.assertEqual(nested_error.error_dict, {"key1": "Error 1", "key2": "Error 2"})
+
+    def test_dict_value_keeps_nested_error_content(self) -> None:
+        inner = ValidationError({"inner": "Inner error"})
+        error = ValidationError({"outer": inner})
+
+        self.assertIsNone(inner.message)
+        self.assertEqual(error.error_dict, {"outer": "{'inner': 'Inner error'}"})
+        self.assertIn("Inner error", str(error))
+        self.assertEqual(list(error), [("outer", "{'inner': 'Inner error'}")])
 
     def test_iteration_with_simple_message(self) -> None:
         error = ValidationError("Simple error")
@@ -85,6 +88,14 @@ class ValidationErrorTestCase(unittest.TestCase):
         # Should yield the message directly
         items = list(error)
         self.assertEqual(items, ["Simple error"])
+
+    def test_iteration_without_message_or_dict(self) -> None:
+        unsupported: Any = 42
+        error = ValidationError(unsupported)
+
+        self.assertIsNone(error.message)
+        self.assertIsNone(error.error_dict)
+        self.assertEqual(list(error), [])
 
     def test_iteration_with_error_dict(self) -> None:
         error_dict = {"key1": "Error 1", "key2": "Error 2", "key3": "Error 3"}
@@ -119,8 +130,7 @@ class ValidationErrorTestCase(unittest.TestCase):
     def test_empty_dict(self) -> None:
         error = ValidationError({})
 
-        self.assertIsNotNone(error.error_dict)
-        self.assertEqual(len(error.error_dict), 0)  # type: ignore[arg-type]
+        self.assertEqual(error.error_dict, {})
 
     def test_dict_with_mixed_value_types(self) -> None:
         error = ValidationError(
@@ -130,12 +140,8 @@ class ValidationErrorTestCase(unittest.TestCase):
             }
         )
 
-        self.assertIsNotNone(error.error_dict)
-        self.assertEqual(len(error.error_dict), 2)  # type: ignore[arg-type]
-
         # All values should be converted to message strings
-        self.assertEqual(error.error_dict["string_key"], "String error")  # type: ignore[index]
-        self.assertEqual(error.error_dict["parse_error_key"], "Nested error")  # type: ignore[index]
+        self.assertEqual(error.error_dict, {"string_key": "String error", "parse_error_key": "Nested error"})
 
     def test_deeply_nested_parse_errors(self) -> None:
         # Create a chain: inner -> middle -> outer
@@ -150,10 +156,7 @@ class ValidationErrorTestCase(unittest.TestCase):
     def test_nested_dict_extraction(self) -> None:
         outer_error = ValidationError(ValidationError({"inner_key1": "Inner error 1", "inner_key2": "Inner error 2"}))
 
-        self.assertIsNotNone(outer_error.error_dict)
-        self.assertEqual(len(outer_error.error_dict), 2)  # type: ignore[arg-type]
-        self.assertEqual(outer_error.error_dict["inner_key1"], "Inner error 1")  # type: ignore[index]
-        self.assertEqual(outer_error.error_dict["inner_key2"], "Inner error 2")  # type: ignore[index]
+        self.assertEqual(outer_error.error_dict, {"inner_key1": "Inner error 1", "inner_key2": "Inner error 2"})
 
     def test_composition_dict_with_parse_error_values(self) -> None:
         composed_error = ValidationError(
@@ -163,9 +166,6 @@ class ValidationErrorTestCase(unittest.TestCase):
                 "email": ValidationError("Email service unavailable"),
             }
         )
-
-        self.assertIsNotNone(composed_error.error_dict)
-        self.assertEqual(len(composed_error.error_dict), 3)  # type: ignore[arg-type]
 
         self.assertEqual(
             composed_error.error_dict,

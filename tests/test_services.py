@@ -103,12 +103,8 @@ class ServiceTestCase(unittest.TestCase):
         error = cm.exception
         self.assertIsInstance(error, ValidationError)
         self.assertIsNotNone(error.error_dict)
-
-        error_dict = error.error_dict
-        self.assertIn("db1", error_dict)  # type: ignore[arg-type]
-        self.assertIn("db2", error_dict)  # type: ignore[arg-type]
-        self.assertEqual(len(error_dict), 2)  # type: ignore[arg-type]
-
+        error_dict = error.error_dict or {}
+        self.assertEqual(sorted(error_dict), ["db1", "db2"])
         self.assertIn("scheme is not registered", error_dict["db1"])
         self.assertIn("invalid", error_dict["db2"])
 
