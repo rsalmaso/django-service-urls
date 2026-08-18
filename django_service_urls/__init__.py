@@ -28,7 +28,7 @@ from .exceptions import ValidationError
 from .parse import UrlInfo
 from .plugins import discover_plugins
 from .registry import register_setting
-from .services import cache, db, email, storage, task
+from .services import cache, db, email, mailer, storage, task
 
 __version__ = "3.0.0"
 __author__ = "Raffaele Salmaso"
@@ -43,6 +43,7 @@ __all__ = [
     "db",
     "discover_plugins",
     "email",
+    "mailer",
     "register_setting",
     "storage",
     "task",

@@ -5,6 +5,11 @@
 * security: avoid leaking the connection password in cleartext via the `location`
   field of `UrlInfo.__repr__`
 * added support for django 6.1
+* added `mailer` service for the Django 6.1 `MAILERS` setting
+  (parses `alias -> url` dicts into `{"BACKEND": ..., "OPTIONS": {...}}` entries)
+  raise `ImproperlyConfigured` when a settings module uses a service its
+  Django version cannot consume: `MAILERS` before Django 6.1, or an `EMAIL_BACKEND`
+  service URL on Django 7.0+ (where the `EMAIL_*` settings are removed)
 
 ## 3.0.0
 

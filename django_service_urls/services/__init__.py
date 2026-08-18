@@ -26,7 +26,8 @@
 from .cache import cache
 from .database import db
 from .email import email
+from .mailers import mailer
 from .storages import storage
 from .tasks import task
 
-__all__ = ["cache", "db", "email", "storage", "task"]
+__all__ = ["cache", "db", "email", "mailer", "storage", "task"]

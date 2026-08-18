@@ -22,14 +22,46 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import sys
+import types
+from typing import cast
 import unittest
 
 import django
+from django.conf import Settings
+from django.core.exceptions import ImproperlyConfigured
+from django.core.mail.backends.smtp import EmailBackend as SMTPEmailBackend
 
 import django_service_urls.loads  # noqa: F401
 
+MAILERS_SUPPORTED = django.VERSION >= (6, 1)
+EMAIL_SETTINGS_SUPPORTED = django.VERSION < (7, 0)
+
+SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+_EMAIL_URL = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
+
 os.environ["DJANGO_SETTINGS_MODULE"] = "tests.settings"
 django.setup()
+
+
+def build_settings(name: str, **settings: object) -> Settings:
+    """
+    Build an isolated ``Settings`` object from an in-memory settings module.
+
+    This exercises django-service-urls' patched ``Settings.__init__`` (URL parsing
+    and version guards) followed by Django's own initialization, without disturbing
+    the process-wide settings configured by ``django.setup()``.
+    """
+
+    module = types.ModuleType(name)
+    module.SECRET_KEY = "test"  # type: ignore[attr-defined]
+    for key, value in settings.items():
+        setattr(module, key, value)
+    sys.modules[name] = module
+    try:
+        return Settings(name)
+    finally:
+        del sys.modules[name]
 
 
 class MonkeyPatchDjangoTestCase(unittest.TestCase):
@@ -54,6 +86,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertTrue(isinstance(default_cache, dict))
         self.assertEqual(default_cache["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
 
+    @unittest.skipUnless(EMAIL_SETTINGS_SUPPORTED, "EMAIL_* settings are removed in Django 7.0")
     def test_email(self) -> None:
         from django.conf import settings
 
@@ -102,3 +135,107 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         with translation.override("it"):
             output = template.render(context={"now": dt.date(2025, 3, 21)})
             self.assertEqual(output, "21 Marzo 2025")
+
+
+class EmailBackendVersionTests(unittest.TestCase):
+    """EMAIL_BACKEND service URL behaviour across Django versions."""
+
+    @unittest.skipUnless(django.VERSION < (6, 1), "targets Django < 6.1")
+    def test_works_before_6_1(self) -> None:
+        # EMAIL_BACKEND is expanded into the EMAIL_* settings, as it always has been.
+        values = vars(build_settings("svc_email_pre61", EMAIL_BACKEND=_EMAIL_URL))
+        self.assertEqual(values["EMAIL_BACKEND"], SMTP_BACKEND)
+        self.assertEqual(values["EMAIL_HOST"], "smtpserver")
+        self.assertEqual(values["EMAIL_PORT"], 42)
+
+    @unittest.skipUnless((6, 1) <= django.VERSION < (7, 0), "targets Django 6.1 .. <7.0")
+    def test_works_and_warns_on_6_1(self) -> None:
+        # Still works, but Django emits its own deprecation warning. We rely on
+        # Django's RemovedInDjango70Warning and deliberately do not add our own.
+        from django.utils.deprecation import RemovedInDjango70Warning
+
+        with self.assertWarns(RemovedInDjango70Warning):
+            values = vars(build_settings("svc_email_61", EMAIL_BACKEND=_EMAIL_URL))
+        self.assertEqual(values["EMAIL_BACKEND"], SMTP_BACKEND)
+        self.assertEqual(values["EMAIL_HOST"], "smtpserver")
+
+    @unittest.skipUnless(django.VERSION >= (7, 0), "targets Django >= 7.0")
+    def test_url_raises_on_7_0(self) -> None:
+        # EMAIL_* is removed in Django 7.0: a service URL must raise instead of
+        # being silently dropped. (Our own guard, in addition to Django's.)
+        with self.assertRaises(ImproperlyConfigured):
+            build_settings("svc_email_70", EMAIL_BACKEND=_EMAIL_URL)
+
+
+class MailersVersionTests(unittest.TestCase):
+    """MAILERS service URL behaviour across Django versions."""
+
+    @unittest.skipIf(MAILERS_SUPPORTED, "targets Django < 6.1")
+    def test_raises_before_6_1(self) -> None:
+        # MAILERS is unknown before Django 6.1, so it must raise rather than be
+        # silently ignored.
+        with self.assertRaises(ImproperlyConfigured):
+            build_settings("svc_mailers_pre61", MAILERS={"default": _EMAIL_URL})
+
+    @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
+    def test_options_are_accepted_by_the_backend(self) -> None:
+        # The OPTIONS we emit must match the backend's real signature, so build an
+        # actual mailer from them and check the values landed where they belong.
+        from django.core import mail
+        from django.test import override_settings
+
+        from django_service_urls import mailer
+
+        with override_settings(MAILERS=mailer.parse({"default": _EMAIL_URL})):
+            connection = mail.mailers["default"]
+        # mailers[alias] is typed as the base backend; these options live on the SMTP one.
+        self.assertIsInstance(connection, SMTPEmailBackend)
+        backend = cast("SMTPEmailBackend", connection)
+        self.assertEqual(backend.host, "smtpserver")
+        self.assertEqual(backend.port, 42)
+        self.assertEqual(backend.username, "myuser")
+        self.assertEqual(backend.password, "mypasswd")
+        self.assertEqual(backend.use_tls, True)
+        self.assertEqual(backend.timeout, 30)
+
+    @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
+    def test_unmappable_option_is_rejected_by_the_backend(self) -> None:
+        # use_localtime has no per-mailer equivalent. Forwarding it (rather than
+        # dropping it) is what makes the backend reject the config loudly instead
+        # of quietly ignoring what the URL asked for.
+        from django.core import mail
+        from django.core.mail import InvalidMailer
+        from django.test import override_settings
+
+        from django_service_urls import mailer
+
+        config = mailer.parse({"default": "smtp://user:pass@host:587/?use_localtime=true"})
+        with override_settings(MAILERS=config), self.assertRaises(InvalidMailer):
+            mail.mailers["default"]
+
+    @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
+    def test_both_email_backend_and_mailers_raises(self) -> None:
+        # Django itself forbids mixing the deprecated EMAIL_* settings with MAILERS
+        # (Settings._check_email_settings_conflicts). We rely on that check rather
+        # than adding our own.
+        with self.assertRaises(ImproperlyConfigured):
+            build_settings("svc_both", EMAIL_BACKEND=_EMAIL_URL, MAILERS={"default": _EMAIL_URL})
+
+    @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
+    def test_parsed_on_6_1(self) -> None:
+        values = vars(build_settings("svc_mailers_61", MAILERS={"default": _EMAIL_URL}))
+        self.assertEqual(
+            values["MAILERS"]["default"],
+            {
+                "BACKEND": SMTP_BACKEND,
+                "OPTIONS": {
+                    "host": "smtpserver",
+                    "port": 42,
+                    "username": "myuser",
+                    "password": "mypasswd",
+                    "use_tls": True,
+                    "ssl_certfile": "mycert",
+                    "timeout": 30,
+                },
+            },
+        )

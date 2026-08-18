@@ -1,6 +1,6 @@
 # django-service-urls
 
-`django-service-urls` is a setting helper for django to represent databases, caches, email, storages and task backends via a single string.
+`django-service-urls` is a setting helper for django to represent databases, caches, email, mailers, storages and task backends via a single string.
 
 This work is based on [dj-database-url](https://github.com/jazzband/dj-database-url) and [https://github.com/django/django/pull/8562](https://github.com/django/django/pull/8562).
 
@@ -37,6 +37,15 @@ CACHES = {
     },
 }
 
+# django >= 6.1
+MAILERS = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {"host": "localhost", "port": "2525", "ssl_certfile": "/etc/ssl/cert", "ssl_keyfile": "/etc/ssl/key", "timeout": "600", "use_tls": True},
+    },
+}
+
+# django < 6.1
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 2525
@@ -84,6 +93,15 @@ CACHES = {
     ),
 }
 
+# django >= 6.1
+MAILERS = {
+    "default": os.environ.get(
+        MAILERS_DEFAULT,
+        "smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600",
+    ),
+}
+
+# django < 6.1
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
     "smtps://localhost:2525?ssl_certfile=/etc/ssl/cert&ssl_keyfile=/etc/ssl/key&timeout=600",
@@ -400,6 +418,30 @@ SMTP+SSL | django.core.mail.backends.smtp.EmailBackend | smtp+ssl://localhost:58
 File | django.core.mail.backends.filebased.EmailBackend | file:///var/log/emails
 Memory | django.core.mail.backends.locmem.EmailBackend | memory://
 Dummy | django.core.mail.backends.dummy.EmailBackend | dummy://
+
+### MAILERS (``django_service_urls.mailer``)
+
+Service | Backend | URLString
+--------|---------|-----------
+Console | django.core.mail.backends.console.EmailBackend | console://
+SMTP | django.core.mail.backends.smtp.EmailBackend | smtp://localhost:25
+SMTPS (smtp+tls alias) | django.core.mail.backends.smtp.EmailBackend | smtps://localhost:465
+SMTP+TLS | django.core.mail.backends.smtp.EmailBackend | smtp+tls://localhost:465
+SMTP+SSL | django.core.mail.backends.smtp.EmailBackend | smtp+ssl://localhost:587
+File | django.core.mail.backends.filebased.EmailBackend | file:///var/log/emails
+Memory | django.core.mail.backends.locmem.EmailBackend | memory://
+Dummy | django.core.mail.backends.dummy.EmailBackend | dummy://
+
+> Only values present in the URL are emitted into ``OPTIONS`` (``host`` is always
+> included, as the SMTP backend requires it). Unrecognized query parameters are
+> forwarded to ``OPTIONS`` to support custom backends.
+
+> **Note:** ``MAILERS`` requires Django 6.1+, while the ``EMAIL_*`` settings are
+> removed in Django 7.0. `django-service-urls` raises ``ImproperlyConfigured`` if
+> you configure ``MAILERS`` on Django < 6.1, or an ``EMAIL_BACKEND`` service URL on
+> Django 7.0+. Django 6.1 additionally forbids defining the deprecated ``EMAIL_*``
+> settings and ``MAILERS`` together, so use ``MAILERS`` on 6.1+ and ``EMAIL_BACKEND``
+> on older versions — not both.
 
 ### STORAGES (``django_service_urls.storage``)
 

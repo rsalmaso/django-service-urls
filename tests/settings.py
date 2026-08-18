@@ -21,6 +21,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+import django
+
 DATABASES = {
     "default": "postgres://myuser:mypasswd@localhost:5432/mydb",
     "analytics": "sqlite:///tmp/analytics.db",
@@ -30,7 +32,17 @@ CACHES = {
     "default": "memory://abc",
 }
 
-EMAIL_BACKEND = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
+_email_url = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
+
+# The deprecated EMAIL_* settings still work (with a deprecation warning on 6.1+)
+# until they are removed in Django 7.0, where MAILERS becomes the only option.
+# Keep exercising EMAIL_BACKEND while supported, and switch to MAILERS on 7.0.
+if django.VERSION >= (7, 0):
+    MAILERS = {
+        "default": _email_url,
+    }
+else:
+    EMAIL_BACKEND = _email_url
 
 STORAGES = {
     "default": "fs://",
