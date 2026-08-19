@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 3.1.0
 
 * security: avoid leaking the connection password in cleartext via the `location`
   field of `UrlInfo.__repr__`

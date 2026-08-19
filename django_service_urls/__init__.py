@@ -30,7 +30,7 @@ from .plugins import discover_plugins
 from .registry import register_setting
 from .services import cache, db, email, mailer, storage, task
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 __author__ = "Raffaele Salmaso"
 __email__ = "raffaele@salmaso.org"
 
