@@ -22,6 +22,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from pathlib import Path
 
 import nox
 import nox.command
@@ -48,10 +49,29 @@ nox.options.envdir = os.environ.get("NOX_ENVDIR", ".nox")
 
 
 def install(session: nox.Session, django: str) -> None:
+    """Install the dev toolchain plus one Django group, with only the toolchain held to `uv.lock`."""
+
     pyproject = nox.project.load_toml("pyproject.toml")
+    constraints = Path(session.virtualenv.location) / "lock-constraints.txt"
+    session.run_install(
+        "uv",
+        "export",
+        "--locked",
+        "--no-hashes",
+        "--no-emit-project",
+        "--no-default-groups",
+        "--group",
+        "dev",
+        "--no-emit-package",
+        "django",
+        "-o",
+        str(constraints),
+        silent=True,
+    )
     session.install(
         *nox.project.dependency_groups(pyproject, "dev"),
         *nox.project.dependency_groups(pyproject, f"django{django.replace('.', '')}"),
+        env={"UV_CONSTRAINT": str(constraints)},
     )
 
 
