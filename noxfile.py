@@ -22,6 +22,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from pathlib import Path
 
 import nox
 import nox.command
@@ -43,15 +44,35 @@ TYPING_DEPS = [(python, django) for python, django in DEPS if python != "3.10"]
 nox.options.sessions = ["lint", "tests", "typing"]
 nox.options.reuse_existing_virtualenvs = False
 nox.options.error_on_external_run = True
-nox.options.default_venv_backend = "uv|virtualenv"
+nox.options.default_venv_backend = "uv"
 nox.options.envdir = os.environ.get("NOX_ENVDIR", ".nox")
 
 
 def install(session: nox.Session, django: str) -> None:
+    """Install the dev toolchain plus one Django group, with everything but Django held to `uv.lock`."""
+
+    # Django main can raise its own dependency floors past uv.lock, so let them float there.
+    unpinned = ["django", *(["asgiref", "sqlparse", "tzdata"] if django == "main" else [])]
     pyproject = nox.project.load_toml("pyproject.toml")
+    constraints = Path(session.virtualenv.location) / "lock-constraints.txt"
+    session.run_install(
+        "uv",
+        "export",
+        "--locked",
+        "--no-hashes",
+        "--no-emit-project",
+        "--no-default-groups",
+        "--group",
+        "dev",
+        *(arg for package in unpinned for arg in ("--no-emit-package", package)),
+        "-o",
+        str(constraints),
+        silent=True,
+    )
     session.install(
         *nox.project.dependency_groups(pyproject, "dev"),
         *nox.project.dependency_groups(pyproject, f"django{django.replace('.', '')}"),
+        env={"UV_CONSTRAINT": str(constraints)},
     )
 
 
