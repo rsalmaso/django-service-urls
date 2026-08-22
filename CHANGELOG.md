@@ -17,7 +17,7 @@
 * added a docker development environment
 * added justfile with the common tasks
 * improve typing support:
-  - added support fot ty and pyrefly
+  - added support for ty and pyrefly
   - fix `ValidationError` discarding a nested error's `error_dict`
   - fix iterating a `ValidationError` with neither a message nor an `error_dict`
 
