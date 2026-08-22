@@ -37,7 +37,7 @@ MAP = [
     ("3.15", ("5.2", "6.1", "main")),
 ]
 DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
-# django-stubs needs python >= 3.11. Nothing is lost by skipping 3.10: mypy.ini pins
+# django-stubs needs python >= 3.11. Nothing is lost by skipping 3.10: [tool.mypy] pins
 # python_version = 3.10, so every session checks 3.10 semantics whatever runs it.
 TYPING_DEPS = [(python, django) for python, django in DEPS if python != "3.10"]
 
