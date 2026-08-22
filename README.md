@@ -28,7 +28,7 @@ DATABASES = {
 
 CACHES = {
     "default": {
-        "BACKEND" : "django.core.cache.backends.memcached.MemcachedCache",
+        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
         "LOCATION": "127.0.0.1:11211",
         "OPTIONS": {
             "timeout": 300,
@@ -41,7 +41,14 @@ CACHES = {
 MAILERS = {
     "default": {
         "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
-        "OPTIONS": {"host": "localhost", "port": "2525", "ssl_certfile": "/etc/ssl/cert", "ssl_keyfile": "/etc/ssl/key", "timeout": "600", "use_tls": True},
+        "OPTIONS": {
+            "host": "localhost",
+            "port": "2525",
+            "ssl_certfile": "/etc/ssl/cert",
+            "ssl_keyfile": "/etc/ssl/key",
+            "timeout": "600",
+            "use_tls": True,
+        },
     },
 }
 
@@ -273,11 +280,11 @@ allowing you to use special characters without manual encoding in your configura
 
 ```python
 # In your .env file or environment
-DATABASE_URL="postgres://admin%40company:P%40ssw0rd%21@db.example.com:5432/production"
+DATABASE_URL = "postgres://admin%40company:P%40ssw0rd%21@db.example.com:5432/production"
 
 # In settings.py
 DATABASES = {
-    "default": os.environ["DATABASE_URL"]
+    "default": os.environ["DATABASE_URL"],
 }
 # → USER: "admin@company", PASSWORD: "P@ssw0rd!"
 ```
@@ -328,7 +335,7 @@ It automatically includes:
 ```python
 # Simple production-ready configuration
 DATABASES = {
-    "default": "sqlite+:///path/to/database.db"
+    "default": "sqlite+:///path/to/database.db",
 }
 
 # Resulting configuration:
@@ -378,12 +385,12 @@ The regular `sqlite://` protocol also supports PRAGMA settings via URL fragments
 ```python
 # Add PRAGMA settings to standard SQLite
 DATABASES = {
-    "default": "sqlite:///path/to/db.sqlite3#PRAGMA.journal_mode=WAL&PRAGMA.synchronous=NORMAL"
+    "default": "sqlite:///path/to/db.sqlite3#PRAGMA.journal_mode=WAL&PRAGMA.synchronous=NORMAL",
 }
 
 # Works with spatialite too
 DATABASES = {
-    "default": "spatialite:///path/to/spatial.db#PRAGMA.journal_mode=WAL"
+    "default": "spatialite:///path/to/spatial.db#PRAGMA.journal_mode=WAL",
 }
 ```
 
@@ -537,14 +544,16 @@ from django_service_urls import db
 from django_service_urls.services.database import postgresql_config_from_url
 
 postgresql_config_from_url = db.register(
-    ("mypgbackend", "my_postgres_backend")
+    ("mypgbackend", "my_postgres_backend"),
 )(postgresql_config_from_url)
 ```
 
 Consumer's `settings.py` — unchanged:
 
 ```python
-DATABASES = {"default": "mypgbackend://user:pwd@localhost/mydb"}
+DATABASES = {
+    "default": "mypgbackend://user:pwd@localhost/mydb",
+}
 ```
 
 #### Tier 2 — entirely new service type
@@ -569,7 +578,10 @@ class SearchService(Service):
 search = SearchService()
 register_setting("SEARCH_ENGINES", search)
 
-@search.register(("myengine", "my_search_engine.Engine"))
+
+@search.register(
+    ("myengine", "my_search_engine.Engine"),
+)
 def search_config_from_url(backend, engine, scheme, url):
     return backend.config_from_url(engine, scheme, url)
 ```
@@ -590,11 +602,11 @@ from types import ModuleType
 from django_service_urls import ConfigDict, register_setting, Service, UrlInfo, ValidationError
 
 
-class CustomService(Service):
-    ...
+class CustomService(Service): ...
 
 
 my_service = CustomService()
+
 
 def _handler(module: ModuleType) -> None:
     if backend := getattr(module, "MY_CUSTOM_SERVICE_BACKEND", None):
@@ -604,6 +616,7 @@ def _handler(module: ModuleType) -> None:
                 setattr(module, f"MY_CUSTOM_SERVICE_{'BACKEND' if k == 'ENGINE' else k}", v)
         except ValidationError:
             pass
+
 
 register_setting("MY_CUSTOM_SERVICE_BACKEND", my_service, handler=_handler)
 ```
@@ -622,7 +635,9 @@ You can also register a handler by manually importing the module:
 from django_service_urls import db
 from django_service_urls.services.database import postgresql_config_from_url
 
-postgresql_config_from_url = db.register(("mypgbackend", "my_postgres_backend"))(postgresql_config_from_url)
+postgresql_config_from_url = db.register(
+    ("mypgbackend", "my_postgres_backend"),
+)(postgresql_config_from_url)
 ```
 
 `yourapp/settings.py`
@@ -631,7 +646,9 @@ postgresql_config_from_url = db.register(("mypgbackend", "my_postgres_backend"))
 import my_postgres_backend.service_urls
 
 
-DATABASES = {"default": "mypgbackend://user:pwd@:/mydb"}
+DATABASES = {
+    "default": "mypgbackend://user:pwd@:/mydb",
+}
 ```
 
 ## mypy integration
