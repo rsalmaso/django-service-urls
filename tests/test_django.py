@@ -34,8 +34,8 @@ from django.core.mail.backends.smtp import EmailBackend as SMTPEmailBackend
 
 import django_service_urls.loads  # noqa: F401
 
-MAILERS_SUPPORTED = django.VERSION >= (6, 1)
-EMAIL_SETTINGS_SUPPORTED = django.VERSION < (7, 0)
+MAILERS_SUPPORTED = django.VERSION[:2] >= (6, 1)
+EMAIL_SETTINGS_SUPPORTED = django.VERSION[:2] <= (6, 2)
 
 SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 _EMAIL_URL = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
@@ -86,7 +86,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
         self.assertTrue(isinstance(default_cache, dict))
         self.assertEqual(default_cache["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
 
-    @unittest.skipUnless(EMAIL_SETTINGS_SUPPORTED, "EMAIL_* settings are removed in Django 7.0")
+    @unittest.skipUnless(EMAIL_SETTINGS_SUPPORTED, "EMAIL_* settings are removed in Django 2028.0")
     def test_email(self) -> None:
         from django.conf import settings
 
@@ -140,7 +140,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
 class EmailBackendVersionTests(unittest.TestCase):
     """EMAIL_BACKEND service URL behaviour across Django versions."""
 
-    @unittest.skipUnless(django.VERSION < (6, 1), "targets Django < 6.1")
+    @unittest.skipUnless(django.VERSION[:2] < (6, 1), "targets Django < 6.1")
     def test_works_before_6_1(self) -> None:
         # EMAIL_BACKEND is expanded into the EMAIL_* settings, as it always has been.
         values = vars(build_settings("svc_email_pre61", EMAIL_BACKEND=_EMAIL_URL))
@@ -148,10 +148,10 @@ class EmailBackendVersionTests(unittest.TestCase):
         self.assertEqual(values["EMAIL_HOST"], "smtpserver")
         self.assertEqual(values["EMAIL_PORT"], 42)
 
-    @unittest.skipUnless((6, 1) <= django.VERSION < (7, 0), "targets Django 6.1 .. <7.0")
+    @unittest.skipUnless(django.VERSION[:2] == (6, 1), "targets Django 6.1")
     def test_works_and_warns_on_6_1(self) -> None:
         # Still works, but Django emits its own deprecation warning. We rely on
-        # Django's RemovedInDjango70Warning and deliberately do not add our own.
+        # Django's RemovedInDjango2028Warning and deliberately do not add our own.
         from django.utils.deprecation import RemovedInDjango70Warning
 
         with self.assertWarns(RemovedInDjango70Warning):
@@ -159,12 +159,25 @@ class EmailBackendVersionTests(unittest.TestCase):
         self.assertEqual(values["EMAIL_BACKEND"], SMTP_BACKEND)
         self.assertEqual(values["EMAIL_HOST"], "smtpserver")
 
-    @unittest.skipUnless(django.VERSION >= (7, 0), "targets Django >= 7.0")
-    def test_url_raises_on_7_0(self) -> None:
-        # EMAIL_* is removed in Django 7.0: a service URL must raise instead of
+    @unittest.skipUnless(django.VERSION[:2] == (6, 2), "targets Django 6.2")
+    def test_works_and_warns_on_6_2(self) -> None:
+        # Still works, but Django emits its own deprecation warning. We rely on
+        # Django's RemovedInDjango2028Warning and deliberately do not add our own.
+        from django.utils.deprecation import (  # type: ignore[attr-defined]
+            RemovedInDjango2028Warning,  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-import]
+        )
+
+        with self.assertWarns(RemovedInDjango2028Warning):
+            values = vars(build_settings("svc_email_62", EMAIL_BACKEND=_EMAIL_URL))
+        self.assertEqual(values["EMAIL_BACKEND"], SMTP_BACKEND)
+        self.assertEqual(values["EMAIL_HOST"], "smtpserver")
+
+    @unittest.skipUnless(django.VERSION[:2] >= (2028, 0), "targets Django >= 2028.0")
+    def test_url_raises_on_2028_0(self) -> None:
+        # EMAIL_* is removed in Django 2028.0: a service URL must raise instead of
         # being silently dropped. (Our own guard, in addition to Django's.)
         with self.assertRaises(ImproperlyConfigured):
-            build_settings("svc_email_70", EMAIL_BACKEND=_EMAIL_URL)
+            build_settings("svc_email_2028", EMAIL_BACKEND=_EMAIL_URL)
 
 
 class MailersVersionTests(unittest.TestCase):

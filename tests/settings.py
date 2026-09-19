@@ -35,14 +35,14 @@ CACHES = {
 _email_url = "smtps://myuser:mypasswd@smtpserver:42/?ssl_certfile=mycert&timeout=30"
 
 # The deprecated EMAIL_* settings still work (with a deprecation warning on 6.1+)
-# until they are removed in Django 7.0, where MAILERS becomes the only option.
-# Keep exercising EMAIL_BACKEND while supported, and switch to MAILERS on 7.0.
-if django.VERSION >= (7, 0):
+# until they are removed in Django 2028.0, where MAILERS becomes the only option.
+# Keep exercising EMAIL_BACKEND while supported, and switch to MAILERS on 2028.0.
+if django.VERSION[:2] <= (6, 2):
+    EMAIL_BACKEND = _email_url
+else:
     MAILERS = {
         "default": _email_url,
     }
-else:
-    EMAIL_BACKEND = _email_url
 
 STORAGES = {
     "default": "fs://",
