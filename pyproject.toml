@@ -47,6 +47,7 @@ dev = [
     "nox[uv]>=2026.7.11",
     "psycopg>=3.3.4",
     "pyrefly>=1.2.0",
+    "pyright[nodejs]>=1.1.414",
     "pytest>=9.1.1",
     "ruff>=0.16.2",
     "ty>=0.0.72",
@@ -102,6 +103,9 @@ python-version = "3.10.0"
 [tool.pyrefly.errors]
 no-any-return = "error"
 redundant-cast = "warn"
+
+[tool.pyright]
+pythonVersion = "3.10"
 
 [tool.pytest.ini_options]
 filterwarnings = [

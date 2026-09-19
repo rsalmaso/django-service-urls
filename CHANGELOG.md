@@ -3,6 +3,7 @@
 ## dev
 
 * configure pyrefly
+* added pyright support
 
 ## 3.1.0
 
