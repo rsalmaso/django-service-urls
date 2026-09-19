@@ -94,6 +94,15 @@ warn_unused_configs = false
 no_incremental = true
 cache_dir = "/dev/null"
 strict = true
+
+[tool.pyrefly]
+ignore-missing-imports = ["*"]
+python-version = "3.10.0"
+
+[tool.pyrefly.errors]
+no-any-return = "error"
+redundant-cast = "warn"
+
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore:The EMAIL_.* setting is deprecated",
