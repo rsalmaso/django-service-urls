@@ -455,9 +455,9 @@ Dummy | django.core.mail.backends.dummy.EmailBackend | dummy://
 > forwarded to ``OPTIONS`` to support custom backends.
 
 > **Note:** ``MAILERS`` requires Django 6.1+, while the ``EMAIL_*`` settings are
-> removed in Django 7.0. `django-service-urls` raises ``ImproperlyConfigured`` if
+> removed in Django 2028. `django-service-urls` raises ``ImproperlyConfigured`` if
 > you configure ``MAILERS`` on Django < 6.1, or an ``EMAIL_BACKEND`` service URL on
-> Django 7.0+. Django 6.1 additionally forbids defining the deprecated ``EMAIL_*``
+> Django 2028+. Django 6.1 additionally forbids defining the deprecated ``EMAIL_*``
 > settings and ``MAILERS`` together, so use ``MAILERS`` on 6.1+ and ``EMAIL_BACKEND``
 > on older versions — not both.
 

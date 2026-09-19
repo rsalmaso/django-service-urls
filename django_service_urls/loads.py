@@ -34,7 +34,7 @@ def email_settings_supported() -> bool:
     Return whether Django still supports the deprecated flat ``EMAIL_*`` settings.
 
     These settings are deprecated in favor of ``MAILERS`` and will be removed in
-    Django 7.0. Detect their availability via ``global_settings`` so we don't
+    Django 2028. Detect their availability via ``global_settings`` so we don't
     inject ``EMAIL_HOST``/``EMAIL_PORT``/... into settings Django no longer reads.
     """
 
@@ -47,7 +47,7 @@ def mailers_supported() -> bool:
     """
     Return whether Django supports the ``MAILERS`` setting (added in Django 6.1).
 
-    ``MAILERS`` is not present in ``global_settings`` until Django 7.0, so detect
+    ``MAILERS`` is not present in ``global_settings`` until Django 2028, so detect
     support via ``django.core.mail`` (which exposes the mailers API from 6.1).
     """
 
@@ -62,7 +62,7 @@ def apply_service_urls(module: ModuleType) -> None:
 
     Raises ``ImproperlyConfigured`` when a settings module uses a service that the
     running Django version cannot consume: ``MAILERS`` before Django 6.1, or an
-    ``EMAIL_BACKEND`` service URL on Django 7.0+ (where ``EMAIL_*`` was removed).
+    ``EMAIL_BACKEND`` service URL on Django 2028+ (where ``EMAIL_*`` was removed).
     """
 
     from django.core.exceptions import ImproperlyConfigured
@@ -98,7 +98,7 @@ def apply_service_urls(module: ModuleType) -> None:
         else:
             if not email_settings_supported():
                 raise ImproperlyConfigured(
-                    "EMAIL_BACKEND service URLs rely on the EMAIL_* settings removed in Django 7.0; "
+                    "EMAIL_BACKEND service URLs rely on the EMAIL_* settings removed in Django 2028; "
                     "use the MAILERS setting instead."
                 )
             for k, v in email_config.items():
