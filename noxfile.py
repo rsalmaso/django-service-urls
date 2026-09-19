@@ -88,7 +88,7 @@ def typing(session: nox.Session, django: str) -> None:
     install(session, django)
 
     failures: list[str] = []
-    for checker, *args in (("mypy",), ("pyrefly", "check"), ("ty", "check")):
+    for checker, *args in (("mypy",), ("pyrefly", "check"), ("ty", "check"), ("pyright",)):
         try:
             session.run(checker, *args, *FILES)
         except nox.command.CommandFailed as ex:  # noqa: PERF203
