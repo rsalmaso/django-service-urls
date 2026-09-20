@@ -23,13 +23,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from django_service_urls.base import ConfigDict, Service
+from django_service_urls._compat import override
+from django_service_urls.base import Service
 from django_service_urls.parse import UrlInfo
+from django_service_urls.types import ConfigDict
 
 __all__ = ["db"]
 
 
 class DatabaseService(Service):
+    @override
     def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         parsed: UrlInfo = self.parse_url(url)
         config: ConfigDict = {
@@ -54,7 +57,7 @@ def _handle_postgres_like_config(backend: Service, engine: str, scheme: str, url
 
     # Convert currentSchema option to PostgreSQL search_path
     if "currentSchema" in config["OPTIONS"]:
-        value = config["OPTIONS"].pop("currentSchema")
+        value: object = config["OPTIONS"].pop("currentSchema")
         config["OPTIONS"]["options"] = f"-c search_path={value}"
 
     return config
@@ -158,7 +161,7 @@ def postgresql_config_from_url(backend: Service, engine: str, scheme: str, url: 
 def mysql_config_from_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
     config: ConfigDict = backend.config_from_url(engine, scheme, url)
     if "ssl-ca" in config["OPTIONS"]:
-        value = config["OPTIONS"].pop("ssl-ca")
+        value: object = config["OPTIONS"].pop("ssl-ca")
         config["OPTIONS"]["ssl"] = {"ca": value}
     return config
 

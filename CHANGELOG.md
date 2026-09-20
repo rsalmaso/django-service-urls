@@ -2,9 +2,15 @@
 
 ## dev
 
-* configure pyrefly
-* added pyright support
+* improve typing support
+  - configure pyrefly
+  - added pyright support
+  - added `django_service_urls.types` module; `ConfigInput` and `ConfigRegistry`
+    are exported from the package root
+  - `Service.parse` accepts any `Mapping`, not only `dict`
 * update deprecation handling to new django versioning scheme
+* moved mypy config from `mypy.ini` to `pyproject.toml`
+* nox sessions install dev tools from `uv.lock`, using the `uv` backend
 
 ## 3.1.0
 

@@ -22,8 +22,9 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 from dataclasses import dataclass, field
-from typing import Any, TypeAlias
 from urllib import parse
+
+from .types import CastValue, CastValues, Options
 
 __all__ = ["parse_url"]
 
@@ -59,10 +60,6 @@ def _get_host_and_port(netloc: str) -> tuple[str, int | None]:
     else:
         hostname, _, port = hostinfo.partition(":")
     return hostname, None if not port else int(port)
-
-
-CastValue: TypeAlias = int | bool | str | None
-CastValues: TypeAlias = list[CastValue] | CastValue
 
 
 def _cast_value(value: str) -> CastValue:
@@ -110,12 +107,12 @@ def _cast_value(value: str) -> CastValue:
             return False
         case "null":
             return None
+        case _:
+            # Default: return as string
+            return value
 
-    # Default: return as string
-    return value
 
-
-def _set_nested_option(options: dict[str, Any], key: str, value: CastValues) -> None:
+def _set_nested_option(options: Options, key: str, value: CastValues) -> None:
     """
     Set a nested option using dot notation.
 
@@ -132,26 +129,26 @@ def _set_nested_option(options: dict[str, Any], key: str, value: CastValues) -> 
     """
 
     parts = key.split(".")
-    current = options
+    current: Options = options
 
     # Navigate/create the nested structure
     for part in parts[:-1]:
-        if part not in current:
-            current[part] = {}
-        elif not isinstance(current[part], dict):
-            # If there's a conflict (existing non-dict value), convert to dict
-            current[part] = {}
-        current = current[part]
+        nested = current.get(part)
+        if not isinstance(nested, dict):
+            # Missing, or a conflicting non-dict value: (re)create the level
+            nested = {}
+            current[part] = nested
+        current = nested
 
     # Set the final value
     current[parts[-1]] = value
 
 
-def _parse_querystring(data: str) -> dict[str, Any]:
+def _parse_querystring(data: str) -> Options:
     """Parse a query string into a typed dictionary with nested structure support."""
 
-    parsed_data: dict[str, Any] = parse.parse_qs(data, keep_blank_values=True)
-    result: dict[str, Any] = {}
+    parsed_data: dict[str, list[str]] = parse.parse_qs(data, keep_blank_values=True)
+    result: Options = {}
     for key, values in parsed_data.items():
         # Handle multiple values as lists
         processed_value: CastValues = (
@@ -183,9 +180,9 @@ class UrlInfo:
     port: int | None = None
     path: str = ""
     fullpath: str = ""
-    query: dict[str, Any] = field(default_factory=dict)
+    query: Options = field(default_factory=dict)
     location: list[str] | str = ""
-    fragment: dict[str, Any] = field(default_factory=dict)
+    fragment: Options = field(default_factory=dict)
 
     def __repr__(self) -> str:
         password = "***" if self.password else repr(self.password)

@@ -23,12 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from .base import ConfigDict, Service
+from .base import Service
 from .exceptions import ValidationError
 from .parse import UrlInfo
 from .plugins import discover_plugins
 from .registry import register_setting
 from .services import cache, db, email, mailer, storage, task
+from .types import ConfigDict, ConfigInput, ConfigRegistry
 
 __version__ = "3.1.0"
 __author__ = "Raffaele Salmaso"
@@ -36,6 +37,8 @@ __email__ = "raffaele@salmaso.org"
 
 __all__ = [
     "ConfigDict",
+    "ConfigInput",
+    "ConfigRegistry",
     "Service",
     "UrlInfo",
     "ValidationError",

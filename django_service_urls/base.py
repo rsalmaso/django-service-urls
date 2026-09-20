@@ -23,18 +23,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from collections.abc import Callable, MutableMapping
-from typing import Any, TypeAlias, TypedDict
+from collections.abc import Callable, Mapping
+from typing import overload, TypedDict
 from urllib.parse import urlsplit
 
 from .exceptions import ValidationError
 from .parse import parse_url, UrlInfo
+from .types import ConfigDict, ConfigInput, ConfigRegistry, ServiceCallback
 
 __all__ = ["ConfigDict", "Service"]
-
-
-ConfigDict: TypeAlias = MutableMapping[str, Any]
-ServiceCallback: TypeAlias = Callable[["Service", str, str, str], ConfigDict]
 
 
 class SchemeRegistration(TypedDict):
@@ -51,7 +48,13 @@ class Service:
     def __init__(self) -> None:
         self._schemes: dict[str, SchemeRegistration] = {}
 
-    def parse(self, data: str | ConfigDict) -> ConfigDict:
+    @overload
+    def parse(self, data: str) -> ConfigDict: ...
+
+    @overload
+    def parse(self, data: ConfigInput) -> ConfigRegistry: ...
+
+    def parse(self, data: str | ConfigInput) -> ConfigDict | ConfigRegistry:
         """
         Parse URL strings or configuration dictionaries into Django configs.
 
@@ -79,7 +82,7 @@ class Service:
         """  # noqa: E501
 
         match data:
-            case dict():
+            case Mapping():
                 return self._parse_dict(data)
             case str():
                 return self._parse_str(data)
@@ -132,16 +135,17 @@ class Service:
 
         return wrapper
 
-    def _parse_dict(self, data: ConfigDict) -> ConfigDict:
+    def _parse_dict(self, data: ConfigInput) -> ConfigRegistry:
         """
         Parse a Django settings dictionary, converting any URL string values to config dicts.
 
-        Iterates over the dictionary entries. Values that are already dicts are kept as-is;
-        string values are parsed as service URLs via ``_parse_str``. Collects all errors
-        and raises a single ``ValidationError`` with an error dict mapping keys to their errors.
+        Iterates over the dictionary entries. ``None`` values (e.g. an unset environment
+        variable) become ``{}``; string values are parsed as service URLs via ``_parse_str``;
+        any other value is kept as-is. Collects all errors and raises a single
+        ``ValidationError`` with an error dict mapping keys to their errors.
 
         Args:
-            data: Configuration dictionary mapping names to URL strings or config dicts
+            data: Configuration dictionary mapping names to URL strings, config dicts or ``None``
 
         Returns:
             Dictionary with all string values replaced by their parsed config dicts
@@ -158,10 +162,15 @@ class Service:
         """  # noqa: E501
 
         errors: dict[str, ValidationError] = {}
-        parsed_data: dict[str, ConfigDict] = {}
+        parsed_data: ConfigRegistry = {}
         for key, value in data.items():
             try:
-                parsed_data[key] = value if isinstance(value, dict) else self._parse_str(value)
+                if value is None:
+                    parsed_data[key] = {}
+                elif isinstance(value, str):
+                    parsed_data[key] = self._parse_str(value)
+                else:
+                    parsed_data[key] = value
             except ValidationError as exc:  # noqa: PERF203
                 errors[key] = exc
         if errors:

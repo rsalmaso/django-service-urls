@@ -55,7 +55,7 @@ def install(session: nox.Session, django: str) -> None:
     unpinned = ["django", *(["asgiref", "sqlparse", "tzdata"] if django == "main" else [])]
     pyproject = nox.project.load_toml("pyproject.toml")
     constraints = Path(session.virtualenv.location) / "lock-constraints.txt"
-    session.run_install(
+    _ = session.run_install(
         "uv",
         "export",
         "--locked",
@@ -79,8 +79,8 @@ def install(session: nox.Session, django: str) -> None:
 @nox.session(python="3.10")  # type: ignore[untyped-decorator]
 def lint(session: nox.Session, django: str = "5.2") -> None:
     install(session, django)
-    session.run("ruff", "format", "--check", *FILES)
-    session.run("ruff", "check", *FILES)
+    _ = session.run("ruff", "format", "--check", *FILES)
+    _ = session.run("ruff", "check", *FILES)
 
 
 @nox.session  # type: ignore[untyped-decorator]
@@ -91,7 +91,7 @@ def typing(session: nox.Session, django: str) -> None:
     failures: list[str] = []
     for checker, *args in (("mypy",), ("pyrefly", "check"), ("ty", "check"), ("pyright",)):
         try:
-            session.run(checker, *args, *FILES)
+            _ = session.run(checker, *args, *FILES)
         except nox.command.CommandFailed as ex:  # noqa: PERF203
             failures.append(f"{checker} ({ex})")
     if failures:
@@ -102,4 +102,4 @@ def typing(session: nox.Session, django: str) -> None:
 @nox.parametrize("python,django", DEPS)  # type: ignore[untyped-decorator]
 def tests(session: nox.Session, django: str) -> None:
     install(session, django)
-    session.run("pytest")
+    _ = session.run("pytest")

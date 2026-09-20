@@ -23,30 +23,37 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import TYPE_CHECKING
 import unittest
 
 from django_service_urls import task
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigDict
 
 
 class CustomTaskBackendTestCase(unittest.TestCase):
     def test_custom_task_backend(self) -> None:
         result = task.parse("task://my.custom.TaskBackend?workers=4&timeout=300")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "my.custom.TaskBackend")
-        self.assertEqual(result["OPTIONS"]["workers"], 4)
-        self.assertEqual(result["OPTIONS"]["timeout"], 300)
+        self.assertEqual(options["workers"], 4)
+        self.assertEqual(options["timeout"], 300)
 
 
 class DjangoBuiltinTasksTestCase(unittest.TestCase):
     def test_dummy_backend(self) -> None:
         result = task.parse("dummy://?debug=true")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "django.tasks.backends.dummy.DummyBackend")
-        self.assertEqual(result["OPTIONS"]["debug"], True)
+        self.assertEqual(options["debug"], True)
 
     def test_immediate_backend(self) -> None:
         result = task.parse("immediate://?max_retries=3&timeout=60")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "django.tasks.backends.immediate.ImmediateBackend")
-        self.assertEqual(result["OPTIONS"]["max_retries"], 3)
-        self.assertEqual(result["OPTIONS"]["timeout"], 60)
+        self.assertEqual(options["max_retries"], 3)
+        self.assertEqual(options["timeout"], 60)
 
 
 class DjangoTasksBackendsTestCase(unittest.TestCase):
@@ -60,19 +67,23 @@ class DjangoTasksBackendsTestCase(unittest.TestCase):
 
     def test_database_dt_backend(self) -> None:
         result = task.parse("database+dt://?db_table=tasks&retry.max_attempts=5&retry.delay=10")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "django_tasks_db.DatabaseBackend")
-        self.assertEqual(result["OPTIONS"]["db_table"], "tasks")
-        self.assertEqual(result["OPTIONS"]["retry"]["max_attempts"], 5)
-        self.assertEqual(result["OPTIONS"]["retry"]["delay"], 10)
+        retry: ConfigDict = options["retry"]
+        self.assertEqual(options["db_table"], "tasks")
+        self.assertEqual(retry["max_attempts"], 5)
+        self.assertEqual(retry["delay"], 10)
 
     def test_rq_dt_backend(self) -> None:
         result = task.parse("rq+dt://?queue_name=high_priority&redis.host=localhost&redis.port=6379&redis.db=0")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "django_tasks_rq.RQBackend")
-        self.assertEqual(result["OPTIONS"]["queue_name"], "high_priority")
-        self.assertEqual(result["OPTIONS"]["redis"]["host"], "localhost")
-        self.assertEqual(result["OPTIONS"]["redis"]["port"], 6379)
-        self.assertEqual(result["OPTIONS"]["redis"]["db"], 0)
+        redis: ConfigDict = options["redis"]
+        self.assertEqual(options["queue_name"], "high_priority")
+        self.assertEqual(redis["host"], "localhost")
+        self.assertEqual(redis["port"], 6379)
+        self.assertEqual(redis["db"], 0)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

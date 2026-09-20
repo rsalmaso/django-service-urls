@@ -21,6 +21,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+import typing
 import unittest
 
 from django_service_urls.parse import _get_host_and_port, parse_url, UrlInfo
@@ -172,6 +174,19 @@ class ParseUrlTestCase(unittest.TestCase):
         result = parse_url(input)
         self.assertIs(result, input)
 
+    def test_url_info_type_hints_resolve(self) -> None:
+        # Introspection tools (serializers, autodoc) resolve dataclass hints in parse.py's namespace.
+        hints = typing.get_type_hints(UrlInfo)
+        for name in ("query", "fragment"):
+            with self.subTest(field=name):
+                hint: object = hints[name]
+                origin: object = typing.get_origin(hint)
+                self.assertIs(origin, dict)
+                if sys.version_info >= (3, 11):
+                    # 3.10's get_type_hints leaves string args of builtin generics unevaluated.
+                    value_type: object = typing.get_args(hint)[1]
+                    self.assertNotIsInstance(value_type, str)
+
     def test_parse_url_query_parameter_types(self) -> None:
         url = "scheme://host/path?int_param=123&bool_true=true&bool_false=false&string_param=value"
         result = parse_url(url)
@@ -264,4 +279,4 @@ class ParseUrlTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

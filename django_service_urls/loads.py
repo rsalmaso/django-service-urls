@@ -38,9 +38,9 @@ def email_settings_supported() -> bool:
     inject ``EMAIL_HOST``/``EMAIL_PORT``/... into settings Django no longer reads.
     """
 
-    from django.conf import global_settings
+    import django.conf.global_settings
 
-    return hasattr(global_settings, "EMAIL_BACKEND")
+    return hasattr(django.conf.global_settings, "EMAIL_BACKEND")
 
 
 def mailers_supported() -> bool:
