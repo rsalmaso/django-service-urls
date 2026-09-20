@@ -28,6 +28,8 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping
 from typing import TypeAlias
 
+from ._compat import override
+
 __all__ = ["ValidationError"]
 
 
@@ -58,6 +60,7 @@ class ValidationError(ValueError):
             >>> ValidationError({"field1": ValidationError("Error 1"), "field2": ValidationError("Error 2")})
             ValidationError({'field1': 'Error 1', 'field2': 'Error 2'})
         """
+        super().__init__(message)
         self.error_dict: dict[str, str] | None = None
         self.message: str | None = None
 
@@ -76,18 +79,19 @@ class ValidationError(ValueError):
         elif isinstance(message, str):
             self.message = message
 
+    @override
     def __str__(self) -> str:
         if self.error_dict is not None:
             return repr(self.error_dict)
         return repr(self.message)
 
+    @override
     def __repr__(self) -> str:
         return f"ValidationError({self})"
 
     def __iter__(self) -> Generator[tuple[str, str] | str, None, None]:
         if self.error_dict is not None:
-            for key, message in self.error_dict.items():
-                yield key, str(message)
+            yield from self.error_dict.items()
         elif self.message is not None:
             # An error with neither a message nor a dict yields nothing.
             yield self.message

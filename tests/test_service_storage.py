@@ -23,25 +23,31 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import TYPE_CHECKING
 import unittest
 
 from django_service_urls import storage
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigDict
 
 
 class CustomStorageTestCase(unittest.TestCase):
     def test_custom_storage_backend(self) -> None:
         result = storage.parse("storage://my.custom.StorageBackend?location=/path/to/storage&mode=private")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "my.custom.StorageBackend")
-        self.assertEqual(result["OPTIONS"]["location"], "/path/to/storage")
-        self.assertEqual(result["OPTIONS"]["mode"], "private")
+        self.assertEqual(options["location"], "/path/to/storage")
+        self.assertEqual(options["mode"], "private")
 
 
 class DjangoBuiltinStoragesTestCase(unittest.TestCase):
     def test_filesystem_storage(self) -> None:
         result = storage.parse("fs://?location=/var/www/media&base_url=/media/")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "django.core.files.storage.filesystem.FileSystemStorage")
-        self.assertEqual(result["OPTIONS"]["location"], "/var/www/media")
-        self.assertEqual(result["OPTIONS"]["base_url"], "/media/")
+        self.assertEqual(options["location"], "/var/www/media")
+        self.assertEqual(options["base_url"], "/media/")
 
     def test_inmemory_storage(self) -> None:
         result = storage.parse("memory://")
@@ -59,9 +65,10 @@ class DjangoBuiltinStoragesTestCase(unittest.TestCase):
 class WhitenoiseStoragesTestCase(unittest.TestCase):
     def test_whitenoise_storage(self) -> None:
         result = storage.parse("whitenoise://?max_age=31536000&autorefresh=true")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "whitenoise.storage.CompressedStaticFilesStorage")
-        self.assertEqual(result["OPTIONS"]["max_age"], 31536000)
-        self.assertEqual(result["OPTIONS"]["autorefresh"], True)
+        self.assertEqual(options["max_age"], 31536000)
+        self.assertEqual(options["autorefresh"], True)
 
     def test_whitenoise_manifest_storage(self) -> None:
         result = storage.parse("whitenoise+static://")
@@ -71,10 +78,12 @@ class WhitenoiseStoragesTestCase(unittest.TestCase):
 class S3StoragesTestCase(unittest.TestCase):
     def test_s3_storage(self) -> None:
         result = storage.parse("s3://?access_key=KEY&secret_key=SECRET&object_parameters.CacheControl=max-age=86400")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.s3.S3Storage")
-        self.assertEqual(result["OPTIONS"]["access_key"], "KEY")
-        self.assertEqual(result["OPTIONS"]["secret_key"], "SECRET")
-        self.assertEqual(result["OPTIONS"]["object_parameters"]["CacheControl"], "max-age=86400")
+        self.assertEqual(options["access_key"], "KEY")
+        self.assertEqual(options["secret_key"], "SECRET")
+        object_parameters: ConfigDict = options["object_parameters"]
+        self.assertEqual(object_parameters["CacheControl"], "max-age=86400")
 
     def test_s3_static_storage(self) -> None:
         result = storage.parse("s3+static://")
@@ -86,55 +95,62 @@ class S3StoragesTestCase(unittest.TestCase):
 
     def test_s3_with_basic_options(self) -> None:
         result = storage.parse("s3://?bucket_name=mybucket&region_name=us-east-1")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.s3.S3Storage")
-        self.assertEqual(result["OPTIONS"]["bucket_name"], "mybucket")
-        self.assertEqual(result["OPTIONS"]["region_name"], "us-east-1")
+        self.assertEqual(options["bucket_name"], "mybucket")
+        self.assertEqual(options["region_name"], "us-east-1")
 
 
 class CloudStoragesTestCase(unittest.TestCase):
     def test_azure_storage(self) -> None:
         result = storage.parse("azure://?account_name=myaccount&account_key=mykey&azure_container=media")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.azure_storage.AzureStorage")
-        self.assertEqual(result["OPTIONS"]["account_name"], "myaccount")
-        self.assertEqual(result["OPTIONS"]["account_key"], "mykey")
-        self.assertEqual(result["OPTIONS"]["azure_container"], "media")
+        self.assertEqual(options["account_name"], "myaccount")
+        self.assertEqual(options["account_key"], "mykey")
+        self.assertEqual(options["azure_container"], "media")
 
     def test_google_cloud_storage(self) -> None:
         result = storage.parse("google://?bucket_name=mybucket&project_id=myproject")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.gcloud.GoogleCloudStorage")
-        self.assertEqual(result["OPTIONS"]["bucket_name"], "mybucket")
-        self.assertEqual(result["OPTIONS"]["project_id"], "myproject")
+        self.assertEqual(options["bucket_name"], "mybucket")
+        self.assertEqual(options["project_id"], "myproject")
 
     def test_dropbox_storage(self) -> None:
         result = storage.parse("dropbox://?oauth2_access_token=mytoken&root_path=/media")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.dropbox.DropboxStorage")
-        self.assertEqual(result["OPTIONS"]["oauth2_access_token"], "mytoken")
-        self.assertEqual(result["OPTIONS"]["root_path"], "/media")
+        self.assertEqual(options["oauth2_access_token"], "mytoken")
+        self.assertEqual(options["root_path"], "/media")
 
 
 class FileTransferStoragesTestCase(unittest.TestCase):
     def test_ftp_storage(self) -> None:
         result = storage.parse("ftp://?location=ftp.example.com&encoding=utf-8")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.ftp.FTPStorage")
-        self.assertEqual(result["OPTIONS"]["location"], "ftp.example.com")
-        self.assertEqual(result["OPTIONS"]["encoding"], "utf-8")
+        self.assertEqual(options["location"], "ftp.example.com")
+        self.assertEqual(options["encoding"], "utf-8")
 
     def test_sftp_storage(self) -> None:
         result = storage.parse("sftp://?host=sftp.example.com&root_path=/uploads&port=22")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.sftpstorage.SFTPStorage")
-        self.assertEqual(result["OPTIONS"]["host"], "sftp.example.com")
-        self.assertEqual(result["OPTIONS"]["root_path"], "/uploads")
-        self.assertEqual(result["OPTIONS"]["port"], 22)
+        self.assertEqual(options["host"], "sftp.example.com")
+        self.assertEqual(options["root_path"], "/uploads")
+        self.assertEqual(options["port"], 22)
 
 
 class LibCloudStorageTestCase(unittest.TestCase):
     def test_libcloud_storage(self) -> None:
         result = storage.parse("libcloud://?provider=S3&key=mykey&secret=mysecret")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["BACKEND"], "storages.backends.apache_libcloud.LibCloudStorage")
-        self.assertEqual(result["OPTIONS"]["provider"], "S3")
-        self.assertEqual(result["OPTIONS"]["key"], "mykey")
-        self.assertEqual(result["OPTIONS"]["secret"], "mysecret")
+        self.assertEqual(options["provider"], "S3")
+        self.assertEqual(options["key"], "mykey")
+        self.assertEqual(options["secret"], "mysecret")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

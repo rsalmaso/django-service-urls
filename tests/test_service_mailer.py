@@ -23,9 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import TYPE_CHECKING
 import unittest
 
 from django_service_urls import mailer, ValidationError
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigDict
 
 SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
@@ -81,18 +85,21 @@ class MailerSmtpTests(unittest.TestCase):
 
     def test_smtps_automatic_tls_setting(self) -> None:
         result = mailer.parse("smtps://user:pass@host:465/")
-        self.assertEqual(result["OPTIONS"]["use_tls"], True)
+        options: ConfigDict = result["OPTIONS"]
+        self.assertEqual(options["use_tls"], True)
         self.assertNotIn("use_ssl", result["OPTIONS"])
 
     def test_smtp_ssl_automatic_ssl_setting(self) -> None:
         result = mailer.parse("smtp+ssl://user:pass@host:465/")
-        self.assertEqual(result["OPTIONS"]["use_ssl"], True)
+        options: ConfigDict = result["OPTIONS"]
+        self.assertEqual(options["use_ssl"], True)
         self.assertNotIn("use_tls", result["OPTIONS"])
 
     def test_unknown_query_params_pass_through(self) -> None:
         """Unrecognized query params are forwarded to OPTIONS."""
         result = mailer.parse("smtp://host/?custom_option=value")
-        self.assertEqual(result["OPTIONS"]["custom_option"], "value")
+        options: ConfigDict = result["OPTIONS"]
+        self.assertEqual(options["custom_option"], "value")
 
 
 class MailerConsoleTests(unittest.TestCase):
@@ -157,4 +164,4 @@ class MailerDictTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

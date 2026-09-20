@@ -24,7 +24,7 @@
 import os
 import sys
 import types
-from typing import cast
+from typing import cast, TYPE_CHECKING
 import unittest
 
 import django
@@ -33,6 +33,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.backends.smtp import EmailBackend as SMTPEmailBackend
 
 import django_service_urls.loads  # noqa: F401
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigRegistry
 
 MAILERS_SUPPORTED = django.VERSION[:2] >= (6, 1)
 EMAIL_SETTINGS_SUPPORTED = django.VERSION[:2] <= (6, 2)
@@ -68,7 +71,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
     def test_databases(self) -> None:
         from django.conf import settings
 
-        DATABASES = settings.DATABASES
+        DATABASES: ConfigRegistry = settings.DATABASES
         default_database = DATABASES["default"]
         self.assertTrue(isinstance(default_database, dict))
         self.assertEqual(default_database["ENGINE"], "django.db.backends.postgresql")
@@ -81,7 +84,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
     def test_caches(self) -> None:
         from django.conf import settings
 
-        CACHES = settings.CACHES
+        CACHES: ConfigRegistry = settings.CACHES
         default_cache = CACHES["default"]
         self.assertTrue(isinstance(default_cache, dict))
         self.assertEqual(default_cache["BACKEND"], "django.core.cache.backends.locmem.LocMemCache")
@@ -104,7 +107,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
     def test_storages(self) -> None:
         from django.conf import settings
 
-        STORAGES = settings.STORAGES
+        STORAGES: ConfigRegistry = settings.STORAGES
         default_storage = STORAGES["default"]
         self.assertTrue(isinstance(default_storage, dict))
         self.assertEqual(default_storage["BACKEND"], "django.core.files.storage.filesystem.FileSystemStorage")
@@ -115,7 +118,7 @@ class MonkeyPatchDjangoTestCase(unittest.TestCase):
     def test_tasks(self) -> None:
         from django.conf import settings
 
-        TASKS = settings.TASKS
+        TASKS: ConfigRegistry = settings.TASKS
         default_task = TASKS["default"]
         self.assertTrue(isinstance(default_task, dict))
         self.assertEqual(default_task["BACKEND"], "django.tasks.backends.immediate.ImmediateBackend")
@@ -167,7 +170,8 @@ class EmailBackendVersionTests(unittest.TestCase):
             RemovedInDjango2028Warning,  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-import]
         )
 
-        with self.assertWarns(RemovedInDjango2028Warning):
+        warning_class: type[Warning] = RemovedInDjango2028Warning
+        with self.assertWarns(warning_class):
             values = vars(build_settings("svc_email_62", EMAIL_BACKEND=_EMAIL_URL))
         self.assertEqual(values["EMAIL_BACKEND"], SMTP_BACKEND)
         self.assertEqual(values["EMAIL_HOST"], "smtpserver")
@@ -177,7 +181,7 @@ class EmailBackendVersionTests(unittest.TestCase):
         # EMAIL_* is removed in Django 2028.0: a service URL must raise instead of
         # being silently dropped. (Our own guard, in addition to Django's.)
         with self.assertRaises(ImproperlyConfigured):
-            build_settings("svc_email_2028", EMAIL_BACKEND=_EMAIL_URL)
+            _ = build_settings("svc_email_2028", EMAIL_BACKEND=_EMAIL_URL)
 
 
 class MailersVersionTests(unittest.TestCase):
@@ -188,7 +192,7 @@ class MailersVersionTests(unittest.TestCase):
         # MAILERS is unknown before Django 6.1, so it must raise rather than be
         # silently ignored.
         with self.assertRaises(ImproperlyConfigured):
-            build_settings("svc_mailers_pre61", MAILERS={"default": _EMAIL_URL})
+            _ = build_settings("svc_mailers_pre61", MAILERS={"default": _EMAIL_URL})
 
     @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
     def test_options_are_accepted_by_the_backend(self) -> None:
@@ -232,13 +236,14 @@ class MailersVersionTests(unittest.TestCase):
         # (Settings._check_email_settings_conflicts). We rely on that check rather
         # than adding our own.
         with self.assertRaises(ImproperlyConfigured):
-            build_settings("svc_both", EMAIL_BACKEND=_EMAIL_URL, MAILERS={"default": _EMAIL_URL})
+            _ = build_settings("svc_both", EMAIL_BACKEND=_EMAIL_URL, MAILERS={"default": _EMAIL_URL})
 
     @unittest.skipUnless(MAILERS_SUPPORTED, "MAILERS requires Django 6.1+")
     def test_parsed_on_6_1(self) -> None:
         values = vars(build_settings("svc_mailers_61", MAILERS={"default": _EMAIL_URL}))
+        mailers: ConfigRegistry = values["MAILERS"]
         self.assertEqual(
-            values["MAILERS"]["default"],
+            mailers["default"],
             {
                 "BACKEND": SMTP_BACKEND,
                 "OPTIONS": {

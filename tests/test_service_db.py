@@ -23,10 +23,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 import unittest
 
 from django_service_urls import db, ValidationError
+from django_service_urls._compat import override
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigDict
 
 if TYPE_CHECKING:
     _TestCaseBase = unittest.TestCase
@@ -34,7 +38,11 @@ else:
     _TestCaseBase = object
 
 
-GENERIC_TESTS = [
+# (user, password, host, port, name, options); port is a string only for the
+# backends that set STRING_PORTS.
+ExpectedParts: TypeAlias = tuple[str, str, str, str | int, str, dict[str, object]]
+
+GENERIC_TESTS: list[tuple[str, ExpectedParts]] = [
     ("username:password@domain/database", ("username", "password", "domain", "", "database", {})),
     ("username:password@domain:123/database", ("username", "password", "domain", 123, "database", {})),
     ("domain:123/database", ("", "", "domain", 123, "database", {})),
@@ -220,10 +228,11 @@ class SqliteTests(unittest.TestCase):
 
     def test_file_database_with_query_options(self) -> None:
         result = db.parse("sqlite:///path/to/db.sqlite3?timeout=10&check_same_thread=false")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
-        self.assertEqual(result["OPTIONS"]["timeout"], 10)
-        self.assertEqual(result["OPTIONS"]["check_same_thread"], False)
+        self.assertEqual(options["timeout"], 10)
+        self.assertEqual(options["check_same_thread"], False)
 
     def test_spatialite_file_database(self) -> None:
         result = db.parse("spatialite:///path/to/spatial.db")
@@ -234,7 +243,8 @@ class SqliteTests(unittest.TestCase):
         result = db.parse(
             "sqlite:///path/to/db.sqlite3#PRAGMA.journal_mode=WAL&PRAGMA.synchronous=NORMAL&CONN_MAX_AGE=300"
         )
-        init_command = result["OPTIONS"]["init_command"]
+        options: ConfigDict = result["OPTIONS"]
+        init_command = options["init_command"]
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
         self.assertIn("PRAGMA journal_mode=WAL;", init_command)
@@ -245,54 +255,60 @@ class SqliteTests(unittest.TestCase):
 
     def test_spatialite_with_pragma(self) -> None:
         result = db.parse("spatialite:///path/to/spatial.db#PRAGMA.journal_mode=WAL")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.spatialite")
         self.assertEqual(result["NAME"], "/path/to/spatial.db")
-        self.assertEqual(result["OPTIONS"]["init_command"], "PRAGMA journal_mode=WAL;")
+        self.assertEqual(options["init_command"], "PRAGMA journal_mode=WAL;")
 
 
 class SqlitePlusTests(unittest.TestCase):
     def test_file_database_with_production_defaults(self) -> None:
         result = db.parse("sqlite+:///path/to/db.sqlite3")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
-        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
-        self.assertEqual(result["OPTIONS"]["timeout"], 5)
-        self.assertIn("PRAGMA journal_mode=WAL", result["OPTIONS"]["init_command"])
-        self.assertIn("PRAGMA synchronous=NORMAL", result["OPTIONS"]["init_command"])
-        self.assertIn("PRAGMA temp_store=MEMORY", result["OPTIONS"]["init_command"])
+        self.assertEqual(options["transaction_mode"], "IMMEDIATE")
+        self.assertEqual(options["timeout"], 5)
+        self.assertIn("PRAGMA journal_mode=WAL", options["init_command"])
+        self.assertIn("PRAGMA synchronous=NORMAL", options["init_command"])
+        self.assertIn("PRAGMA temp_store=MEMORY", options["init_command"])
 
     def test_override_defaults(self) -> None:
         result = db.parse(
             "sqlite+:///path/to/db.sqlite3#PRAGMA.journal_mode=DELETE&PRAGMA.synchronous=FULL&CONN_MAX_AGE=300"
         )
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.db.backends.sqlite3")
         self.assertEqual(result["NAME"], "/path/to/db.sqlite3")
-        init_command = result["OPTIONS"]["init_command"]
+        init_command = options["init_command"]
         self.assertIn("PRAGMA journal_mode=DELETE;", init_command)
         self.assertIn("PRAGMA synchronous=FULL;", init_command)
         self.assertNotIn("PRAGMA journal_mode=WAL;", init_command)
         self.assertNotIn("PRAGMA synchronous=NORMAL;", init_command)
         self.assertEqual(result["CONN_MAX_AGE"], 300)
         # Other defaults should still be present
-        self.assertIn("PRAGMA temp_store=MEMORY", result["OPTIONS"]["init_command"])
+        self.assertIn("PRAGMA temp_store=MEMORY", options["init_command"])
 
     def test_windows_path(self) -> None:
         result = db.parse("sqlite+:///C:/Users/data/db.sqlite3")
+        options: ConfigDict = result["OPTIONS"]
         # Note: SQLite URLs with three slashes have the leading slash preserved
         self.assertEqual(result["NAME"], "/C:/Users/data/db.sqlite3")
-        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
+        self.assertEqual(options["transaction_mode"], "IMMEDIATE")
 
     def test_override_transaction_mode_via_query(self) -> None:
         result = db.parse("sqlite+:///path/to/db.sqlite3?transaction_mode=DEFERRED")
-        self.assertEqual(result["OPTIONS"]["transaction_mode"], "DEFERRED")
+        options: ConfigDict = result["OPTIONS"]
+        self.assertEqual(options["transaction_mode"], "DEFERRED")
         # timeout should still get its default
-        self.assertEqual(result["OPTIONS"]["timeout"], 5)
+        self.assertEqual(options["timeout"], 5)
 
     def test_override_timeout_via_query(self) -> None:
         result = db.parse("sqlite+:///path/to/db.sqlite3?timeout=30")
-        self.assertEqual(result["OPTIONS"]["timeout"], 30)
+        options: ConfigDict = result["OPTIONS"]
+        self.assertEqual(options["timeout"], 30)
         # transaction_mode should still get its default
-        self.assertEqual(result["OPTIONS"]["transaction_mode"], "IMMEDIATE")
+        self.assertEqual(options["transaction_mode"], "IMMEDIATE")
 
 
 class PostgresTests(DatabaseTestCaseMixin, unittest.TestCase):
@@ -336,13 +352,14 @@ class PostgresTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_search_path_schema_parsing(self) -> None:
         result = db.parse("postgres://user:password@host:5431/database?currentSchema=otherschema")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.db.backends.postgresql")
         self.assertEqual(result["NAME"], "database")
         self.assertEqual(result["HOST"], "host")
         self.assertEqual(result["USER"], "user")
         self.assertEqual(result["PASSWORD"], "password")
         self.assertEqual(result["PORT"], 5431)
-        self.assertEqual(result["OPTIONS"]["options"], "-c search_path=otherschema")
+        self.assertEqual(options["options"], "-c search_path=otherschema")
         self.assertNotIn("currentSchema", result["OPTIONS"])
 
     def test_parsing_with_special_characters(self) -> None:
@@ -368,13 +385,14 @@ class PostgresTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_gis_search_path_parsing(self) -> None:
         result = db.parse("postgis://user:password@host:5431/database?currentSchema=otherschema")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django.contrib.gis.db.backends.postgis")
         self.assertEqual(result["NAME"], "database")
         self.assertEqual(result["HOST"], "host")
         self.assertEqual(result["USER"], "user")
         self.assertEqual(result["PASSWORD"], "password")
         self.assertEqual(result["PORT"], 5431)
-        self.assertEqual(result["OPTIONS"]["options"], "-c search_path=otherschema")
+        self.assertEqual(options["options"], "-c search_path=otherschema")
         self.assertNotIn("currentSchema", result["OPTIONS"])
 
     def test_postgres_compatibility_aliases(self) -> None:
@@ -426,9 +444,11 @@ class MysqlTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_mysql_ssl_ca_option_handling(self) -> None:
         result = db.parse("mysql://user:password@host:3306/database?ssl-ca=/path/to/ca.pem")
-        self.assertIn("ssl", result["OPTIONS"])
-        self.assertEqual(result["OPTIONS"]["ssl"]["ca"], "/path/to/ca.pem")
-        self.assertNotIn("ssl-ca", result["OPTIONS"])
+        options: ConfigDict = result["OPTIONS"]
+        ssl: ConfigDict = options["ssl"]
+        self.assertIn("ssl", options)
+        self.assertEqual(ssl["ca"], "/path/to/ca.pem")
+        self.assertNotIn("ssl-ca", options)
 
     def test_mysqlgis_alias(self) -> None:
         result = db.parse("mysqlgis://user:password@host:3306/database")
@@ -521,9 +541,11 @@ class MSSQLTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_mssql_with_options(self) -> None:
         result = db.parse("mssql://user:password@host:1433/database?driver=ODBC+Driver+17+for+SQL+Server")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "sql_server.pyodbc")
-        self.assertEqual(result["OPTIONS"]["driver"], "ODBC Driver 17 for SQL Server")
+        self.assertEqual(options["driver"], "ODBC Driver 17 for SQL Server")
 
+    @override
     def test_multiple_nested_groups(self) -> None:
         result = db.parse(
             f"{self.SCHEME}://user:passwd@host:1433/dbname?driver=ODBC+Driver+17"
@@ -568,13 +590,14 @@ class RedshiftTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_redshift_parsing(self) -> None:
         result = db.parse("redshift://user:pass@host:5439/dbname?currentSchema=myschema")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django_redshift_backend")
         self.assertEqual(result["NAME"], "dbname")
         self.assertEqual(result["USER"], "user")
         self.assertEqual(result["PASSWORD"], "pass")
         self.assertEqual(result["HOST"], "host")
         self.assertEqual(result["PORT"], 5439)
-        self.assertEqual(result["OPTIONS"]["options"], "-c search_path=myschema")
+        self.assertEqual(options["options"], "-c search_path=myschema")
         self.assertNotIn("currentSchema", result["OPTIONS"])
 
 
@@ -594,14 +617,15 @@ class CockroachDBTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_cockroach_parsing(self) -> None:
         result = db.parse("cockroach://user:pass@host:26257/dbname?sslmode=require&sslrootcert=/path/to/cert")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "django_cockroachdb")
         self.assertEqual(result["NAME"], "dbname")
         self.assertEqual(result["USER"], "user")
         self.assertEqual(result["PASSWORD"], "pass")
         self.assertEqual(result["HOST"], "host")
         self.assertEqual(result["PORT"], 26257)
-        self.assertEqual(result["OPTIONS"]["sslmode"], "require")
-        self.assertEqual(result["OPTIONS"]["sslrootcert"], "/path/to/cert")
+        self.assertEqual(options["sslmode"], "require")
+        self.assertEqual(options["sslrootcert"], "/path/to/cert")
 
 
 class TimescaleTests(DatabaseTestCaseMixin, unittest.TestCase):
@@ -645,8 +669,9 @@ class TimescaleTests(DatabaseTestCaseMixin, unittest.TestCase):
 
     def test_timescale_with_current_schema(self) -> None:
         result = db.parse("timescale://user:pass@host:5432/dbname?currentSchema=timeseries")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["ENGINE"], "timescale.db.backends.postgresql")
-        self.assertEqual(result["OPTIONS"]["options"], "-c search_path=timeseries")
+        self.assertEqual(options["options"], "-c search_path=timeseries")
         self.assertNotIn("currentSchema", result["OPTIONS"])
 
     def test_timescale_unix_socket_parsing(self) -> None:
@@ -700,4 +725,4 @@ class DictionaryTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

@@ -38,6 +38,7 @@ dynamic = [
 ]
 dependencies = [
     "django>=5.2",
+    "typing-extensions>=4.4 ; python_version<'3.12'",
 ]
 
 [dependency-groups]
@@ -98,11 +99,14 @@ strict = true
 
 [tool.pyrefly]
 ignore-missing-imports = ["*"]
+preset = "all"
 python-version = "3.10.0"
 
 [tool.pyrefly.errors]
+implicit-bool = "ignore"
 no-any-return = "error"
 redundant-cast = "warn"
+unused-type-ignore = "ignore" # `# type: ignore` is mypy's channel
 
 [tool.pyright]
 pythonVersion = "3.10"

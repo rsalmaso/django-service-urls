@@ -24,14 +24,18 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 import types
+from typing import TYPE_CHECKING
 import unittest
 from unittest.mock import patch
 
 import django
-from django.conf import global_settings
+import django.conf.global_settings
 from django.core.exceptions import ImproperlyConfigured
 
 from django_service_urls.loads import apply_service_urls, email_settings_supported, mailers_supported
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigRegistry
 
 SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
@@ -45,18 +49,18 @@ def make_settings(**attrs: object) -> types.ModuleType:
 
 class SupportDetectionTests(unittest.TestCase):
     def test_email_settings_supported_reflects_global_settings(self) -> None:
-        self.assertEqual(email_settings_supported(), hasattr(global_settings, "EMAIL_BACKEND"))
+        self.assertEqual(email_settings_supported(), hasattr(django.conf.global_settings, "EMAIL_BACKEND"))
         # Every currently-supported Django version still ships the EMAIL_* settings.
         self.assertTrue(email_settings_supported())
 
     def test_email_settings_not_supported_when_removed(self) -> None:
         # Simulate Django 7.0, where the deprecated EMAIL_* settings are removed.
-        original = global_settings.EMAIL_BACKEND
-        del global_settings.EMAIL_BACKEND
+        original = django.conf.global_settings.EMAIL_BACKEND
+        del django.conf.global_settings.EMAIL_BACKEND
         try:
             self.assertFalse(email_settings_supported())
         finally:
-            global_settings.EMAIL_BACKEND = original
+            django.conf.global_settings.EMAIL_BACKEND = original
 
     def test_mailers_supported_matches_version(self) -> None:
         self.assertEqual(mailers_supported(), django.VERSION >= (6, 1))
@@ -75,8 +79,9 @@ class ApplyMailersTests(unittest.TestCase):
         module = make_settings(MAILERS={"default": "smtp://user:pass@host?use_tls=true"})
         with patch("django_service_urls.loads.mailers_supported", return_value=True):
             apply_service_urls(module)
+        mailers: ConfigRegistry = vars(module)["MAILERS"]
         self.assertEqual(
-            vars(module)["MAILERS"]["default"],
+            mailers["default"],
             {
                 "BACKEND": SMTP_BACKEND,
                 "OPTIONS": {"host": "host", "username": "user", "password": "pass", "use_tls": True},
@@ -114,4 +119,4 @@ class ApplyEmailBackendTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

@@ -2,8 +2,9 @@
 
 ## dev
 
-* configure pyrefly
-* added pyright support
+* improve typing support
+  - configure pyrefly
+  - added pyright support
 * update deprecation handling to new django versioning scheme
 
 ## 3.1.0

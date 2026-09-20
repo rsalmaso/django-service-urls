@@ -23,37 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from django_service_urls._compat import override
-from django_service_urls.base import Service
-from django_service_urls.parse import UrlInfo
-from django_service_urls.types import ConfigDict
+from __future__ import annotations
 
-__all__ = ["task"]
+import sys
 
+__all__ = ["override"]
 
-class TaskService(Service):
-    @override
-    def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
-        parsed: UrlInfo = self.parse_url(url)
-        config: ConfigDict = {
-            "BACKEND": parsed.hostname if engine == "<backend>" else engine,
-            "OPTIONS": parsed.query,
-        }
-        config.update({k: v for k, v in parsed.fragment.items() if k not in config})
-        return config
-
-
-task: TaskService = TaskService()
-
-
-@task.register(
-    ("task", "<backend>"),
-    ("dummy", "django.tasks.backends.dummy.DummyBackend"),
-    ("immediate", "django.tasks.backends.immediate.ImmediateBackend"),
-    ("dummy+dt", "django_tasks.backends.dummy.DummyBackend"),
-    ("immediate+dt", "django_tasks.backends.immediate.ImmediateBackend"),
-    ("database+dt", "django_tasks_db.DatabaseBackend"),
-    ("rq+dt", "django_tasks_rq.RQBackend"),
-)
-def tasks_config_url(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
-    return backend.config_from_url(engine, scheme, url)
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override

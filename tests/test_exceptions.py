@@ -21,10 +21,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Any
+from typing import cast
 import unittest
 
-from django_service_urls.exceptions import ValidationError
+from django_service_urls.exceptions import ErrorMessage, ValidationError
 
 
 class ValidationErrorTestCase(unittest.TestCase):
@@ -90,8 +90,9 @@ class ValidationErrorTestCase(unittest.TestCase):
         self.assertEqual(items, ["Simple error"])
 
     def test_iteration_without_message_or_dict(self) -> None:
-        unsupported: Any = 42
-        error = ValidationError(unsupported)
+        # 42 matches no branch in __init__, so the error ends up with neither
+        # a message nor an error_dict. The cast is the lie the test is built on.
+        error = ValidationError(cast("ErrorMessage", 42))
 
         self.assertIsNone(error.message)
         self.assertIsNone(error.error_dict)
@@ -186,4 +187,4 @@ class ValidationErrorTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

@@ -23,13 +23,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-from django_service_urls.base import ConfigDict, Service
+from django_service_urls._compat import override
+from django_service_urls.base import Service
 from django_service_urls.parse import UrlInfo
+from django_service_urls.types import ConfigDict
 
 __all__ = ["cache"]
 
 
 class CacheService(Service):
+    @override
     def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         multiple_netloc: bool = bool(kwargs.pop("multiple_netloc", True))
         parsed: UrlInfo = self.parse_url(url, multiple_netloc=multiple_netloc)

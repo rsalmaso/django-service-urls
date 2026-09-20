@@ -24,8 +24,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from django_service_urls.base import ConfigDict, Service
+from django_service_urls.base import Service
 from django_service_urls.plugins import PluginDiscovery
+from django_service_urls.types import ConfigDict
 
 
 def _make_entry_point(
@@ -115,4 +116,4 @@ class PluginDiscoveryTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

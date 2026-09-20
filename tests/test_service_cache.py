@@ -23,9 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import TYPE_CHECKING
 import unittest
 
 from django_service_urls import cache
+
+if TYPE_CHECKING:
+    from django_service_urls.types import ConfigDict
 
 
 class DictionaryTests(unittest.TestCase):
@@ -68,10 +72,11 @@ class MemoryCacheTestCase(unittest.TestCase):
 
     def test_cache_with_multiple_special_options(self) -> None:
         result = cache.parse("memory://location?timeout=300&key_prefix=app&version=1&custom=value")
+        options: ConfigDict = result["OPTIONS"]
         self.assertEqual(result["TIMEOUT"], 300)
         self.assertEqual(result["KEY_PREFIX"], "app")
         self.assertEqual(result["VERSION"], 1)
-        self.assertEqual(result["OPTIONS"]["custom"], "value")
+        self.assertEqual(options["custom"], "value")
 
 
 class DatabaseCacheTestCase(unittest.TestCase):
@@ -279,4 +284,4 @@ class FileCacheTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

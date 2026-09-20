@@ -25,9 +25,11 @@
 
 import unittest
 
-from django_service_urls.base import ConfigDict, Service
+from django_service_urls._compat import override
+from django_service_urls.base import Service
 from django_service_urls.exceptions import ValidationError
 from django_service_urls.parse import UrlInfo
+from django_service_urls.types import ConfigDict, ConfigInput
 
 
 class MockTestService(Service):
@@ -35,7 +37,7 @@ class MockTestService(Service):
 
     def __init__(self) -> None:
         super().__init__()
-        self.register(("test", "test.engine"))(self._test_callback)
+        _ = self.register(("test", "test.engine"))(self._test_callback)
 
     def _test_callback(
         self, backend: Service, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object
@@ -43,11 +45,13 @@ class MockTestService(Service):
         parsed = backend.parse_url(url)
         return {"parsed": parsed.path}
 
+    @override
     def config_from_url(self, engine: str, scheme: str, url: str | UrlInfo, **kwargs: object) -> ConfigDict:
         return {"engine": engine, "scheme": scheme}
 
 
 class ServiceTestCase(unittest.TestCase):
+    @override
     def setUp(self) -> None:
         self.backend = Service()
 
@@ -64,7 +68,7 @@ class ServiceTestCase(unittest.TestCase):
 
     def test_parse_with_unregistered_scheme_raises_an_error(self) -> None:
         with self.assertRaises(ValidationError) as cm:
-            self.backend.parse("invalid://nonexistent")
+            _ = self.backend.parse("invalid://nonexistent")
 
         error = cm.exception
         self.assertIsInstance(error, ValidationError)
@@ -74,7 +78,7 @@ class ServiceTestCase(unittest.TestCase):
     def test_parse_with_dict_input(self) -> None:
         backend = MockTestService()
 
-        test_dict = {
+        test_dict: ConfigInput = {
             "key1": "test://host/value1",
             "key2": "test://host/value2",
             "key3": {"already": "parsed"},
@@ -98,7 +102,7 @@ class ServiceTestCase(unittest.TestCase):
         }
 
         with self.assertRaises(ValidationError) as cm:
-            self.backend.parse(test_data)
+            _ = self.backend.parse(test_data)
 
         error = cm.exception
         self.assertIsInstance(error, ValidationError)
@@ -152,4 +156,4 @@ class ServiceTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()
