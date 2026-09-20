@@ -254,3 +254,6 @@ order-by-type = false
 
 [tool.ruff.lint.mccabe]
 max-complexity = 18
+
+[tool.ty.environment]
+python-version = "3.10"
