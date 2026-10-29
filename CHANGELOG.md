@@ -1,6 +1,6 @@
 # Changelog
 
-## dev
+## 3.2.0
 
 * improve typing support
   - configure pyrefly
