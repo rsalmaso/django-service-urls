@@ -29,17 +29,15 @@ from django_service_urls.plugins import PluginDiscovery
 from django_service_urls.types import ConfigDict
 
 
-def _make_entry_point(
-    name: str, value: str, load_return: object = None, load_error: Exception | None = None
-) -> MagicMock:
+def _make_entry_point(name: str, value: str, load_error: Exception | None = None) -> tuple[MagicMock, MagicMock]:
+    """Return a fake entry point and its ``load`` mock, the latter kept as its own typed name."""
+
+    load = MagicMock(side_effect=load_error)
     ep = MagicMock()
     ep.name = name
     ep.value = value
-    if load_error is not None:
-        ep.load.side_effect = load_error
-    elif load_return is not None:
-        ep.load.return_value = load_return
-    return ep
+    ep.load = load
+    return ep, load
 
 
 class PluginDiscoveryTestCase(unittest.TestCase):
@@ -55,8 +53,8 @@ class PluginDiscoveryTestCase(unittest.TestCase):
             def test_callback(backend: Service, engine: str, scheme: str, url: str) -> ConfigDict:
                 return backend.config_from_url(engine, scheme, url)
 
-        ep = _make_entry_point("test", "test_module")
-        ep.load.side_effect = fake_plugin
+        ep, load = _make_entry_point("test", "test_module")
+        load.side_effect = fake_plugin
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep]):
             discover = PluginDiscovery()
@@ -66,17 +64,17 @@ class PluginDiscoveryTestCase(unittest.TestCase):
         self.assertIn("testplugin", service._schemes)
 
     def test_discover_is_idempotent(self) -> None:
-        ep = _make_entry_point("test", "test_module")
+        ep, load = _make_entry_point("test", "test_module")
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep]):
             discover = PluginDiscovery()
             discover()
             discover()
 
-        ep.load.assert_called_once()
+        load.assert_called_once()
 
     def test_discover_warns_on_load_failure(self) -> None:
-        ep = _make_entry_point("broken", "broken_module", load_error=ImportError("No module named 'broken_module'"))
+        ep, _ = _make_entry_point("broken", "broken_module", load_error=ImportError("No module named 'broken_module'"))
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep]):
             discover = PluginDiscovery()
@@ -93,26 +91,26 @@ class PluginDiscoveryTestCase(unittest.TestCase):
         self.assertTrue(discover._loaded)
 
     def test_discover_loads_multiple_entry_points(self) -> None:
-        ep1 = _make_entry_point("plugin1", "module1")
-        ep2 = _make_entry_point("plugin2", "module2")
+        ep1, load1 = _make_entry_point("plugin1", "module1")
+        ep2, load2 = _make_entry_point("plugin2", "module2")
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep1, ep2]):
             discover = PluginDiscovery()
             discover()
 
-        ep1.load.assert_called_once()
-        ep2.load.assert_called_once()
+        load1.assert_called_once()
+        load2.assert_called_once()
 
     def test_discover_continues_after_failure(self) -> None:
-        ep1 = _make_entry_point("broken", "broken_module", load_error=ImportError("bad"))
-        ep2 = _make_entry_point("good", "good_module")
+        ep1, _ = _make_entry_point("broken", "broken_module", load_error=ImportError("bad"))
+        ep2, load2 = _make_entry_point("good", "good_module")
 
         with patch("django_service_urls.plugins.importlib.metadata.entry_points", return_value=[ep1, ep2]):
             discover = PluginDiscovery()
             with self.assertWarns(UserWarning):
                 discover()
 
-        ep2.load.assert_called_once()
+        load2.assert_called_once()
 
 
 if __name__ == "__main__":
