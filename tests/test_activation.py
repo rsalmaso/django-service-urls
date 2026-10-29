@@ -78,17 +78,5 @@ class PthFileTestCase(unittest.TestCase):
         self.assertEqual(significant_lines(PTH), [f"import {module}; {module}.{attribute}()"])
 
 
-class PackagingTestCase(unittest.TestCase):
-    def test_both_activation_files_land_in_the_wheel(self) -> None:
-        # The wheel's force-include is what puts these files in site-packages; the
-        # sdist picks them up as root files and rebuilds the wheel from them.
-        # Read the line as text rather than parsing TOML, which needs Python 3.11+.
-        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-        force_include = [line for line in pyproject.splitlines() if line.startswith("force-include")]
-        self.assertEqual(len(force_include), 1, "expected exactly one force-include entry to check")
-        self.assertIn(PTH.name, force_include[0])
-        self.assertIn(START.name, force_include[0])
-
-
 if __name__ == "__main__":
     _ = unittest.main()

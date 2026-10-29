@@ -11,6 +11,8 @@
 * update deprecation handling to new django versioning scheme
 * moved mypy config from `mypy.ini` to `pyproject.toml`
 * nox sessions install dev tools from `uv.lock`, using the `uv` backend
+* nox `package` sessions install the built wheel with only its runtime dependencies
+  and smoke-check it outside the checkout
 
 ## 3.1.0
 

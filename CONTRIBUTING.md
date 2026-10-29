@@ -54,6 +54,11 @@ $ uv run nox --list
 `nox` provisions any missing `python` version through `uv`, so you do not need to
 install them yourself.
 
+The `package` sessions build the wheel and install it with only its declared runtime
+dependencies, then run `tests/package_smoke.py` from outside the checkout. They catch
+what the test suite cannot see, because it imports the source tree: a missing runtime
+dependency, or activation files missing from the wheel.
+
 To run the test suite against a single version, the one `uv` picks for the project:
 
 ```bash

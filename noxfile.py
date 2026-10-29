@@ -41,7 +41,7 @@ DEPS = [(row[0], dependency) for row in MAP for dependency in row[1]]
 # python_version = 3.10, so every session checks 3.10 semantics whatever runs it.
 TYPING_DEPS = [(python, django) for python, django in DEPS if python != "3.10"]
 
-nox.options.sessions = ["lint", "tests", "typing"]
+nox.options.sessions = ["lint", "tests", "typing", "package"]
 nox.options.reuse_existing_virtualenvs = False
 nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
@@ -103,3 +103,29 @@ def typing(session: nox.Session, django: str) -> None:
 def tests(session: nox.Session, django: str) -> None:
     install(session, django)
     _ = session.run("pytest")
+
+
+@nox.session  # type: ignore[untyped-decorator]
+@nox.parametrize("python", [python for python, _ in MAP])  # type: ignore[untyped-decorator]
+def package(session: nox.Session) -> None:
+    """Install the built wheel with only its runtime dependencies, held to `uv.lock`, as users get it."""
+
+    smoke = Path("tests/package_smoke.py").resolve()
+    tmp = Path(session.create_tmp())
+    constraints = tmp / "runtime-constraints.txt"
+    _ = session.run_install(
+        "uv",
+        "export",
+        "--locked",
+        "--no-hashes",
+        "--no-emit-project",
+        "--no-default-groups",
+        "-o",
+        str(constraints),
+        silent=True,
+    )
+    _ = session.run_install("uv", "build", "--wheel", "--out-dir", str(tmp), silent=True)
+    session.install(*(str(wheel) for wheel in tmp.glob("*.whl")), env={"UV_CONSTRAINT": str(constraints)})
+    # Run from outside the checkout, so the source tree cannot shadow the installed wheel.
+    with session.chdir(tmp):
+        _ = session.run("python", str(smoke))
